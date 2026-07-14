@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int               @id @default(autoincrement())
+  name               String
+  avatar             String
+  level              Int               @default(1)
+  xp                 Int               @default(0)
+  currentDestination String?
+  achievements       UserAchievement[]
+}
+
+model Destination {
+  id          Int     @id @default(autoincrement())
+  name        String
+  category    String
+  image       String
+  verified    Boolean @default(false)
+  xpReward    Int     @default(100)
+}
+
+model Achievement {
+  id          Int               @id @default(autoincrement())
+  title       String
+  description String
+  xpReward    Int               @default(200)
+  icon        String
+  users       UserAchievement[]
+}
+
+model UserAchievement {
+  userId        Int
+  achievementId Int
+  unlockedAt    DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id])
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+
+  @@id([userId, achievementId])
+}
