@@ -1,6 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { UA_PATH, UA_CONTOURS } from './data/ukraineMap';
-import { PLACES, CATEGORY_META, type Place, type PlaceCategory } from './data/places';
+import { PLACES, CATEGORY_META, CATEGORY_ORDER, type Place, type PlaceCategory } from './data/places';
+import { projectToMap } from './data/geo';
+import { getPlaces } from './api';
+import AddPlaceForm from './AddPlaceForm';
 import { Icon, type IconName } from './icons';
 
 const CREAM = '#F4F1E8';
@@ -14,10 +17,9 @@ const CATEGORY_ICON: Record<PlaceCategory, IconName> = {
   coast: 'compass',
 };
 
-const CATEGORIES = Object.keys(CATEGORY_META) as PlaceCategory[];
-
 interface ExploreMapProps {
   accent?: string;
+  submitterName?: string;
 }
 
 function CategoryBadge({ category }: { category: PlaceCategory }) {
@@ -43,40 +45,84 @@ function CategoryBadge({ category }: { category: PlaceCategory }) {
   );
 }
 
-function ExploreMap({ accent = '#3FA66B' }: ExploreMapProps) {
-  const [activeId, setActiveId] = useState<string>('kyiv');
-  const [hoverId, setHoverId] = useState<string | null>(null);
+function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
+  const [places, setPlaces] = useState<Place[]>(PLACES);
+  const [activeId, setActiveId] = useState<string | number | null>(null);
+  const [hoverId, setHoverId] = useState<string | number | null>(null);
   const [filter, setFilter] = useState<PlaceCategory | 'all'>('all');
+  const [showForm, setShowForm] = useState(false);
+
+  // Load live places from the backend; fall back to the bundled dataset.
+  const loadPlaces = () => {
+    getPlaces()
+      .then((data) => {
+        if (Array.isArray(data) && data.length) {
+          setPlaces(data);
+          setActiveId((cur) => cur ?? data[0].id);
+        }
+      })
+      .catch(() => {
+        // keep the offline fallback already in state
+      });
+  };
+
+  useEffect(() => {
+    loadPlaces();
+    setActiveId((cur) => cur ?? PLACES[0]?.id ?? null);
+  }, []);
 
   const visiblePlaces = useMemo(
-    () => (filter === 'all' ? PLACES : PLACES.filter((p) => p.category === filter)),
-    [filter],
+    () => (filter === 'all' ? places : places.filter((p) => p.category === filter)),
+    [filter, places],
   );
 
   // The card shows whatever the pointer is hovering, otherwise the last clicked place.
   const shown: Place | undefined = useMemo(() => {
     const id = hoverId ?? activeId;
-    return PLACES.find((p) => p.id === id);
-  }, [hoverId, activeId]);
+    return places.find((p) => p.id === id);
+  }, [hoverId, activeId, places]);
 
   return (
     <div>
-      <div style={{ marginBottom: '20px' }}>
-        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '10px' }}>
-          МАПА МАНДРІВОК
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <div>
+          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '10px' }}>
+            МАПА МАНДРІВОК
+          </div>
+          <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 3vw, 34px)', margin: '0 0 8px' }}>
+            Куди поїхати в Україні
+          </h2>
+          <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'rgba(244,241,232,0.62)', margin: 0, maxWidth: '560px' }}>
+            Наведи або торкнись точки на карті — і дізнайся, що варто побачити. Знаєш круте місце? Додай його!
+          </p>
         </div>
-        <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 3vw, 34px)', margin: '0 0 8px' }}>
-          Куди поїхати в Україні
-        </h2>
-        <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'rgba(244,241,232,0.62)', margin: 0, maxWidth: '560px' }}>
-          Наведи або торкнись точки на карті — і дізнайся, що варто побачити в цьому місці.
-        </p>
+        <button
+          onClick={() => setShowForm(true)}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: accent,
+            color: '#071F16',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '12px 20px',
+            fontSize: '13.5px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            fontFamily: "'Manrope', sans-serif",
+            flex: '0 0 auto',
+          }}
+        >
+          <Icon name="plus" size={17} strokeWidth={2} />
+          Додати місце
+        </button>
       </div>
 
       {/* category filter chips */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }}>
         <FilterChip active={filter === 'all'} onClick={() => setFilter('all')} color={accent} label="Усі місця" />
-        {CATEGORIES.map((cat) => (
+        {CATEGORY_ORDER.map((cat) => (
           <FilterChip
             key={cat}
             active={filter === cat}
@@ -123,6 +169,7 @@ function ExploreMap({ accent = '#3FA66B' }: ExploreMapProps) {
             {visiblePlaces.map((place) => {
               const meta = CATEGORY_META[place.category];
               const isActive = place.id === activeId || place.id === hoverId;
+              const { x, y } = projectToMap(place.lat, place.lng);
               return (
                 <g
                   key={place.id}
@@ -143,16 +190,16 @@ function ExploreMap({ accent = '#3FA66B' }: ExploreMapProps) {
                   }}
                 >
                   {/* generous invisible hit area for easier tapping */}
-                  <circle cx={place.x} cy={place.y} r={14} fill="transparent" />
+                  <circle cx={x} cy={y} r={14} fill="transparent" />
                   {isActive && (
-                    <circle cx={place.x} cy={place.y} r={7} fill="none" stroke={meta.color} strokeWidth="2">
+                    <circle cx={x} cy={y} r={7} fill="none" stroke={meta.color} strokeWidth="2">
                       <animate attributeName="r" values="7;16" dur="1.8s" repeatCount="indefinite" />
                       <animate attributeName="opacity" values="0.7;0" dur="1.8s" repeatCount="indefinite" />
                     </circle>
                   )}
                   <circle
-                    cx={place.x}
-                    cy={place.y}
+                    cx={x}
+                    cy={y}
                     r={isActive ? 7 : 5}
                     fill={meta.color}
                     stroke={isActive ? CREAM : 'rgba(7,31,22,0.6)'}
@@ -182,14 +229,17 @@ function ExploreMap({ accent = '#3FA66B' }: ExploreMapProps) {
                   {shown.name}
                 </div>
                 <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.5)', marginBottom: '14px' }}>{shown.region}</div>
+
+                {shown.photos && shown.photos.length > 0 && <PhotoStrip photos={shown.photos} name={shown.name} />}
+
                 <p style={{ fontSize: '13.5px', lineHeight: 1.65, color: 'rgba(244,241,232,0.78)', margin: '0 0 16px' }}>
                   {shown.description}
                 </p>
                 <div
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '7px',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '12px',
                     fontSize: '12px',
                     fontWeight: 600,
                     color: 'rgba(244,241,232,0.7)',
@@ -197,9 +247,20 @@ function ExploreMap({ accent = '#3FA66B' }: ExploreMapProps) {
                     paddingTop: '14px',
                   }}
                 >
-                  <Icon name="sun" size={15} stroke={accent} strokeWidth={1.9} />
-                  Найкращий час: {shown.bestSeason}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
+                    <Icon name="sun" size={15} stroke={accent} strokeWidth={1.9} />
+                    {shown.bestSeason}
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', color: 'rgba(244,241,232,0.5)' }}>
+                    <Icon name="target" size={14} strokeWidth={1.9} />
+                    {shown.lat.toFixed(3)}, {shown.lng.toFixed(3)}
+                  </span>
                 </div>
+                {shown.submittedBy && (
+                  <div style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.4)', marginTop: '10px' }}>
+                    Додав: {shown.submittedBy}
+                  </div>
+                )}
               </>
             ) : (
               <div style={{ color: 'rgba(244,241,232,0.55)', fontSize: '14px' }}>
@@ -245,6 +306,40 @@ function ExploreMap({ accent = '#3FA66B' }: ExploreMapProps) {
           </div>
         </div>
       </div>
+
+      {showForm && (
+        <AddPlaceForm
+          accent={accent}
+          submitterName={submitterName}
+          onClose={() => setShowForm(false)}
+          onApproved={() => loadPlaces()}
+        />
+      )}
+    </div>
+  );
+}
+
+function PhotoStrip({ photos, name }: { photos: string[]; name: string }) {
+  const [active, setActive] = useState(0);
+  const idx = Math.min(active, photos.length - 1);
+  return (
+    <div style={{ marginBottom: '14px' }}>
+      <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', aspectRatio: '16 / 10', background: '#04100B' }}>
+        <img src={photos[idx]} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      </div>
+      {photos.length > 1 && (
+        <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+          {photos.map((src, i) => (
+            <button
+              key={i}
+              onClick={() => setActive(i)}
+              style={{ width: '46px', height: '38px', borderRadius: '8px', overflow: 'hidden', border: i === idx ? '2px solid #fff' : '1px solid rgba(255,255,255,0.16)', padding: 0, cursor: 'pointer', background: 'none', flex: '0 0 auto' }}
+            >
+              <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

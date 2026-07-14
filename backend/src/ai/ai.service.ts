@@ -53,6 +53,49 @@ interface GeminiContent {
   parts: { text: string }[];
 }
 
+// --- Place moderation -------------------------------------------------------
+
+// What the moderator receives about a user-submitted place.
+export interface PlaceModerationInput {
+  name: string;
+  region: string;
+  category: string;
+  description: string;
+  lat: number;
+  lng: number;
+  // Image data URLs (`data:image/...;base64,...`). The model inspects them too.
+  photos: string[];
+}
+
+export type PlaceDecision = 'approve' | 'reject' | 'review';
+
+export interface PlaceModerationResult {
+  decision: PlaceDecision;
+  reason: string;
+  score: number; // 0..1 confidence that this is a genuine, appropriate place
+  // True only when a real model produced the verdict (vs. offline fallback).
+  moderatedByAi: boolean;
+}
+
+const PLACE_SYSTEM_PROMPT = `Ти — модератор карти цікавих місць України для застосунку Absolute Travel.
+Твоє завдання — вирішити, чи можна опублікувати місце, яке надіслав користувач, щоб інші мандрівники бачили його на карті.
+
+Критерії ПРИЙНЯТИ (approve):
+- Це реальне, конкретне місце, куди можна сходити чи поїхати відпочити в Україні (пам'ятка, природа, гори, місто, узбережжя, музей, парк, фортеця тощо).
+- Назва, опис і категорія узгоджені між собою й виглядають правдоподібно.
+- Фотографії схожі на справжнє місце/локацію (краєвид, споруда, природа) і відповідають опису.
+- Немає нічого образливого, небезпечного, незаконного, реклами чи спаму.
+
+ВІДХИЛИТИ (reject), якщо:
+- Це спам, реклама, беззмістовний або образливий текст, політичні заклики, небезпечний чи незаконний контент.
+- Місце явно вигадане, не існує або не в Україні.
+- Фотографії не стосуються місця (скриншоти, меми, люди крупним планом, випадкові фото, відверті/неприйнятні зображення).
+
+Якщо бракує впевненості — обери "review", щоб місце перевірив адміністратор вручну.
+
+Відповідай ЛИШЕ валідним JSON без пояснень навколо, у форматі:
+{"decision":"approve"|"reject"|"review","reason":"коротке пояснення українською (1-2 речення)","score":число_від_0_до_1}`;
+
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
@@ -155,4 +198,138 @@ export class AiService {
 
     return { reply };
   }
+
+  /**
+   * Moderate a user-submitted place: decide whether it is a genuine, appropriate
+   * spot to publish on the map. Inspects the text AND the attached photos.
+   *
+   * Gracefully degrades: if no API key is configured (or the call fails), it
+   * returns a "review" verdict so a human admin makes the final call — the
+   * submission is never silently approved without a real check.
+   */
+  async moderatePlace(input: PlaceModerationInput): Promise<PlaceModerationResult> {
+    const key = this.apiKey;
+    if (!key) {
+      return {
+        decision: 'review',
+        reason:
+          'ШІ-модерацію не налаштовано (немає GEMINI_API_KEY). Місце надіслано на ручну перевірку адміністратором.',
+        score: 0.5,
+        moderatedByAi: false,
+      };
+    }
+
+    // Build the multimodal request: place details as text + the photos inline.
+    const parts: Array<{ text: string } | { inline_data: { mime_type: string; data: string } }> =
+      [];
+
+    parts.push({
+      text:
+        `Перевір це місце, яке надіслав користувач:\n` +
+        `Назва: ${input.name}\n` +
+        `Область/регіон: ${input.region}\n` +
+        `Категорія: ${input.category}\n` +
+        `Геолокація: ${input.lat.toFixed(5)}, ${input.lng.toFixed(5)}\n` +
+        `Опис: ${input.description}\n\n` +
+        `Далі — ${input.photos.length} фото цього місця. Оціни, чи вони справжні й відповідають опису.`,
+    });
+
+    for (const photo of input.photos.slice(0, 4)) {
+      const parsed = parseDataUrl(photo);
+      if (parsed) {
+        parts.push({ inline_data: { mime_type: parsed.mimeType, data: parsed.base64 } });
+      }
+    }
+
+    const body = {
+      system_instruction: { parts: [{ text: PLACE_SYSTEM_PROMPT }] },
+      contents: [{ role: 'user', parts }],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 400,
+        responseMimeType: 'application/json',
+      },
+    };
+
+    const url = `${GEMINI_ENDPOINT}/${this.model}:generateContent`;
+
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      this.logger.error('Gemini place moderation request failed', err as Error);
+      return this.moderationFallback('Не вдалося зв’язатися з ШІ-модератором.');
+    }
+
+    const data: any = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      const detail = data?.error?.message ?? `HTTP ${res.status}`;
+      this.logger.error(`Gemini place moderation error: ${detail}`);
+      return this.moderationFallback('ШІ-модератор тимчасово недоступний.');
+    }
+
+    const raw: string =
+      data?.candidates?.[0]?.content?.parts
+        ?.map((p: { text?: string }) => p?.text ?? '')
+        .join('')
+        .trim() ?? '';
+
+    const verdict = parseModerationJson(raw);
+    if (!verdict) {
+      this.logger.warn(`Could not parse moderation JSON: ${raw.slice(0, 200)}`);
+      return this.moderationFallback('ШІ-модератор повернув неоднозначну відповідь.');
+    }
+
+    return { ...verdict, moderatedByAi: true };
+  }
+
+  private moderationFallback(reason: string): PlaceModerationResult {
+    return {
+      decision: 'review',
+      reason: `${reason} Місце надіслано на ручну перевірку адміністратором.`,
+      score: 0.5,
+      moderatedByAi: false,
+    };
+  }
+}
+
+// Split a `data:<mime>;base64,<data>` URL into its parts. Returns null if the
+// string is not a base64 data URL.
+function parseDataUrl(url: string): { mimeType: string; base64: string } | null {
+  const match = /^data:([^;,]+);base64,(.+)$/s.exec(url ?? '');
+  if (!match) return null;
+  return { mimeType: match[1], base64: match[2] };
+}
+
+// Best-effort parse of the model's JSON verdict, tolerant of code fences and
+// surrounding prose. Clamps/normalises the fields.
+function parseModerationJson(raw: string): Omit<PlaceModerationResult, 'moderatedByAi'> | null {
+  if (!raw) return null;
+  const start = raw.indexOf('{');
+  const end = raw.lastIndexOf('}');
+  if (start === -1 || end === -1 || end < start) return null;
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(raw.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+
+  const decisionRaw = String(parsed?.decision ?? '').toLowerCase();
+  const decision: PlaceDecision =
+    decisionRaw === 'approve' || decisionRaw === 'reject' ? (decisionRaw as PlaceDecision) : 'review';
+
+  let score = Number(parsed?.score);
+  if (!Number.isFinite(score)) score = 0.5;
+  score = Math.min(1, Math.max(0, score));
+
+  const reason = String(parsed?.reason ?? '').trim() || 'Без додаткового пояснення.';
+
+  return { decision, reason, score };
 }

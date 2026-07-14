@@ -68,3 +68,48 @@ model UserAchievement {
 
   @@id([userId, achievementId])
 }
+
+// Admin account for the moderation panel. There is always exactly one super
+// admin (isSuper) whose login/password come from env and are re-synced on boot;
+// it cannot be deleted. Super admins and regular admins can create more admins.
+model Admin {
+  id        Int      @id @default(autoincrement())
+  login     String   @unique
+  password  String // bcrypt hash
+  name      String   @default("Адміністратор")
+  isSuper   Boolean  @default(false)
+  createdBy String?
+  createdAt DateTime @default(now())
+}
+
+// A place on the explore map. Covers both admin-curated entries and
+// user-submitted ones that must pass AI moderation before going public.
+model Place {
+  id          Int    @id @default(autoincrement())
+  name        String
+  region      String
+  category    String // nature | mountains | history | city | coast
+  description String
+  bestSeason  String @default("Будь-коли")
+
+  // Geolocation is mandatory — real WGS84 coordinates.
+  lat Float
+  lng Float
+
+  // JSON array of image data URLs. At least 2 are required on submission.
+  photos String @default("[]")
+
+  status      String  @default("pending") // pending | approved | rejected
+  source      String  @default("user") // user | admin
+  submittedBy String? // display name / email of the submitter
+
+  // AI moderation verdict.
+  aiDecision String? // approve | reject | review
+  aiReason   String?
+  aiScore    Float?
+
+  createdAt  DateTime  @default(now())
+  reviewedAt DateTime?
+
+  @@index([status])
+}

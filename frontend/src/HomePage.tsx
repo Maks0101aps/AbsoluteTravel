@@ -89,7 +89,7 @@ function HomePage({ user, onLogout, onEditProfile }: HomePageProps) {
 
       <main className="at-home-main" style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
         {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} background={background} />}
-        {tab === 'map' && <ExploreMap accent={accent} />}
+        {tab === 'map' && <ExploreMap accent={accent} submitterName={p?.displayName ?? user.name} />}
         {tab === 'advisor' && <AiAdvisor accent={accent} userName={p?.displayName ?? user.name} />}
       </main>
     </div>
