@@ -10,6 +10,20 @@ export interface AuthUser {
   level: number;
   xp: number;
   currentDestination: string | null;
+  // Client-side profile customization (set via the profile wizard, stored locally).
+  profile?: ProfileCustomization;
+}
+
+export interface ProfileCustomization {
+  avatarId: string;
+  customAvatar?: string; // data URL when the user uploads their own
+  color: string;
+  displayName: string;
+  bio: string;
+  backgroundId: string;
+  frameId: string;
+  badges: string[];
+  effectId: string;
 }
 
 let cachedPort: number | null = null;
