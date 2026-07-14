@@ -141,23 +141,34 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/data')
-      .then((res) => {
-        if (!res.ok) throw new Error('API server unavailable');
-        return res.json();
-      })
-      .then((data) => {
-        if (data.currentUser) setCurrentUser(data.currentUser);
-        if (data.friends && data.friends.length) setFriends(data.friends);
-        if (data.destinations && data.destinations.length) setDestinations(data.destinations);
-        if (data.achievements && data.achievements.length) setAchievements(data.achievements);
-      })
-      .catch((err) => {
-        console.warn('API fetch failed, using local fallback:', err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    const tryFetch = async (port: number) => {
+      const res = await fetch(`http://localhost:${port}/api/data`);
+      if (!res.ok) throw new Error();
+      return res.json();
+    };
+
+    const scanPorts = async () => {
+      for (let port = 3000; port <= 3005; port++) {
+        try {
+          const data = await tryFetch(port);
+          if (data.currentUser) {
+            setCurrentUser(data.currentUser);
+            if (data.friends && data.friends.length) setFriends(data.friends);
+            if (data.destinations && data.destinations.length) setDestinations(data.destinations);
+            if (data.achievements && data.achievements.length) setAchievements(data.achievements);
+            console.log(`Connected to backend on port ${port}`);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          // Continue scanning next port
+        }
+      }
+      console.warn('Could not connect to backend on scanned ports, using local fallback.');
+      setLoading(false);
+    };
+
+    scanPorts();
   }, []);
 
   return (
