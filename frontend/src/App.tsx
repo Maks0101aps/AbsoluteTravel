@@ -177,7 +177,7 @@ function App() {
       {/* ============ NAVBAR ============ */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', padding: '14px 40px', background: 'rgba(7,31,22,0.8)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <a href="#top" style={{ display: 'flex', alignItems: 'center', flex: '0 0 auto' }}>
-          <img src="/assets/logo.avif" alt="Absolute Travel" style={{ height: '42px', width: 'auto', display: 'block' }} />
+          <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '42px', width: 'auto', display: 'block' }} />
         </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: '36px', flexWrap: 'wrap', justifyContent: 'center', fontSize: '13.5px', fontWeight: 500, color: 'rgba(244,241,232,0.85)' }}>
           <a href="#features" style={{ transition: 'color 0.2s' }}>Як це працює</a>
