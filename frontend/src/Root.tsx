@@ -3,7 +3,7 @@ import App from './App';
 import AuthPage from './AuthPage';
 import HomePage from './HomePage';
 import ProfileSetup from './ProfileSetup';
-import type { AuthUser, ProfileCustomization } from './api';
+import { earnCoins, type AuthUser, type ProfileCustomization } from './api';
 
 type View = 'landing' | 'auth' | 'setup' | 'home';
 
@@ -43,13 +43,31 @@ function Root() {
   };
 
   const handleProfileComplete = (profile: ProfileCustomization) => {
+    let userId: number | null = null;
     setUser((prev) => {
       if (!prev) return prev;
+      userId = prev.id;
       const next = { ...prev, name: profile.displayName, profile };
       persist(next);
       return next;
     });
     setView('home');
+
+    // Reward the one-time onboarding bonus (server is idempotent per reason).
+    if (userId !== null) {
+      earnCoins(userId, 'profile_complete')
+        .then(({ coins }) => {
+          setUser((prev) => {
+            if (!prev) return prev;
+            const next = { ...prev, coins };
+            persist(next);
+            return next;
+          });
+        })
+        .catch(() => {
+          // non-blocking: keep the user in the app even if the reward call fails
+        });
+    }
   };
 
   const handleLogout = () => {

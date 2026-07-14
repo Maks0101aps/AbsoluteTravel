@@ -272,6 +272,10 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                       РІВЕНЬ {user.level}
                     </span>
                   </Editable>
+                  <span title="Монети" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 700, color: '#F0C64B', background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.3)', padding: '4px 10px', borderRadius: '999px' }}>
+                    <Icon name="coin" size={14} strokeWidth={1.9} />
+                    {user.coins ?? 0}
+                  </span>
                   <Editable accent={color} active={active === 'badges'} radius={999} onOpen={(el) => openAt('badges', el)}>
                     <div ref={badgesRef} style={{ display: 'flex', alignItems: 'center', gap: '7px', minHeight: '26px', padding: '2px 6px' }}>
                       {selectedBadges.length ? (

@@ -8,6 +8,7 @@ const DEMO_PASSWORD_HASH = bcrypt.hashSync('demo1234', 10);
 
 async function main() {
   // Clean up
+  await prisma.coinTransaction.deleteMany();
   await prisma.userAchievement.deleteMany();
   await prisma.achievement.deleteMany();
   await prisma.destination.deleteMany();
@@ -53,6 +54,7 @@ async function main() {
       avatar: '/assets/avatar_oleksiy.avif',
       level: 24,
       xp: 2450,
+      coins: 1500,
       currentDestination: 'Львів',
     },
   });
@@ -68,6 +70,7 @@ async function main() {
       avatar: '/assets/avatar_mariya.avif',
       level: 18,
       xp: 1200,
+      coins: 900,
       currentDestination: 'Синевир',
     },
   });
@@ -83,6 +86,7 @@ async function main() {
       avatar: '/assets/avatar_dmytro.avif',
       level: 21,
       xp: 1850,
+      coins: 1200,
       currentDestination: 'Говерла',
     },
   });
@@ -98,6 +102,7 @@ async function main() {
       avatar: '/assets/avatar_iryna.avif',
       level: 15,
       xp: 950,
+      coins: 450,
       currentDestination: 'Бакота',
     },
   });

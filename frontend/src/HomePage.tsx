@@ -24,6 +24,10 @@ function HomePage({ user, onLogout, onEditProfile }: HomePageProps) {
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', padding: '14px 40px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '40px', width: 'auto', display: 'block' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div title="Монети" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#F0C64B', background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.3)', borderRadius: '999px', padding: '6px 12px', fontSize: '13px', fontWeight: 700 }}>
+            <Icon name="coin" size={16} strokeWidth={1.9} />
+            {user.coins ?? 0}
+          </div>
           <div style={{ textAlign: 'right', lineHeight: 1.3 }}>
             <div style={{ fontSize: '13.5px', fontWeight: 700 }}>{user.name}</div>
             <div style={{ fontSize: '11px', color: 'rgba(244,241,232,0.5)' }}>Рівень {user.level}</div>
