@@ -22,8 +22,15 @@ export class AuthService {
   constructor(private prisma: PrismaService) {}
 
   private sanitize(user: any) {
-    const { password, ...rest } = user;
-    return rest;
+    const { password, unlockedItems, ...rest } = user;
+    let items: string[] = [];
+    try {
+      const parsed = JSON.parse(unlockedItems ?? '[]');
+      if (Array.isArray(parsed)) items = parsed;
+    } catch {
+      // leave empty on malformed data
+    }
+    return { ...rest, unlockedItems: items };
   }
 
   async register(dto: RegisterDto) {

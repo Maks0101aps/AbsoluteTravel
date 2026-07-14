@@ -37,6 +37,47 @@ const UA_CONTOURS = [
   "M344.8,122.4 L352.5,123.6 L357.7,116.6 L364.0,118.2 L385.4,115.2 L398.5,132.7 L393.3,139.0 L395.1,148.6 L411.5,150.1 L418.8,163.6 L418.4,169.7 L444.6,180.5 L460.4,175.6 L473.1,190.1 L485.1,189.8 L515.5,199.9 L515.7,209.0 L507.4,225.2 L511.9,242.3 L508.7,252.6 L488.8,254.9 L478.1,263.5 L477.5,277.3 L461.0,279.8 L447.3,289.8 L428.0,291.4 L410.2,303.0 L411.5,322.2 L421.6,329.7 L442.6,327.9 L438.5,338.9 L416.0,344.3 L388.0,362.2 L376.6,355.9 L381.1,341.3 L358.6,332.3 L362.2,326.3 L382.0,316.0 L376.0,309.0 L343.9,301.1 L342.5,289.6 L323.4,293.4 L315.8,310.5 L299.8,333.3 L290.5,328.0 L280.8,333.0 L271.6,327.3 L276.8,323.9 L280.4,313.3 L286.0,303.4 L284.6,297.8 L288.9,295.4 L290.9,299.7 L303.1,300.6 L308.5,298.3 L304.7,295.2 L306.1,290.6 L299.0,282.7 L296.0,269.7 L288.4,264.6 L289.9,254.2 L280.6,245.8 L272.1,244.7 L257.0,235.0 L243.3,238.0 L238.3,242.7 L229.7,242.7 L224.5,249.9 L209.3,252.9 L202.2,257.6 L192.6,250.1 L179.4,249.9 L166.7,246.5 L157.8,253.1 L156.4,244.8 L144.9,236.4 L148.9,223.9 L154.7,215.9 L159.2,217.6 L153.8,203.7 L172.5,178.0 L182.7,174.3 L185.0,165.7 L174.6,138.7 L184.5,137.4 L195.7,129.0 L211.7,128.3 L232.5,130.8 L255.5,138.2 L271.8,138.9 L279.5,143.3 L287.3,137.9 L292.7,145.2 L311.3,143.7 L319.4,146.7 L320.7,131.1 L327.1,124.3 Z",
 ];
 
+// Marker coordinates of major cities inside UA_PATH (viewBox 720x480), mapped from real lat/lon
+const UA_CITIES = {
+  kyiv: { x: 314, y: 142 },
+  lviv: { x: 110, y: 171 },
+  odesa: { x: 333, y: 296 },
+  kharkiv: { x: 488, y: 172 },
+  dnipro: { x: 457, y: 237 },
+  zaporizhzhia: { x: 460, y: 266 },
+  vinnytsia: { x: 250, y: 200 },
+  ivanofrankivsk: { x: 131, y: 210 },
+  poltava: { x: 442, y: 183 },
+  cherkasy: { x: 363, y: 190 },
+  lutsk: { x: 150, y: 128 },
+  mykolaiv: { x: 361, y: 305 },
+};
+
+function MapDot({ x, y, r = 6, color = '#3FA66B', pulse = false, delay = '0s' }: { x: number; y: number; r?: number; color?: string; pulse?: boolean; delay?: string }) {
+  return (
+    <g>
+      <circle cx={x} cy={y} r={r} fill={color}></circle>
+      {pulse && (
+        <circle cx={x} cy={y} r={r} fill="none" stroke={color} strokeWidth="2">
+          <animate attributeName="r" values={`${r};${r + 9}`} dur="2.5s" begin={delay} repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.6;0" dur="2.5s" begin={delay} repeatCount="indefinite" />
+        </circle>
+      )}
+    </g>
+  );
+}
+
+function MapAvatar({ clipId, src, title, x, y, r = 20 }: { clipId: string; src: string; title: string; x: number; y: number; r?: number }) {
+  return (
+    <g>
+      <title>{title}</title>
+      <clipPath id={clipId}><circle cx={x} cy={y} r={r}></circle></clipPath>
+      <image href={src} x={x - r} y={y - r} width={r * 2} height={r * 2} preserveAspectRatio="xMidYMid slice" clipPath={`url(#${clipId})`} />
+      <circle cx={x} cy={y} r={r} fill="none" stroke="#F4F1E8" strokeWidth="2.5"></circle>
+    </g>
+  );
+}
+
 const DEFAULT_USER: User = {
   id: 1,
   name: 'Олексій',
@@ -146,7 +187,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
   const [achievements, setAchievements] = useState<Achievement[]>(DEFAULT_ACHIEVEMENTS);
 
   const [showToast, setShowToast] = useState(true);
-  const [showRoutes, setShowRoutes] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [, setLoading] = useState(true);
 
@@ -300,31 +340,28 @@ function App({ onStart }: { onStart?: () => void } = {}) {
                       ))}
                     </g>
                     <path d={UA_PATH} fill="none" stroke="rgba(63,166,107,0.4)" strokeWidth="1.5"></path>
+                    {/* city dots */}
+                    <MapDot x={UA_CITIES.kyiv.x} y={UA_CITIES.kyiv.y} r={6} pulse />
+                    <MapDot x={UA_CITIES.dnipro.x} y={UA_CITIES.dnipro.y} r={5} />
+                    <MapDot x={UA_CITIES.vinnytsia.x} y={UA_CITIES.vinnytsia.y} r={5} color="#9BD8B4" />
+                    <MapDot x={UA_CITIES.lutsk.x} y={UA_CITIES.lutsk.y} r={6} pulse delay="0.8s" />
+                    {/* friend avatar markers on map */}
+                    {friends.map((friend, idx) => {
+                      const positions = [UA_CITIES.lviv, UA_CITIES.kharkiv, UA_CITIES.odesa];
+                      const pos = positions[idx] || UA_CITIES.kyiv;
+                      return (
+                        <MapAvatar
+                          key={friend.id}
+                          clipId={`avHero${friend.id}`}
+                          src={friend.avatar}
+                          title={`${friend.name} - ${friend.currentDestination}`}
+                          x={pos.x}
+                          y={pos.y}
+                          r={20}
+                        />
+                      );
+                    })}
                   </svg>
-                  {/* dots */}
-                  <div style={{ position: 'absolute', left: '22%', top: '30%', width: '8px', height: '8px', borderRadius: '50%', background: '#3FA66B', animation: 'pulseDot 2.5s infinite' }}></div>
-                  <div style={{ position: 'absolute', left: '35%', top: '22%', width: '6px', height: '6px', borderRadius: '50%', background: '#3FA66B', opacity: 0.85 }}></div>
-                  <div style={{ position: 'absolute', left: '48%', top: '34%', width: '7px', height: '7px', borderRadius: '50%', background: '#9BD8B4' }}></div>
-                  <div style={{ position: 'absolute', left: '68%', top: '38%', width: '8px', height: '8px', borderRadius: '50%', background: '#3FA66B', animation: 'pulseDot 2.5s 0.8s infinite' }}></div>
-                  
-                  {/* friend avatar markers on map */}
-                  {friends.map((friend, idx) => {
-                    const positions = [
-                      { left: '27%', top: '38%' }, // Mariya
-                      { left: '62%', top: '42%' }, // Dmytro
-                      { left: '42%', top: '74%' }, // Iryna
-                    ];
-                    const pos = positions[idx] || { left: '50%', top: '50%' };
-                    return (
-                      <img
-                        key={friend.id}
-                        src={friend.avatar}
-                        alt={friend.name}
-                        title={`${friend.name} - ${friend.currentDestination}`}
-                        style={{ position: 'absolute', left: pos.left, top: pos.top, width: '30px', height: '30px', borderRadius: '50%', border: '2px solid #F4F1E8', objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.5)' }}
-                      />
-                    );
-                  })}
                 </div>
               </div>
 
@@ -457,9 +494,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#3FA66B' }}></span>Відвідані регіони</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#9BD8B4' }}></span>Відкриті місця</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#D9B44A' }}></span>Друзі</div>
-              {showRoutes && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ width: '16px', height: '0', borderTop: '2px dashed rgba(244,241,232,0.5)' }}></span>Активні Маршрути</div>
-              )}
             </div>
           </div>
 
@@ -480,55 +514,36 @@ function App({ onStart }: { onStart?: () => void } = {}) {
                 {UA_CONTOURS.map((d, i) => (
                   <path key={i} d={d} fill="none" stroke="rgba(155,216,180,0.18)" strokeWidth="1"></path>
                 ))}
-                {showRoutes && (
-                  <g fill="none" stroke="rgba(217,180,74,0.55)" strokeWidth="1.6" strokeDasharray="5 6">
-                    <path d="M150,180 C220,140 320,150 390,180 C450,205 520,190 580,160"></path>
-                    <path d="M200,260 C280,300 380,290 460,250"></path>
-                    <path d="M390,180 C380,230 350,270 300,300"></path>
-                  </g>
-                )}
               </g>
               <path d={UA_PATH} fill="none" stroke="rgba(63,166,107,0.4)" strokeWidth="1.5"></path>
+              {/* city dots */}
+              <MapDot x={UA_CITIES.dnipro.x} y={UA_CITIES.dnipro.y} r={6} pulse />
+              <MapDot x={UA_CITIES.zaporizhzhia.x} y={UA_CITIES.zaporizhzhia.y} r={5} />
+              <MapDot x={UA_CITIES.vinnytsia.x} y={UA_CITIES.vinnytsia.y} r={5} color="#9BD8B4" />
+              <MapDot x={UA_CITIES.ivanofrankivsk.x} y={UA_CITIES.ivanofrankivsk.y} r={5} color="#D9B44A" />
+              <MapDot x={UA_CITIES.poltava.x} y={UA_CITIES.poltava.y} r={5} />
+              <MapDot x={UA_CITIES.cherkasy.x} y={UA_CITIES.cherkasy.y} r={5} />
+              <MapDot x={UA_CITIES.lutsk.x} y={UA_CITIES.lutsk.y} r={5} color="#D9B44A" />
+              <MapDot x={UA_CITIES.mykolaiv.x} y={UA_CITIES.mykolaiv.y} r={6} pulse delay="1.2s" />
+
+              {/* active user + friends avatar markers on map */}
+              <MapAvatar clipId="avBigUser" src={currentUser.avatar} title={`${currentUser.name} (Ви)`} x={UA_CITIES.kyiv.x} y={UA_CITIES.kyiv.y} r={22} />
+              {friends.map((friend, idx) => {
+                const positions = [UA_CITIES.lviv, UA_CITIES.kharkiv, UA_CITIES.odesa];
+                const pos = positions[idx] || UA_CITIES.dnipro;
+                return (
+                  <MapAvatar
+                    key={friend.id}
+                    clipId={`avBig${friend.id}`}
+                    src={friend.avatar}
+                    title={`${friend.name} - ${friend.currentDestination}`}
+                    x={pos.x}
+                    y={pos.y}
+                    r={22}
+                  />
+                );
+              })}
             </svg>
-            {/* dots */}
-            <div style={{ position: 'absolute', left: '18%', top: '34%', width: '9px', height: '9px', borderRadius: '50%', background: '#3FA66B', animation: 'pulseDot 2.5s infinite' }}></div>
-            <div style={{ position: 'absolute', left: '28%', top: '24%', width: '7px', height: '7px', borderRadius: '50%', background: '#3FA66B' }}></div>
-            <div style={{ position: 'absolute', left: '40%', top: '30%', width: '7px', height: '7px', borderRadius: '50%', background: '#9BD8B4' }}></div>
-            <div style={{ position: 'absolute', left: '52%', top: '22%', width: '8px', height: '8px', borderRadius: '50%', background: '#3FA66B' }}></div>
-            <div style={{ position: 'absolute', left: '64%', top: '32%', width: '7px', height: '7px', borderRadius: '50%', background: '#D9B44A' }}></div>
-            <div style={{ position: 'absolute', left: '76%', top: '40%', width: '8px', height: '8px', borderRadius: '50%', background: '#3FA66B', animation: 'pulseDot 2.5s 1.2s infinite' }}></div>
-            <div style={{ position: 'absolute', left: '24%', top: '52%', width: '7px', height: '7px', borderRadius: '50%', background: '#D9B44A' }}></div>
-            <div style={{ position: 'absolute', left: '36%', top: '60%', width: '8px', height: '8px', borderRadius: '50%', background: '#3FA66B' }}></div>
-
-            {/* active user + friends avatar markers on map */}
-            <img src={currentUser.avatar} title={`${currentUser.name} (Ви)`} style={{ position: 'absolute', left: '42%', top: '18%', width: '34px', height: '34px', borderRadius: '50%', border: '2px solid #F4F1E8', objectFit: 'cover', boxShadow: '0 6px 16px rgba(0,0,0,0.5)', zIndex: 10 }} />
-            {friends.map((friend, idx) => {
-              const positions = [
-                { left: '56%', top: '40%' }, // Mariya
-                { left: '32%', top: '64%' }, // Dmytro
-              ];
-              const pos = positions[idx] || { left: '50%', top: '50%' };
-              return (
-                <img
-                  key={friend.id}
-                  src={friend.avatar}
-                  alt={friend.name}
-                  title={`${friend.name} - ${friend.currentDestination}`}
-                  style={{ position: 'absolute', left: pos.left, top: pos.top, width: '34px', height: '34px', borderRadius: '50%', border: '2px solid #F4F1E8', objectFit: 'cover', boxShadow: '0 6px 16px rgba(0,0,0,0.5)', zIndex: 5 }}
-                />
-              );
-            })}
-
-            {/* map control actions */}
-            <div style={{ position: 'absolute', right: 0, top: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button
-                onClick={() => setShowRoutes(!showRoutes)}
-                title="Перемкнути відображення маршрутів"
-                style={{ width: '34px', height: '34px', borderRadius: '9px', background: 'rgba(11,43,32,0.9)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#F4F1E8' }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"></path></svg>
-              </button>
-            </div>
           </div>
         </div>
       </section>
