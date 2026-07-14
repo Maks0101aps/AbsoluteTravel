@@ -1,6 +1,10 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
+
+// Demo password for all seeded accounts (min 8 chars)
+const DEMO_PASSWORD_HASH = bcrypt.hashSync('demo1234', 10);
 
 async function main() {
   // Clean up
@@ -40,6 +44,11 @@ async function main() {
   // Create Users
   const oleksiy = await prisma.user.create({
     data: {
+      username: 'oleksiy',
+      email: 'oleksiy@example.com',
+      password: DEMO_PASSWORD_HASH,
+      city: 'Львів',
+      region: 'Львівська область',
       name: 'Олексій',
       avatar: '/assets/avatar_oleksiy.avif',
       level: 24,
@@ -50,6 +59,11 @@ async function main() {
 
   const mariya = await prisma.user.create({
     data: {
+      username: 'mariya',
+      email: 'mariya@example.com',
+      password: DEMO_PASSWORD_HASH,
+      city: 'Ужгород',
+      region: 'Закарпатська область',
       name: 'Марія',
       avatar: '/assets/avatar_mariya.avif',
       level: 18,
@@ -60,6 +74,11 @@ async function main() {
 
   const dmytro = await prisma.user.create({
     data: {
+      username: 'dmytro',
+      email: 'dmytro@example.com',
+      password: DEMO_PASSWORD_HASH,
+      city: 'Івано-Франківськ',
+      region: 'Івано-Франківська область',
       name: 'Дмитро',
       avatar: '/assets/avatar_dmytro.avif',
       level: 21,
@@ -70,6 +89,11 @@ async function main() {
 
   const iryna = await prisma.user.create({
     data: {
+      username: 'iryna',
+      email: 'iryna@example.com',
+      password: DEMO_PASSWORD_HASH,
+      city: 'Кам’янець-Подільський',
+      region: 'Хмельницька область',
       name: 'Ірина',
       avatar: '/assets/avatar_iryna.avif',
       level: 15,

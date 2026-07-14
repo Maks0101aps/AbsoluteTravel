@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 
 interface Achievement {
@@ -139,15 +139,15 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
   },
 ];
 
-function App() {
+function App({ onStart }: { onStart?: () => void } = {}) {
   const [currentUser, setCurrentUser] = useState<User>(DEFAULT_USER);
   const [friends, setFriends] = useState<User[]>(DEFAULT_FRIENDS);
-  const [destinations, setDestinations] = useState<Destination[]>(DEFAULT_DESTINATIONS);
+  const [, setDestinations] = useState<Destination[]>(DEFAULT_DESTINATIONS);
   const [achievements, setAchievements] = useState<Achievement[]>(DEFAULT_ACHIEVEMENTS);
 
   const [showToast, setShowToast] = useState(true);
   const [showRoutes, setShowRoutes] = useState(true);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     const tryFetch = async (port: number) => {
@@ -195,9 +195,9 @@ function App() {
           <a href="#progress" style={{ transition: 'color 0.2s' }}>Досягнення</a>
           <a href="#cta" style={{ transition: 'color 0.2s' }}>Контакти</a>
         </div>
-        <a href="#cta" style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#9BD8B4', fontSize: '13.5px', fontWeight: 700, padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', transition: 'all 0.2s' }}>
+        <button onClick={onStart} style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#9BD8B4', fontFamily: "'Manrope', sans-serif", fontSize: '13.5px', fontWeight: 700, padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', cursor: 'pointer', transition: 'all 0.2s' }}>
           Почати дослідження
-        </a>
+        </button>
       </nav>
 
       {/* ============ HERO ============ */}
@@ -217,10 +217,10 @@ function App() {
               Absolute Travel — соціальна платформа для дослідження України. Знаходь цікаві місця, проходь маршрути, виконуй завдання та створюй свою карту відкриттів разом із друзями.
             </p>
             <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '44px' }}>
-              <a href="#map" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#3FA66B', color: '#071F16', fontSize: '14px', fontWeight: 700, padding: '15px 26px', borderRadius: '12px', transition: 'background 0.2s' }}>
+              <button onClick={onStart} style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#3FA66B', color: '#071F16', fontFamily: "'Manrope', sans-serif", fontSize: '14px', fontWeight: 700, padding: '15px 26px', borderRadius: '12px', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>
                 Почати дослідження
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
-              </a>
+              </button>
               <a href="#features" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'transparent', color: '#F4F1E8', fontSize: '14px', fontWeight: 600, padding: '15px 26px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.18)', transition: 'border-color 0.2s' }}>
                 Як це працює
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"></path></svg>
@@ -578,10 +578,10 @@ function App() {
         <div style={{ position: 'relative', maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
           <div style={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.24em', color: '#3FA66B', textTransform: 'uppercase' }}>готовий до пригод!</div>
           <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(32px, 3.6vw, 46px)', lineHeight: 1.25, margin: 0, color: '#F4F1E8' }}>Твоя наступна пригода<br />вже поруч.</h2>
-          <a href="#top" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#3FA66B', color: '#071F16', fontSize: '14px', fontWeight: 700, padding: '15px 30px', borderRadius: '12px', marginTop: '8px' }}>
+          <button onClick={onStart} style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#3FA66B', color: '#071F16', fontFamily: "'Manrope', sans-serif", fontSize: '14px', fontWeight: 700, padding: '15px 30px', borderRadius: '12px', border: 'none', cursor: 'pointer', marginTop: '8px' }}>
             Почати подорож
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
-          </a>
+          </button>
         </div>
       </section>
 

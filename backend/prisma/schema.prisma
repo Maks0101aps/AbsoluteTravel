@@ -12,11 +12,17 @@ datasource db {
 
 model User {
   id                 Int               @id @default(autoincrement())
+  username           String            @unique
+  email              String            @unique
+  password           String
+  city               String?
+  region             String?
   name               String
-  avatar             String
+  avatar             String            @default("/assets/avatar_default.avif")
   level              Int               @default(1)
   xp                 Int               @default(0)
   currentDestination String?
+  createdAt          DateTime          @default(now())
   achievements       UserAchievement[]
 }
 
