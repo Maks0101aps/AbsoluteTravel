@@ -42,3 +42,82 @@ a:hover {
 ::selection {
   background: rgba(63,166,107,0.35);
 }
+
+/* ===================================================================
+   RESPONSIVE / MOBILE
+   Inline styles are overridden via classes + !important on small screens.
+   Breakpoints: 860px (tablet/mobile), 560px (phones), 380px (small phones)
+   =================================================================== */
+
+/* nav burger button — hidden on desktop */
+.at-burger { display: none; }
+.at-mobile-menu { display: none; }
+
+/* larger, comfortable tap targets everywhere on touch devices */
+@media (hover: none) {
+  a, button { -webkit-tap-highlight-color: rgba(63,166,107,0.25); }
+}
+
+@media (max-width: 860px) {
+  /* ---- navbar ---- */
+  .at-nav { padding: 12px 18px !important; gap: 12px !important; }
+  .at-nav-links, .at-nav-cta { display: none !important; }
+  .at-burger {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 11px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.04);
+    color: #F4F1E8;
+    cursor: pointer;
+  }
+  .at-mobile-menu { display: flex !important; }
+
+  /* ---- hero ---- */
+  .at-hero { padding: 34px 18px 56px !important; min-height: auto !important; }
+  .at-hero-inner { gap: 40px !important; }
+  .at-hero-copy { flex: 1 1 100% !important; min-width: 0 !important; }
+  .at-hero-copy p { max-width: 100% !important; }
+  .at-hero-btns { flex-direction: column !important; align-items: stretch !important; }
+  .at-hero-btns > * { width: 100% !important; justify-content: center !important; }
+
+  /* ---- hero app preview: flatten 3D, keep decorative cards on screen ---- */
+  .at-preview-col { flex: 1 1 100% !important; min-width: 0 !important; perspective: none !important; }
+  .at-preview-card { transform: none !important; }
+  .at-toast { top: 40px !important; right: 8px !important; }
+  .at-placecard { right: 8px !important; bottom: -14px !important; }
+
+  /* ---- generic section horizontal padding ---- */
+  .at-sec { padding-left: 18px !important; padding-right: 18px !important; }
+  .at-panel { padding: 24px 18px !important; gap: 24px !important; }
+
+  /* ---- cta ---- */
+  .at-cta { padding: 64px 18px 76px !important; }
+
+  /* ---- auth ---- */
+  .at-auth-card { padding: 30px 22px !important; }
+
+  /* ---- home page ---- */
+  .at-home-nav { padding: 12px 18px !important; }
+  .at-home-main { padding: 40px 18px 64px !important; }
+}
+
+@media (max-width: 560px) {
+  /* trim decorative floating cards on phones so they never overflow */
+  .at-toast { width: 158px !important; top: 34px !important; }
+  .at-placecard { width: 172px !important; }
+  .at-preview-col { margin-top: 8px; }
+
+  /* home nav: drop the name/level text, keep avatar + logout */
+  .at-home-userinfo { display: none !important; }
+}
+
+@media (max-width: 380px) {
+  .at-toast { display: none !important; }
+  .at-sec { padding-left: 14px !important; padding-right: 14px !important; }
+  .at-panel { padding: 20px 14px !important; }
+}

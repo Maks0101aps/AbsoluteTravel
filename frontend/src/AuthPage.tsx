@@ -107,6 +107,7 @@ function AuthPage({ onAuth, onBack }: AuthPageProps) {
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 55% at 50% 30%, rgba(63,166,107,0.16), transparent 70%)', pointerEvents: 'none' }} />
 
       <div
+        className="at-auth-card"
         style={{
           position: 'relative',
           width: '100%',

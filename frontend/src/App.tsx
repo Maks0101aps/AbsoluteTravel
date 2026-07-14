@@ -147,7 +147,16 @@ function App({ onStart }: { onStart?: () => void } = {}) {
 
   const [showToast, setShowToast] = useState(true);
   const [showRoutes, setShowRoutes] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [, setLoading] = useState(true);
+
+  const navLinks = [
+    { href: '#features', label: 'Як це працює' },
+    { href: '#features', label: 'Можливості' },
+    { href: '#map', label: 'Карта' },
+    { href: '#progress', label: 'Досягнення' },
+    { href: '#cta', label: 'Контакти' },
+  ];
 
   useEffect(() => {
     const tryFetch = async (port: number) => {
@@ -184,31 +193,52 @@ function App({ onStart }: { onStart?: () => void } = {}) {
     <div style={{ fontFamily: "'Manrope', sans-serif", background: '#071F16', color: '#F4F1E8', minHeight: '100vh', overflowX: 'hidden' }}>
       
       {/* ============ NAVBAR ============ */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', padding: '14px 40px', background: 'rgba(7,31,22,0.8)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <nav className="at-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', padding: '14px 40px', background: 'rgba(7,31,22,0.8)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <a href="#top" style={{ display: 'flex', alignItems: 'center', flex: '0 0 auto' }}>
           <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '42px', width: 'auto', display: 'block' }} />
         </a>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '36px', flexWrap: 'wrap', justifyContent: 'center', fontSize: '13.5px', fontWeight: 500, color: 'rgba(244,241,232,0.85)' }}>
-          <a href="#features" style={{ transition: 'color 0.2s' }}>Як це працює</a>
-          <a href="#features" style={{ transition: 'color 0.2s' }}>Можливості</a>
-          <a href="#map" style={{ transition: 'color 0.2s' }}>Карта</a>
-          <a href="#progress" style={{ transition: 'color 0.2s' }}>Досягнення</a>
-          <a href="#cta" style={{ transition: 'color 0.2s' }}>Контакти</a>
+        <div className="at-nav-links" style={{ display: 'flex', alignItems: 'center', gap: '36px', flexWrap: 'wrap', justifyContent: 'center', fontSize: '13.5px', fontWeight: 500, color: 'rgba(244,241,232,0.85)' }}>
+          {navLinks.map((l, i) => (
+            <a key={i} href={l.href} style={{ transition: 'color 0.2s' }}>{l.label}</a>
+          ))}
         </div>
-        <button onClick={onStart} style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#9BD8B4', fontFamily: "'Manrope', sans-serif", fontSize: '13.5px', fontWeight: 700, padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', cursor: 'pointer', transition: 'all 0.2s' }}>
+        <button className="at-nav-cta" onClick={onStart} style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#9BD8B4', fontFamily: "'Manrope', sans-serif", fontSize: '13.5px', fontWeight: 700, padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', cursor: 'pointer', transition: 'all 0.2s' }}>
           Почати дослідження
         </button>
+
+        {/* mobile hamburger */}
+        <button className="at-burger" aria-label="Меню" aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}>
+          {menuOpen ? (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12" /><path d="M18 6l-12 12" /></svg>
+          ) : (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" /></svg>
+          )}
+        </button>
+
+        {/* mobile dropdown menu */}
+        {menuOpen && (
+          <div className="at-mobile-menu" style={{ position: 'absolute', top: '100%', left: 0, right: 0, flexDirection: 'column', gap: '2px', padding: '10px 14px 18px', background: 'rgba(7,31,22,0.98)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 40px -12px rgba(0,0,0,0.6)' }}>
+            {navLinks.map((l, i) => (
+              <a key={i} href={l.href} onClick={() => setMenuOpen(false)} style={{ padding: '14px 12px', fontSize: '15px', fontWeight: 600, color: 'rgba(244,241,232,0.9)', borderRadius: '10px' }}>
+                {l.label}
+              </a>
+            ))}
+            <button onClick={() => { setMenuOpen(false); onStart?.(); }} style={{ marginTop: '8px', width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#3FA66B', color: '#071F16', fontFamily: "'Manrope', sans-serif", fontSize: '15px', fontWeight: 700, padding: '15px 22px', borderRadius: '12px', border: 'none', cursor: 'pointer' }}>
+              Почати дослідження
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* ============ HERO ============ */}
-      <header id="top" style={{ position: 'relative', padding: '90px 40px 110px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 70px)' }}>
+      <header id="top" className="at-hero" style={{ position: 'relative', padding: '90px 40px 110px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 70px)' }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/assets/forest_bg.avif')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18, mixBlendMode: 'color-dodge', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(7,31,22,0.2) 0%, rgba(7,31,22,0.85) 60%, #071F16 100%)', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 50% at 25% 35%, rgba(63,166,107,0.15), transparent 70%)', pointerEvents: 'none' }}></div>
 
-        <div style={{ position: 'relative', maxWidth: '1240px', width: '100%', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '56px', alignItems: 'center' }}>
+        <div className="at-hero-inner" style={{ position: 'relative', maxWidth: '1240px', width: '100%', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '56px', alignItems: 'center' }}>
           {/* left copy */}
-          <div style={{ flex: '1 1 420px', minWidth: '320px', animation: 'fadeUp 0.7s ease both' }}>
+          <div className="at-hero-copy" style={{ flex: '1 1 420px', minWidth: '320px', animation: 'fadeUp 0.7s ease both' }}>
             <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B', marginBottom: '22px' }}>EXPLORE UKRAINE</div>
             <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(38px, 4.6vw, 58px)', lineHeight: 1.14, margin: '0 0 26px', color: '#F4F1E8' }}>
               Відкрий Україну.<br />Разом із друзями.
@@ -216,7 +246,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
             <p style={{ fontSize: '15.5px', lineHeight: 1.7, color: 'rgba(244,241,232,0.68)', maxWidth: '440px', margin: '0 0 34px' }}>
               Absolute Travel — соціальна платформа для дослідження України. Знаходь цікаві місця, проходь маршрути, виконуй завдання та створюй свою карту відкриттів разом із друзями.
             </p>
-            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '44px' }}>
+            <div className="at-hero-btns" style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '44px' }}>
               <button onClick={onStart} style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#3FA66B', color: '#071F16', fontFamily: "'Manrope', sans-serif", fontSize: '14px', fontWeight: 700, padding: '15px 26px', borderRadius: '12px', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>
                 Почати дослідження
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
@@ -229,8 +259,8 @@ function App({ onStart }: { onStart?: () => void } = {}) {
           </div>
 
           {/* right: app preview */}
-          <div style={{ flex: '1 1 500px', minWidth: '340px', position: 'relative', perspective: '1200px', transformStyle: 'preserve-3d', animation: 'fadeUp 0.7s 0.15s ease both' }}>
-            <div style={{ position: 'relative', background: 'rgba(8,26,18,0.92)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '18px', boxShadow: '0 30px 60px -15px rgba(0,0,0,0.8), 0 0 50px rgba(63, 166, 107, 0.15)', overflow: 'visible', transform: 'rotateY(-15deg) rotateX(6deg) rotateZ(1deg)', transformStyle: 'preserve-3d' }}>
+          <div className="at-preview-col" style={{ flex: '1 1 500px', minWidth: '340px', position: 'relative', perspective: '1200px', transformStyle: 'preserve-3d', animation: 'fadeUp 0.7s 0.15s ease both' }}>
+            <div className="at-preview-card" style={{ position: 'relative', background: 'rgba(8,26,18,0.92)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '18px', boxShadow: '0 30px 60px -15px rgba(0,0,0,0.8), 0 0 50px rgba(63, 166, 107, 0.15)', overflow: 'visible', transform: 'rotateY(-15deg) rotateX(6deg) rotateZ(1deg)', transformStyle: 'preserve-3d' }}>
               {/* app top bar */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '22px', padding: '13px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(244,241,232,0.8)" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path></svg>
@@ -300,7 +330,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
 
               {/* floating toast */}
               {showToast && (
-                <div style={{ position: 'absolute', top: '54px', right: '-18px', width: '190px', background: 'rgba(11,43,32,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', padding: '12px 14px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', animation: 'fadeIn 0.8s 0.5s both', transform: 'translateZ(25px)', transformStyle: 'preserve-3d' }}>
+                <div className="at-toast" style={{ position: 'absolute', top: '54px', right: '-18px', width: '190px', background: 'rgba(11,43,32,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', padding: '12px 14px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', animation: 'fadeIn 0.8s 0.5s both', transform: 'translateZ(25px)', transformStyle: 'preserve-3d' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
                     <img src="/assets/carpathians_thumb.avif" alt="Карпати" style={{ width: '30px', height: '30px', borderRadius: '8px', objectFit: 'cover', flex: '0 0 auto', border: '1px solid rgba(255,255,255,0.1)' }} />
                     <div style={{ fontSize: '10.5px', lineHeight: 1.4 }}>
@@ -316,7 +346,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
               )}
 
               {/* floating place card */}
-              <div style={{ position: 'absolute', bottom: '-26px', right: '-22px', width: '200px', background: 'rgba(11,43,32,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '14px', padding: '13px', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', animation: 'fadeIn 0.8s 0.8s both', transform: 'translateZ(32px)', transformStyle: 'preserve-3d' }}>
+              <div className="at-placecard" style={{ position: 'absolute', bottom: '-26px', right: '-22px', width: '200px', background: 'rgba(11,43,32,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '14px', padding: '13px', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', animation: 'fadeIn 0.8s 0.8s both', transform: 'translateZ(32px)', transformStyle: 'preserve-3d' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '3px' }}>
                   <div style={{ fontSize: '13px', fontWeight: 800 }}>Львів</div>
                 </div>
@@ -336,7 +366,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       </header>
 
       {/* ============ FEATURES ============ */}
-      <section id="features" style={{ maxWidth: '1240px', margin: '0 auto', padding: '40px 40px 30px' }}>
+      <section id="features" className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '40px 40px 30px' }}>
         <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B', marginBottom: '14px' }}>МОЖЛИВОСТІ</div>
         <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(28px, 3.2vw, 40px)', margin: '0 0 40px', color: '#F4F1E8' }}>Україна, яку ти ще не бачив</h2>
 
@@ -414,8 +444,8 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       </section>
 
       {/* ============ MAP ============ */}
-      <section id="map" style={{ maxWidth: '1240px', margin: '0 auto', padding: '10px 40px' }}>
-        <div style={{ background: '#081E15', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '40px', display: 'flex', flexWrap: 'wrap', gap: '40px', position: 'relative', overflow: 'hidden' }}>
+      <section id="map" className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '10px 40px' }}>
+        <div className="at-panel" style={{ background: '#081E15', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '40px', display: 'flex', flexWrap: 'wrap', gap: '40px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 55% 65% at 60% 45%, rgba(63,166,107,0.08), transparent 70%)' }}></div>
           {/* text col */}
           <div style={{ position: 'relative', flex: '0 1 280px', minWidth: '240px', display: 'flex', flexDirection: 'column' }}>
@@ -504,8 +534,8 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       </section>
 
       {/* ============ PROGRESS ============ */}
-      <section id="progress" style={{ maxWidth: '1240px', margin: '0 auto', padding: '20px 40px 10px' }}>
-        <div style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '36px 40px', display: 'flex', flexWrap: 'wrap', gap: '36px', alignItems: 'center' }}>
+      <section id="progress" className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '20px 40px 10px' }}>
+        <div className="at-panel" style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '36px 40px', display: 'flex', flexWrap: 'wrap', gap: '36px', alignItems: 'center' }}>
           {/* text */}
           <div style={{ flex: '1 1 260px', minWidth: '240px' }}>
             <div style={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B', marginBottom: '16px' }}>ПРОГРЕС</div>
@@ -547,8 +577,8 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       </section>
 
       {/* ============ FRIENDS ============ */}
-      <section style={{ maxWidth: '1240px', margin: '0 auto', padding: '20px 40px 40px' }}>
-        <div style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '32px 36px', display: 'flex', flexWrap: 'wrap', gap: '28px', alignItems: 'stretch' }}>
+      <section className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '20px 40px 40px' }}>
+        <div className="at-panel" style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '32px 36px', display: 'flex', flexWrap: 'wrap', gap: '28px', alignItems: 'stretch' }}>
           <div style={{ flex: '0 1 220px', minWidth: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px' }}>
             <div style={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B' }}>ДРУЗІ</div>
             <div style={{ fontFamily: "'Lora', serif", fontSize: '23px', fontWeight: 500, lineHeight: 1.35 }}>Досліджуйте разом ще цікавіше</div>
@@ -571,7 +601,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       </section>
 
       {/* ============ CTA ============ */}
-      <section id="cta" style={{ position: 'relative', padding: '110px 40px 130px', overflow: 'hidden', textAlign: 'center' }}>
+      <section id="cta" className="at-cta" style={{ position: 'relative', padding: '110px 40px 130px', overflow: 'hidden', textAlign: 'center' }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/assets/forest_bg.avif')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18, mixBlendMode: 'color-dodge', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, #071F16 0%, rgba(7,31,22,0.85) 60%, rgba(7,31,22,0.2) 100%)', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 50% 60% at 50% 100%, rgba(63,166,107,0.15), transparent 70%)', pointerEvents: 'none' }}></div>

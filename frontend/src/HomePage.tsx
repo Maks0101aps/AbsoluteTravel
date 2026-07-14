@@ -14,10 +14,10 @@ function HomePage({ user, onLogout }: HomePageProps) {
   return (
     <div style={{ fontFamily: "'Manrope', sans-serif", background: BG, color: CREAM, minHeight: '100vh' }}>
       {/* navbar */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', padding: '14px 40px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <nav className="at-home-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 40px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '40px', width: 'auto', display: 'block' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ textAlign: 'right', lineHeight: 1.3 }}>
+          <div className="at-home-userinfo" style={{ textAlign: 'right', lineHeight: 1.3 }}>
             <div style={{ fontSize: '13.5px', fontWeight: 700 }}>{user.name}</div>
             <div style={{ fontSize: '11px', color: 'rgba(244,241,232,0.5)' }}>Рівень {user.level}</div>
           </div>
@@ -28,7 +28,7 @@ function HomePage({ user, onLogout }: HomePageProps) {
         </div>
       </nav>
 
-      <main style={{ maxWidth: '760px', margin: '0 auto', padding: '60px 24px 80px' }}>
+      <main className="at-home-main" style={{ maxWidth: '760px', margin: '0 auto', padding: '60px 24px 80px' }}>
         <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: GREEN, marginBottom: '16px' }}>
           ЛАСКАВО ПРОСИМО
         </div>
