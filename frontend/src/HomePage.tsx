@@ -1,11 +1,22 @@
+import { useState } from 'react';
 import type { AuthUser } from './api';
 import ProfileAvatar from './ProfileAvatar';
+import ExploreMap from './ExploreMap';
+import AiAdvisor from './AiAdvisor';
 import { BACKGROUNDS, BADGES } from './data/profileOptions';
-import { Icon } from './icons';
+import { Icon, type IconName } from './icons';
 
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
 const DEFAULT_ACCENT = '#3FA66B';
+
+type Tab = 'profile' | 'map' | 'advisor';
+
+const TABS: { id: Tab; label: string; icon: IconName }[] = [
+  { id: 'profile', label: 'Профіль', icon: 'user' },
+  { id: 'map', label: 'Мапа мандрівок', icon: 'map' },
+  { id: 'advisor', label: 'ШІ-порадник', icon: 'compass' },
+];
 
 interface HomePageProps {
   user: AuthUser;
@@ -17,6 +28,9 @@ function HomePage({ user, onLogout, onEditProfile }: HomePageProps) {
   const p = user.profile;
   const accent = p?.color ?? DEFAULT_ACCENT;
   const background = BACKGROUNDS.find((b) => b.id === p?.backgroundId);
+  const [tab, setTab] = useState<Tab>('profile');
+
+  const maxWidth = tab === 'profile' ? '860px' : '1140px';
 
   return (
     <div style={{ fontFamily: "'Manrope', sans-serif", background: BG, color: CREAM, minHeight: '100vh' }}>
@@ -43,59 +57,111 @@ function HomePage({ user, onLogout, onEditProfile }: HomePageProps) {
         </div>
       </nav>
 
-      <main className="at-home-main" style={{ maxWidth: '860px', margin: '0 auto', padding: '48px 24px 80px' }}>
-        {p ? (
-          <>
-            {/* profile banner */}
-            <div style={{ position: 'relative', borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.10)', marginBottom: '30px', boxShadow: '0 24px 60px -20px rgba(0,0,0,0.7)' }}>
-              <div style={{ position: 'absolute', inset: 0, background: background?.css ?? 'linear-gradient(135deg,#0B3B29,#071F16)' }} />
-              {p.effectId === 'glow' && (
-                <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', ['--glow-color' as any]: `${accent}80`, animation: 'softGlow 3.5s ease-in-out infinite' }} />
-              )}
-              <div style={{ position: 'relative', padding: '34px 30px', display: 'flex', alignItems: 'center', gap: '22px', flexWrap: 'wrap' }}>
-                <ProfileAvatar avatarId={p.avatarId} customAvatar={p.customAvatar} frameId={p.frameId} color={accent} size={104} />
-                <div style={{ flex: '1 1 240px', minWidth: '220px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
-                    <span style={{ display: 'inline-block', fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.12em', color: BG, background: accent, padding: '4px 10px', borderRadius: '999px' }}>
-                      РІВЕНЬ {user.level}
-                    </span>
-                    {BADGES.filter((b) => p.badges?.includes(b.id)).map((b) => (
-                      <span key={b.id} title={b.label} style={{ display: 'inline-flex', color: 'rgba(244,241,232,0.85)' }}>
-                        <Icon name={b.icon} size={17} strokeWidth={1.8} />
-                      </span>
-                    ))}
-                  </div>
-                  <div style={{ fontFamily: "'Lora', serif", fontSize: '26px', fontWeight: 500, marginBottom: '4px' }}>{p.displayName}</div>
-                  <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.7)', marginBottom: '8px' }}>
-                    @{user.username}{user.city ? ` · ${user.city}` : ''}
-                  </div>
-                  {p.bio && <div style={{ fontSize: '13.5px', color: 'rgba(244,241,232,0.78)', lineHeight: 1.5, maxWidth: '440px' }}>{p.bio}</div>}
-                </div>
-                <button onClick={onEditProfile} style={{ background: 'rgba(255,255,255,0.12)', color: CREAM, border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(6px)' }}>
-                  Редагувати
-                </button>
-              </div>
-            </div>
-
-            <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: '0 0 12px' }}>Готово, {p.displayName}!</h2>
-            <p style={{ fontSize: '15px', lineHeight: 1.7, color: 'rgba(244,241,232,0.65)', maxWidth: '520px', margin: 0 }}>
-              Профіль створено. Далі — карта, маршрути та дослідження України разом із друзями (у розробці).
-            </p>
-          </>
-        ) : (
-          <>
-            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '16px' }}>ЛАСКАВО ПРОСИМО</div>
-            <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(30px, 4vw, 42px)', margin: '0 0 14px' }}>Вітаємо, {user.name}!</h1>
-            <p style={{ fontSize: '15.5px', lineHeight: 1.7, color: 'rgba(244,241,232,0.68)', maxWidth: '520px', margin: '0 0 32px' }}>
-              Ти пропустив налаштування профілю. Персоналізуй його будь-коли.
-            </p>
-            <button onClick={onEditProfile} style={{ background: accent, color: BG, fontFamily: "'Manrope', sans-serif", fontSize: '14.5px', fontWeight: 700, border: 'none', borderRadius: '12px', padding: '15px 30px', cursor: 'pointer' }}>
-              Налаштувати профіль
+      {/* tab bar */}
+      <div style={{ position: 'sticky', top: '69px', zIndex: 40, display: 'flex', justifyContent: 'center', gap: '6px', padding: '10px 16px', background: 'rgba(7,31,22,0.75)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
+        {TABS.map((t) => {
+          const isActive = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: isActive ? `${accent}1F` : 'transparent',
+                border: `1px solid ${isActive ? `${accent}66` : 'transparent'}`,
+                color: isActive ? accent : 'rgba(244,241,232,0.65)',
+                borderRadius: '10px',
+                padding: '10px 18px',
+                fontSize: '13.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: "'Manrope', sans-serif",
+              }}
+            >
+              <Icon name={t.icon} size={16} strokeWidth={1.9} />
+              {t.label}
             </button>
-          </>
-        )}
+          );
+        })}
+      </div>
+
+      <main className="at-home-main" style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
+        {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} background={background} />}
+        {tab === 'map' && <ExploreMap accent={accent} />}
+        {tab === 'advisor' && <AiAdvisor accent={accent} userName={p?.displayName ?? user.name} />}
       </main>
     </div>
+  );
+}
+
+// The original profile view, now the first tab.
+function ProfileTab({
+  user,
+  onEditProfile,
+  accent,
+  background,
+}: {
+  user: AuthUser;
+  onEditProfile: () => void;
+  accent: string;
+  background: (typeof BACKGROUNDS)[number] | undefined;
+}) {
+  const p = user.profile;
+  if (!p) {
+    return (
+      <>
+        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '16px' }}>ЛАСКАВО ПРОСИМО</div>
+        <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(30px, 4vw, 42px)', margin: '0 0 14px' }}>Вітаємо, {user.name}!</h1>
+        <p style={{ fontSize: '15.5px', lineHeight: 1.7, color: 'rgba(244,241,232,0.68)', maxWidth: '520px', margin: '0 0 32px' }}>
+          Ти пропустив налаштування профілю. Персоналізуй його будь-коли.
+        </p>
+        <button onClick={onEditProfile} style={{ background: accent, color: BG, fontFamily: "'Manrope', sans-serif", fontSize: '14.5px', fontWeight: 700, border: 'none', borderRadius: '12px', padding: '15px 30px', cursor: 'pointer' }}>
+          Налаштувати профіль
+        </button>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {/* profile banner */}
+      <div style={{ position: 'relative', borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.10)', marginBottom: '30px', boxShadow: '0 24px 60px -20px rgba(0,0,0,0.7)' }}>
+        <div style={{ position: 'absolute', inset: 0, background: background?.css ?? 'linear-gradient(135deg,#0B3B29,#071F16)' }} />
+        {p.effectId === 'glow' && (
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', ['--glow-color' as any]: `${accent}80`, animation: 'softGlow 3.5s ease-in-out infinite' }} />
+        )}
+        <div style={{ position: 'relative', padding: '34px 30px', display: 'flex', alignItems: 'center', gap: '22px', flexWrap: 'wrap' }}>
+          <ProfileAvatar avatarId={p.avatarId} customAvatar={p.customAvatar} frameId={p.frameId} color={accent} size={104} />
+          <div style={{ flex: '1 1 240px', minWidth: '220px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+              <span style={{ display: 'inline-block', fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.12em', color: BG, background: accent, padding: '4px 10px', borderRadius: '999px' }}>
+                РІВЕНЬ {user.level}
+              </span>
+              {BADGES.filter((b) => p.badges?.includes(b.id)).map((b) => (
+                <span key={b.id} title={b.label} style={{ display: 'inline-flex', color: 'rgba(244,241,232,0.85)' }}>
+                  <Icon name={b.icon} size={17} strokeWidth={1.8} />
+                </span>
+              ))}
+            </div>
+            <div style={{ fontFamily: "'Lora', serif", fontSize: '26px', fontWeight: 500, marginBottom: '4px' }}>{p.displayName}</div>
+            <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.7)', marginBottom: '8px' }}>
+              @{user.username}{user.city ? ` · ${user.city}` : ''}
+            </div>
+            {p.bio && <div style={{ fontSize: '13.5px', color: 'rgba(244,241,232,0.78)', lineHeight: 1.5, maxWidth: '440px' }}>{p.bio}</div>}
+          </div>
+          <button onClick={onEditProfile} style={{ background: 'rgba(255,255,255,0.12)', color: CREAM, border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(6px)' }}>
+            Редагувати
+          </button>
+        </div>
+      </div>
+
+      <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: '0 0 12px' }}>Готово, {p.displayName}!</h2>
+      <p style={{ fontSize: '15px', lineHeight: 1.7, color: 'rgba(244,241,232,0.65)', maxWidth: '520px', margin: 0 }}>
+        Відкрий вкладку «Мапа мандрівок», щоб дослідити цікаві місця України, або запитай поради у «ШІ-порадника».
+      </p>
+    </>
   );
 }
 

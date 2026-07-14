@@ -124,3 +124,18 @@ export function purchaseItem(userId: number, itemId: string) {
 export function getLeaderboard() {
   return call<LeaderboardEntry[]>('GET', '/api/economy/leaderboard');
 }
+
+// --- AI travel advisor -----------------------------------------------------
+
+export interface AdvisorTurn {
+  role: 'user' | 'model';
+  text: string;
+}
+
+export function getAdvisorStatus() {
+  return call<{ available: boolean; model: string }>('GET', '/api/ai/status');
+}
+
+export function askAdvisor(payload: { message: string; topic?: string; history?: AdvisorTurn[] }) {
+  return call<{ reply: string }>('POST', '/api/ai/chat', payload);
+}

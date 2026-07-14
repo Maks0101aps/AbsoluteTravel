@@ -151,3 +151,13 @@ a:hover {
     box-shadow: inset 0 0 90px -10px var(--glow-color, rgba(63,166,107,0.7));
   }
 }
+
+/* AI advisor "typing…" indicator */
+.at-typing {
+  animation: typingPulse 1.3s ease-in-out infinite;
+}
+
+@keyframes typingPulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
