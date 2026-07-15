@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { CATEGORY_META, DIFFICULTY_META, type Place } from './data/places';
@@ -36,6 +36,17 @@ function pinIcon(color: string) {
   });
 }
 
+function clusterIcon(color: string, count: number, active: boolean) {
+  const size = active ? 36 : 28;
+  const ring = active ? `box-shadow:0 0 0 5px ${color}33;` : '';
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid #F4F1E8;display:flex;align-items:center;justify-content:center;color:#071F16;font-size:11px;font-weight:800;${ring}"><span style="text-shadow: 0 1px 0px rgba(255,255,255,0.4);">${count}</span></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
 interface LeafletMapProps {
   // Display mode: a set of places with markers.
   places?: Place[];
@@ -51,6 +62,72 @@ interface LeafletMapProps {
   accent?: string;
 
   height?: string;
+}
+
+interface Cluster {
+  isCluster: true;
+  id: string;
+  difficulty: number;
+  places: Place[];
+  centerLat: number;
+  centerLng: number;
+}
+
+function getClusters(places: Place[], map: L.Map, clusterRadiusPixels = 40): (Place | Cluster)[] {
+  const result: (Place | Cluster)[] = [];
+  
+  // Group places by difficulty
+  const byDifficulty: Record<number, Place[]> = { 1: [], 2: [], 3: [], 4: [] };
+  places.forEach((p) => {
+    const diff = p.difficulty ?? 1;
+    if (!byDifficulty[diff]) byDifficulty[diff] = [];
+    byDifficulty[diff].push(p);
+  });
+
+  for (const diffStr of Object.keys(byDifficulty)) {
+    const diff = Number(diffStr);
+    const diffPlaces = byDifficulty[diff];
+    const clusters: Cluster[] = [];
+
+    diffPlaces.forEach((place) => {
+      let matchedCluster: Cluster | null = null;
+      const placePoint = map.latLngToLayerPoint([place.lat, place.lng]);
+
+      for (const cluster of clusters) {
+        const clusterPoint = map.latLngToLayerPoint([cluster.centerLat, cluster.centerLng]);
+        if (placePoint.distanceTo(clusterPoint) < clusterRadiusPixels) {
+          matchedCluster = cluster;
+          break;
+        }
+      }
+
+      if (matchedCluster) {
+        matchedCluster.places.push(place);
+        const len = matchedCluster.places.length;
+        matchedCluster.centerLat = (matchedCluster.centerLat * (len - 1) + place.lat) / len;
+        matchedCluster.centerLng = (matchedCluster.centerLng * (len - 1) + place.lng) / len;
+      } else {
+        clusters.push({
+          isCluster: true,
+          id: `cluster-${diff}-${place.id}`,
+          difficulty: diff,
+          places: [place],
+          centerLat: place.lat,
+          centerLng: place.lng,
+        });
+      }
+    });
+
+    clusters.forEach((c) => {
+      if (c.places.length === 1) {
+        result.push(c.places[0]);
+      } else {
+        result.push(c);
+      }
+    });
+  }
+
+  return result;
 }
 
 function LeafletMap({
@@ -69,6 +146,7 @@ function LeafletMap({
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string | number, L.Marker>>(new Map());
   const pinMarkerRef = useRef<L.Marker | null>(null);
+  const [zoom, setZoom] = useState<number>(6);
 
   // Keep the latest callbacks/values in refs so the map-init effect (which only
   // runs once) can reach fresh state without re-creating the map instance.
@@ -98,6 +176,10 @@ function LeafletMap({
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
     }).addTo(map);
+
+    map.on('zoomend', () => {
+      setZoom(map.getZoom());
+    });
 
     // "Locate me" control — handy on a phone while out exploring.
     const LocateControl = L.Control.extend({
@@ -159,7 +241,8 @@ function LeafletMap({
     if (!map) return;
 
     const existing = markersRef.current;
-    const nextIds = new Set((places ?? []).map((p) => p.id));
+    const clusteredItems = getClusters(places ?? [], map, 50);
+    const nextIds = new Set(clusteredItems.map((item) => ('isCluster' in item ? item.id : item.id)));
 
     // Remove markers for places no longer present.
     for (const [id, marker] of existing) {
@@ -169,28 +252,62 @@ function LeafletMap({
       }
     }
 
-    (places ?? []).forEach((place) => {
-      const isActive = place.id === activeId || place.id === hoverId;
-      const color = difficultyColor(place);
-      let marker = existing.get(place.id);
-      if (!marker) {
-        marker = L.marker([place.lat, place.lng], { icon: dotIcon(color, isActive) });
-        marker.on('click', () => stateRef.current.onSelect?.(place.id));
-        marker.on('mouseover', () => stateRef.current.onHover?.(place.id));
-        marker.on('mouseout', () => stateRef.current.onHover?.(null));
-        const diffLabel = DIFFICULTY_META[place.difficulty ?? 1]?.label ?? '';
-        marker.bindTooltip(`${place.name}${diffLabel ? ` · ${diffLabel}` : ''}`, {
+    clusteredItems.forEach((item) => {
+      if ('isCluster' in item) {
+        const isHovered = item.places.some((p) => p.id === hoverId);
+        const isActive = item.places.some((p) => p.id === activeId);
+        const activeState = isActive || isHovered;
+        
+        const color = DIFFICULTY_META[item.difficulty]?.color ?? '#3FA66B';
+        const diffLabel = DIFFICULTY_META[item.difficulty]?.label ?? '';
+        
+        let marker = existing.get(item.id);
+        if (!marker) {
+          marker = L.marker([item.centerLat, item.centerLng], { icon: clusterIcon(color, item.places.length, activeState) });
+          marker.on('click', () => {
+            map.flyTo([item.centerLat, item.centerLng], map.getZoom() + 2, { duration: 0.5 });
+            if (item.places.length > 0) {
+              stateRef.current.onSelect?.(item.places[0].id);
+            }
+          });
+          marker.addTo(map);
+          existing.set(item.id, marker);
+        } else {
+          marker.setIcon(clusterIcon(color, item.places.length, activeState));
+          marker.setLatLng([item.centerLat, item.centerLng]);
+        }
+
+        const maxToShow = 4;
+        const placeNames = item.places.slice(0, maxToShow).map((p) => p.name).join(', ');
+        const suffix = item.places.length > maxToShow ? ` та ще ${item.places.length - maxToShow}...` : '';
+        marker.bindTooltip(`<strong>Складність: ${diffLabel} (${item.places.length} місць)</strong><br/><span style="font-size:11px;opacity:0.85">${placeNames}${suffix}</span>`, {
           direction: 'top',
-          offset: [0, -8],
+          offset: [0, -14],
         });
-        marker.addTo(map);
-        existing.set(place.id, marker);
       } else {
-        marker.setIcon(dotIcon(color, isActive));
-        marker.setLatLng([place.lat, place.lng]);
+        const place = item;
+        const isActive = place.id === activeId || place.id === hoverId;
+        const color = difficultyColor(place);
+        let marker = existing.get(place.id);
+        if (!marker) {
+          marker = L.marker([place.lat, place.lng], { icon: dotIcon(color, isActive) });
+          marker.on('click', () => stateRef.current.onSelect?.(place.id));
+          marker.on('mouseover', () => stateRef.current.onHover?.(place.id));
+          marker.on('mouseout', () => stateRef.current.onHover?.(null));
+          const diffLabel = DIFFICULTY_META[place.difficulty ?? 1]?.label ?? '';
+          marker.bindTooltip(`${place.name}${diffLabel ? ` · ${diffLabel}` : ''}`, {
+            direction: 'top',
+            offset: [0, -8],
+          });
+          marker.addTo(map);
+          existing.set(place.id, marker);
+        } else {
+          marker.setIcon(dotIcon(color, isActive));
+          marker.setLatLng([place.lat, place.lng]);
+        }
       }
     });
-  }, [places, activeId, hoverId]);
+  }, [places, activeId, hoverId, zoom]);
 
   // --- sync the single draggable pick pin -------------------------------------
   useEffect(() => {
