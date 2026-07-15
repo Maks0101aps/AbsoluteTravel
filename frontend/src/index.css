@@ -110,6 +110,9 @@ a:hover {
   /* ---- home page ---- */
   .at-home-nav { padding: 12px 18px !important; }
   .at-home-main { padding: 40px 18px 64px !important; }
+
+  /* ---- explore map: stack map + detail panel on narrow screens ---- */
+  .at-explore-grid { grid-template-columns: 1fr !important; }
 }
 
 @media (max-width: 560px) {
@@ -149,12 +152,12 @@ a:hover {
     box-shadow: 0 0 0 0 rgba(63,166,107,0);
   }
 }
-@keyframes softGlow {
+@keyframes softGlowOpacity {
   0%, 100% {
-    box-shadow: inset 0 0 60px -20px var(--glow-color, rgba(63,166,107,0.5));
+    opacity: 0.45;
   }
   50% {
-    box-shadow: inset 0 0 90px -10px var(--glow-color, rgba(63,166,107,0.7));
+    opacity: 0.95;
   }
 }
 
