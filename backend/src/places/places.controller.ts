@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { PlacesService } from './places.service';
-import type { SubmitPlaceDto } from './places.service';
+import type { SubmitPlaceDto, UpdatePlaceDto } from './places.service';
 
 @Controller('api/places')
 export class PlacesController {
@@ -43,6 +43,15 @@ export class PlacesController {
   @Post('admin/create')
   adminCreate(@Body() dto: SubmitPlaceDto, @Headers('x-admin-token') token?: string) {
     return this.placesService.adminCreate(token, dto);
+  }
+
+  @Post('admin/:id/update')
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdatePlaceDto,
+    @Headers('x-admin-token') token?: string,
+  ) {
+    return this.placesService.adminUpdate(token, id, dto);
   }
 
   @Post('admin/:id/approve')

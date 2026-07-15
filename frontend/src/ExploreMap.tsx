@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { UA_PATH, UA_CONTOURS } from './data/ukraineMap';
-import { PLACES, CATEGORY_META, CATEGORY_ORDER, type Place, type PlaceCategory } from './data/places';
-import { projectToMap } from './data/geo';
+import { PLACES, CATEGORY_META, CATEGORY_ORDER, DIFFICULTY_META, DIFFICULTY_ORDER, type Place, type PlaceCategory } from './data/places';
 import { getPlaces } from './api';
 import AddPlaceForm from './AddPlaceForm';
+import LeafletMap from './LeafletMap';
 import { Icon, type IconName } from './icons';
 
 const CREAM = '#F4F1E8';
@@ -45,11 +44,35 @@ function CategoryBadge({ category }: { category: PlaceCategory }) {
   );
 }
 
+function DifficultyBadge({ difficulty }: { difficulty: number }) {
+  const meta = DIFFICULTY_META[difficulty] ?? DIFFICULTY_META[1];
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '5px',
+        fontSize: '11px',
+        fontWeight: 700,
+        color: meta.color,
+        background: `${meta.color}22`,
+        border: `1px solid ${meta.color}55`,
+        borderRadius: '999px',
+        padding: '3px 9px',
+      }}
+    >
+      <Icon name="star" size={13} strokeWidth={1.9} />
+      {meta.label} · +{meta.xp} XP
+    </span>
+  );
+}
+
 function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
   const [places, setPlaces] = useState<Place[]>(PLACES);
   const [activeId, setActiveId] = useState<string | number | null>(null);
   const [hoverId, setHoverId] = useState<string | number | null>(null);
   const [filter, setFilter] = useState<PlaceCategory | 'all'>('all');
+  const [difficultyFilter, setDifficultyFilter] = useState<number | 'all'>('all');
   const [showForm, setShowForm] = useState(false);
 
   // Load live places from the backend; fall back to the bundled dataset.
@@ -72,8 +95,13 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
   }, []);
 
   const visiblePlaces = useMemo(
-    () => (filter === 'all' ? places : places.filter((p) => p.category === filter)),
-    [filter, places],
+    () =>
+      places.filter(
+        (p) =>
+          (filter === 'all' || p.category === filter) &&
+          (difficultyFilter === 'all' || (p.difficulty ?? 1) === difficultyFilter),
+      ),
+    [filter, difficultyFilter, places],
   );
 
   // The card shows whatever the pointer is hovering, otherwise the last clicked place.
@@ -120,7 +148,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
       </div>
 
       {/* category filter chips */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
         <FilterChip active={filter === 'all'} onClick={() => setFilter('all')} color={accent} label="Усі місця" />
         {CATEGORY_ORDER.map((cat) => (
           <FilterChip
@@ -129,6 +157,20 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
             onClick={() => setFilter(cat)}
             color={CATEGORY_META[cat].color}
             label={CATEGORY_META[cat].label}
+          />
+        ))}
+      </div>
+
+      {/* difficulty filter chips */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }}>
+        <FilterChip active={difficultyFilter === 'all'} onClick={() => setDifficultyFilter('all')} color={accent} label="Будь-яка складність" />
+        {DIFFICULTY_ORDER.map((d) => (
+          <FilterChip
+            key={d}
+            active={difficultyFilter === d}
+            onClick={() => setDifficultyFilter(d)}
+            color={DIFFICULTY_META[d].color}
+            label={DIFFICULTY_META[d].label}
           />
         ))}
       </div>
@@ -147,68 +189,14 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
             overflow: 'hidden',
           }}
         >
-          <svg viewBox="0 0 720 480" style={{ width: '100%', height: 'auto', display: 'block' }} preserveAspectRatio="xMidYMid meet">
-            <defs>
-              <radialGradient id="expGlow" cx="0.4" cy="0.4" r="0.5">
-                <stop offset="0%" stopColor="rgba(63,166,107,0.22)" />
-                <stop offset="100%" stopColor="rgba(63,166,107,0)" />
-              </radialGradient>
-              <clipPath id="expClip">
-                <path d={UA_PATH} />
-              </clipPath>
-            </defs>
-            <g clipPath="url(#expClip)">
-              <rect x="0" y="0" width="720" height="480" fill="rgba(63,166,107,0.05)" />
-              <rect x="0" y="0" width="720" height="480" fill="url(#expGlow)" style={{ pointerEvents: 'none' }} />
-              {UA_CONTOURS.map((d, i) => (
-                <path key={i} d={d} fill="none" stroke="rgba(155,216,180,0.16)" strokeWidth="1" />
-              ))}
-            </g>
-            <path d={UA_PATH} fill="none" stroke="rgba(63,166,107,0.4)" strokeWidth="1.5" />
-
-            {visiblePlaces.map((place) => {
-              const meta = CATEGORY_META[place.category];
-              const isActive = place.id === activeId || place.id === hoverId;
-              const { x, y } = projectToMap(place.lat, place.lng);
-              return (
-                <g
-                  key={place.id}
-                  style={{ cursor: 'pointer' }}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={place.name}
-                  onMouseEnter={() => setHoverId(place.id)}
-                  onMouseLeave={() => setHoverId((cur) => (cur === place.id ? null : cur))}
-                  onFocus={() => setHoverId(place.id)}
-                  onBlur={() => setHoverId((cur) => (cur === place.id ? null : cur))}
-                  onClick={() => setActiveId(place.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setActiveId(place.id);
-                    }
-                  }}
-                >
-                  {/* generous invisible hit area for easier tapping */}
-                  <circle cx={x} cy={y} r={14} fill="transparent" />
-                  {isActive && (
-                    <circle cx={x} cy={y} r={7} fill="none" stroke={meta.color} strokeWidth="2">
-                      <animate attributeName="r" values="7;16" dur="1.8s" repeatCount="indefinite" />
-                      <animate attributeName="opacity" values="0.7;0" dur="1.8s" repeatCount="indefinite" />
-                    </circle>
-                  )}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={isActive ? 7 : 5}
-                    fill={meta.color}
-                    stroke={isActive ? CREAM : 'rgba(7,31,22,0.6)'}
-                    strokeWidth={isActive ? 2 : 1}
-                  />
-                </g>
-              );
-            })}
-          </svg>
+          <LeafletMap
+            places={visiblePlaces}
+            activeId={activeId}
+            hoverId={hoverId}
+            onSelect={(id) => setActiveId(id)}
+            onHover={(id) => setHoverId(id)}
+            height="clamp(320px, 60vh, 560px)"
+          />
         </div>
 
         {/* detail panel */}
@@ -224,7 +212,10 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
           >
             {shown ? (
               <>
-                <CategoryBadge category={shown.category} />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  <CategoryBadge category={shown.category} />
+                  <DifficultyBadge difficulty={shown.difficulty ?? 1} />
+                </div>
                 <div style={{ fontFamily: "'Lora', serif", fontSize: '22px', fontWeight: 500, margin: '12px 0 4px' }}>
                   {shown.name}
                 </div>

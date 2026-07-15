@@ -22,9 +22,20 @@ export interface Place {
   // Image URLs (data URLs for user/admin submissions). May be empty for the
   // curated starter set, which is text-only.
   photos?: string[];
+  // Exploration difficulty, 1 (easy) – 4 (extreme). Drives the XP reward.
+  difficulty?: number;
   source?: string;
   submittedBy?: string | null;
 }
+
+export const DIFFICULTY_META: Record<number, { label: string; color: string; xp: number }> = {
+  1: { label: 'Легко', color: '#3FA66B', xp: 20 },
+  2: { label: 'Середньо', color: '#D9B44A', xp: 50 },
+  3: { label: 'Складно', color: '#E4A672', xp: 100 },
+  4: { label: 'Екстремально', color: '#E05A5A', xp: 250 },
+};
+
+export const DIFFICULTY_ORDER = [1, 2, 3, 4];
 
 // Display metadata per category: Ukrainian label + accent colour for the marker.
 export const CATEGORY_META: Record<PlaceCategory, { label: string; color: string }> = {

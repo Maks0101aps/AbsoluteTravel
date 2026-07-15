@@ -12,8 +12,9 @@ import {
   type AdminAccount,
   type AdminSession,
 } from './api';
-import { CATEGORY_META, type PlaceCategory } from './data/places';
+import { CATEGORY_META, DIFFICULTY_META, type PlaceCategory } from './data/places';
 import AddPlaceForm from './AddPlaceForm';
+import EditPlaceModal from './EditPlaceModal';
 import { Icon } from './icons';
 
 const CREAM = '#F4F1E8';
@@ -135,6 +136,7 @@ function ModerationSection({ accent, token }: { accent: string; token: string })
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAdd, setShowAdd] = useState(false);
+  const [editing, setEditing] = useState<AdminPlace | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
 
   const refresh = useCallback(async () => {
@@ -227,6 +229,7 @@ function ModerationSection({ accent, token }: { accent: string; token: string })
               onApprove={() => act(place.id, () => adminApprovePlace(token, place.id))}
               onReject={() => act(place.id, () => adminRejectPlace(token, place.id))}
               onDelete={() => act(place.id, () => adminDeletePlace(token, place.id))}
+              onEdit={() => setEditing(place)}
             />
           ))}
         </div>
@@ -241,20 +244,32 @@ function ModerationSection({ accent, token }: { accent: string; token: string })
           onApproved={() => { setShowAdd(false); refresh(); }}
         />
       )}
+
+      {editing && (
+        <EditPlaceModal
+          place={editing}
+          token={token}
+          accent={accent}
+          onClose={() => setEditing(null)}
+          onSaved={() => { setEditing(null); refresh(); }}
+        />
+      )}
     </div>
   );
 }
 
-function PlaceCard({ place, accent, busy, onApprove, onReject, onDelete }: {
+function PlaceCard({ place, accent, busy, onApprove, onReject, onDelete, onEdit }: {
   place: AdminPlace;
   accent: string;
   busy: boolean;
   onApprove: () => void;
   onReject: () => void;
   onDelete: () => void;
+  onEdit: () => void;
 }) {
   const meta = CATEGORY_META[place.category as PlaceCategory] ?? { label: place.category, color: accent };
   const status = STATUS_META[place.status] ?? { label: place.status, color: accent };
+  const difficulty = DIFFICULTY_META[place.difficulty ?? 1] ?? DIFFICULTY_META[1];
 
   return (
     <div style={{ background: PANEL, border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '18px', display: 'flex', flexWrap: 'wrap', gap: '18px' }}>
@@ -274,6 +289,7 @@ function PlaceCard({ place, accent, busy, onApprove, onReject, onDelete }: {
           <span style={{ fontFamily: "'Lora', serif", fontSize: '19px', fontWeight: 500 }}>{place.name}</span>
           <Pill color={status.color} label={status.label} filled />
           <Pill color={meta.color} label={meta.label} />
+          <Pill color={difficulty.color} label={`${difficulty.label} · +${difficulty.xp} XP`} />
         </div>
         <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.5)', marginBottom: '10px' }}>
           {place.region} · {place.lat.toFixed(3)}, {place.lng.toFixed(3)}
@@ -297,6 +313,7 @@ function PlaceCard({ place, accent, busy, onApprove, onReject, onDelete }: {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {place.status !== 'approved' && <ActionBtn onClick={onApprove} disabled={busy} color="#3FA66B" icon="check" label="Схвалити" />}
           {place.status !== 'rejected' && <ActionBtn onClick={onReject} disabled={busy} color="#E05A5A" icon="close" label="Відхилити" />}
+          <ActionBtn onClick={onEdit} disabled={busy} color="#7FC4A0" icon="pencil" label="Редагувати" />
           <ActionBtn onClick={onDelete} disabled={busy} color="rgba(244,241,232,0.6)" icon="close" label="Видалити" ghost />
         </div>
       </div>
@@ -443,7 +460,7 @@ function Pill({ color, label, filled }: { color: string; label: string; filled?:
   );
 }
 
-function ActionBtn({ onClick, disabled, color, icon, label, ghost }: { onClick: () => void; disabled: boolean; color: string; icon: 'check' | 'close'; label: string; ghost?: boolean }) {
+function ActionBtn({ onClick, disabled, color, icon, label, ghost }: { onClick: () => void; disabled: boolean; color: string; icon: 'check' | 'close' | 'pencil'; label: string; ghost?: boolean }) {
   return (
     <button
       onClick={onClick}

@@ -99,6 +99,9 @@ model Place {
   // JSON array of image data URLs. At least 2 are required on submission.
   photos String @default("[]")
 
+  // Exploration difficulty, 1 (easy) – 4 (extreme). Drives the XP reward.
+  difficulty Int @default(1)
+
   status      String  @default("pending") // pending | approved | rejected
   source      String  @default("user") // user | admin
   submittedBy String? // display name / email of the submitter

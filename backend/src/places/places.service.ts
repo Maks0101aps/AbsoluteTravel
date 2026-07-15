@@ -17,9 +17,23 @@ export interface SubmitPlaceDto {
   lng?: number;
   photos?: string[];
   submittedBy?: string;
+  difficulty?: number;
+}
+
+export interface UpdatePlaceDto {
+  name?: string;
+  region?: string;
+  category?: string;
+  description?: string;
+  bestSeason?: string;
+  lat?: number;
+  lng?: number;
+  difficulty?: number;
 }
 
 const CATEGORIES = ['nature', 'mountains', 'history', 'city', 'coast'];
+const MIN_DIFFICULTY = 1;
+const MAX_DIFFICULTY = 4;
 
 // Rough bounding box of Ukraine (WGS84). Submissions outside it are rejected.
 const UA_BOUNDS = { minLat: 44.0, maxLat: 52.6, minLng: 21.9, maxLng: 40.5 };
@@ -49,6 +63,7 @@ export class PlacesService {
       lat: place.lat,
       lng: place.lng,
       photos: parsePhotos(place.photos),
+      difficulty: place.difficulty,
       source: place.source,
       submittedBy: place.submittedBy,
     };
@@ -87,6 +102,9 @@ export class PlacesService {
     const lat = Number(dto.lat);
     const lng = Number(dto.lng);
     const photos = Array.isArray(dto.photos) ? dto.photos.filter((p) => typeof p === 'string') : [];
+    const difficulty = Number.isFinite(Number(dto.difficulty))
+      ? Math.min(MAX_DIFFICULTY, Math.max(MIN_DIFFICULTY, Math.round(Number(dto.difficulty))))
+      : MIN_DIFFICULTY;
 
     if (name.length < 3) {
       throw new BadRequestException('Назва місця має містити щонайменше 3 символи');
@@ -136,7 +154,7 @@ export class PlacesService {
       }
     }
 
-    return { name, region, category, description, bestSeason, submittedBy, lat, lng, photos };
+    return { name, region, category, description, bestSeason, submittedBy, lat, lng, photos, difficulty };
   }
 
   /**
@@ -174,6 +192,7 @@ export class PlacesService {
         lat: data.lat,
         lng: data.lng,
         photos: JSON.stringify(data.photos),
+        difficulty: data.difficulty,
         status,
         source: 'user',
         submittedBy: data.submittedBy,
@@ -229,6 +248,7 @@ export class PlacesService {
         lat: data.lat,
         lng: data.lng,
         photos: JSON.stringify(data.photos),
+        difficulty: data.difficulty,
         status: 'approved',
         source: 'admin',
         submittedBy: data.submittedBy ?? 'Адміністратор',
@@ -238,6 +258,71 @@ export class PlacesService {
         reviewedAt: new Date(),
       },
     });
+    return this.toAdmin(place);
+  }
+
+  /** Admin edit: name, category, region, description, position and difficulty. */
+  async adminUpdate(token: string | undefined, id: number, dto: UpdatePlaceDto) {
+    await this.admin.requireAdmin(token);
+    const existing = await this.prisma.place.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException('Місце не знайдено');
+
+    const data: Record<string, unknown> = {};
+
+    if (dto.name !== undefined) {
+      const name = dto.name.trim();
+      if (name.length < 3 || name.length > 80) {
+        throw new BadRequestException('Назва місця має містити від 3 до 80 символів');
+      }
+      data.name = name;
+    }
+    if (dto.region !== undefined) {
+      const region = dto.region.trim();
+      if (!region) throw new BadRequestException('Вкажіть область або регіон');
+      data.region = region;
+    }
+    if (dto.category !== undefined) {
+      const category = dto.category.trim().toLowerCase();
+      if (!CATEGORIES.includes(category)) {
+        throw new BadRequestException('Оберіть коректну категорію місця');
+      }
+      data.category = category;
+    }
+    if (dto.description !== undefined) {
+      const description = dto.description.trim();
+      if (description.length < 20 || description.length > 1500) {
+        throw new BadRequestException('Опис має містити від 20 до 1500 символів');
+      }
+      data.description = description;
+    }
+    if (dto.bestSeason !== undefined) {
+      data.bestSeason = dto.bestSeason.trim() || 'Будь-коли';
+    }
+    if (dto.lat !== undefined || dto.lng !== undefined) {
+      const lat = dto.lat !== undefined ? Number(dto.lat) : existing.lat;
+      const lng = dto.lng !== undefined ? Number(dto.lng) : existing.lng;
+      if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng) ||
+        lat < UA_BOUNDS.minLat ||
+        lat > UA_BOUNDS.maxLat ||
+        lng < UA_BOUNDS.minLng ||
+        lng > UA_BOUNDS.maxLng
+      ) {
+        throw new BadRequestException('Геолокація має бути в межах України');
+      }
+      data.lat = lat;
+      data.lng = lng;
+    }
+    if (dto.difficulty !== undefined) {
+      const difficulty = Number(dto.difficulty);
+      if (!Number.isFinite(difficulty)) {
+        throw new BadRequestException('Некоректний рівень складності');
+      }
+      data.difficulty = Math.min(MAX_DIFFICULTY, Math.max(MIN_DIFFICULTY, Math.round(difficulty)));
+    }
+
+    const place = await this.prisma.place.update({ where: { id }, data });
     return this.toAdmin(place);
   }
 

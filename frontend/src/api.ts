@@ -161,6 +161,18 @@ export interface PlaceSubmission {
   lng: number;
   photos: string[];
   submittedBy?: string;
+  difficulty?: number;
+}
+
+export interface PlaceUpdate {
+  name?: string;
+  region?: string;
+  category?: PlaceCategory;
+  description?: string;
+  bestSeason?: string;
+  lat?: number;
+  lng?: number;
+  difficulty?: number;
 }
 
 export interface SubmitPlaceResult {
@@ -263,4 +275,8 @@ export function adminRejectPlace(token: string, id: number) {
 
 export function adminDeletePlace(token: string, id: number) {
   return call<{ ok: boolean; id: number }>('DELETE', `/api/places/admin/${id}`, undefined, adminHeaders(token));
+}
+
+export function adminUpdatePlace(token: string, id: number, payload: PlaceUpdate) {
+  return call<AdminPlace>('POST', `/api/places/admin/${id}/update`, payload, adminHeaders(token));
 }

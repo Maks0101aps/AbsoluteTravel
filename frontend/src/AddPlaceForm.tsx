@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { CATEGORY_META, CATEGORY_ORDER, type PlaceCategory, type Place } from './data/places';
+import { CATEGORY_META, CATEGORY_ORDER, DIFFICULTY_META, DIFFICULTY_ORDER, type PlaceCategory, type Place } from './data/places';
 import { isInUkraine } from './data/geo';
 import { fileToCompressedDataUrl } from './data/imageUtils';
 import { submitPlace, adminCreatePlace, type SubmitPlaceResult } from './api';
@@ -26,6 +26,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
   const [region, setRegion] = useState('');
   const [description, setDescription] = useState('');
   const [bestSeason, setBestSeason] = useState('');
+  const [difficulty, setDifficulty] = useState(1);
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
   const [photos, setPhotos] = useState<string[]>([]);
@@ -113,6 +114,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
         lat,
         lng,
         photos,
+        difficulty,
         submittedBy: submitterName,
       };
       let res: SubmitPlaceResult;
@@ -252,6 +254,39 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
             {/* best season */}
             <Field label="Найкращий час (необов’язково)">
               <input value={bestSeason} onChange={(e) => setBestSeason(e.target.value)} placeholder="Напр. Травень – вересень" style={input} maxLength={80} />
+            </Field>
+
+            {/* difficulty */}
+            <Field label="Складність дослідження">
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {DIFFICULTY_ORDER.map((d) => {
+                  const meta = DIFFICULTY_META[d];
+                  const active = difficulty === d;
+                  return (
+                    <button
+                      key={d}
+                      onClick={() => setDifficulty(d)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: active ? `${meta.color}22` : 'transparent',
+                        border: `1px solid ${active ? `${meta.color}88` : 'rgba(255,255,255,0.14)'}`,
+                        color: active ? meta.color : 'rgba(244,241,232,0.7)',
+                        borderRadius: '999px',
+                        padding: '7px 13px',
+                        fontSize: '12.5px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontFamily: "'Manrope', sans-serif",
+                      }}
+                    >
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: meta.color }} />
+                      {meta.label} · +{meta.xp} XP
+                    </button>
+                  );
+                })}
+              </div>
             </Field>
 
             {/* geolocation */}
