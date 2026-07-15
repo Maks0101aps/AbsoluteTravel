@@ -185,3 +185,53 @@ a:hover {
   flex-direction: column !important;
   min-height: 0 !important;
 }
+
+/* Territory-exploration hexes (H3 cells the user has walked). The base look is
+   set inline by Leaflet; the reveal class plays a one-shot glow when a brand-new
+   cell is unlocked, then hands the styling back to the inline resting values. */
+.at-hex {
+  transition: fill-opacity 0.4s ease;
+}
+.at-hex-reveal {
+  animation: atHexReveal 1.8s ease-out;
+}
+@keyframes atHexReveal {
+  0% {
+    fill-opacity: 0.7;
+    stroke-opacity: 1;
+    stroke-width: 3;
+    filter: drop-shadow(0 0 6px rgba(155, 216, 180, 0.9));
+  }
+  60% {
+    fill-opacity: 0.4;
+    stroke-width: 2;
+    filter: drop-shadow(0 0 3px rgba(155, 216, 180, 0.5));
+  }
+  100% {
+    fill-opacity: 0.16;
+    stroke-opacity: 0.5;
+    stroke-width: 1;
+    filter: drop-shadow(0 0 0 rgba(155, 216, 180, 0));
+  }
+}
+
+/* "+XP" popup that floats up when a new cell/region is unlocked. */
+.at-xp-pop {
+  animation: atXpPop 2.6s ease-out forwards;
+}
+@keyframes atXpPop {
+  0% { opacity: 0; transform: translateY(8px) scale(0.92); }
+  12% { opacity: 1; transform: translateY(0) scale(1); }
+  75% { opacity: 1; transform: translateY(-6px) scale(1); }
+  100% { opacity: 0; transform: translateY(-18px) scale(0.98); }
+}
+
+/* Count-up flash on the exploration progress numbers. */
+.at-stat-bump {
+  animation: atStatBump 0.5s ease-out;
+}
+@keyframes atStatBump {
+  0% { transform: scale(1); color: #9BD8B4; }
+  40% { transform: scale(1.18); color: #9BD8B4; }
+  100% { transform: scale(1); }
+}
