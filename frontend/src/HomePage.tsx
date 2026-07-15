@@ -10,12 +10,12 @@ const CREAM = '#F4F1E8';
 const BG = '#071F16';
 const DEFAULT_ACCENT = '#3FA66B';
 
-type Tab = 'profile' | 'map' | 'advisor';
+type Tab = 'map' | 'advisor' | 'profile';
 
 const TABS: { id: Tab; label: string; icon: IconName }[] = [
-  { id: 'profile', label: 'Профіль', icon: 'user' },
   { id: 'map', label: 'Мапа мандрівок', icon: 'map' },
   { id: 'advisor', label: 'ШІ-порадник', icon: 'compass' },
+  { id: 'profile', label: 'Профіль', icon: 'user' },
 ];
 
 interface HomePageProps {
@@ -28,15 +28,47 @@ function HomePage({ user, onLogout, onEditProfile }: HomePageProps) {
   const p = user.profile;
   const accent = p?.color ?? DEFAULT_ACCENT;
   const background = BACKGROUNDS.find((b) => b.id === p?.backgroundId);
-  const [tab, setTab] = useState<Tab>('profile');
+  const [tab, setTab] = useState<Tab>('map');
 
   const maxWidth = tab === 'profile' ? '860px' : '1140px';
 
   return (
     <div style={{ fontFamily: "'Manrope', sans-serif", background: BG, color: CREAM, minHeight: '100vh' }}>
       {/* navbar */}
-      <nav className="at-home-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 40px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <nav className="at-home-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 40px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap' }}>
         <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '40px', width: 'auto', display: 'block' }} />
+        
+        {/* navigation tabs */}
+        <div className="at-home-nav-tabs" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          {TABS.map((t) => {
+            const isActive = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: isActive ? `${accent}1F` : 'transparent',
+                  border: `1px solid ${isActive ? `${accent}66` : 'transparent'}`,
+                  color: isActive ? accent : 'rgba(244,241,232,0.65)',
+                  borderRadius: '10px',
+                  padding: '8px 14px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: "'Manrope', sans-serif",
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <Icon name={t.icon} size={15} strokeWidth={1.9} />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div title="Монети" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#F0C64B', background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.3)', borderRadius: '999px', padding: '6px 12px', fontSize: '13px', fontWeight: 700 }}>
             <Icon name="coin" size={16} strokeWidth={1.9} />
@@ -56,36 +88,6 @@ function HomePage({ user, onLogout, onEditProfile }: HomePageProps) {
           </button>
         </div>
       </nav>
-
-      {/* tab bar */}
-      <div style={{ position: 'sticky', top: '69px', zIndex: 40, display: 'flex', justifyContent: 'center', gap: '6px', padding: '10px 16px', background: 'rgba(7,31,22,0.75)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
-        {TABS.map((t) => {
-          const isActive = tab === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: isActive ? `${accent}1F` : 'transparent',
-                border: `1px solid ${isActive ? `${accent}66` : 'transparent'}`,
-                color: isActive ? accent : 'rgba(244,241,232,0.65)',
-                borderRadius: '10px',
-                padding: '10px 18px',
-                fontSize: '13.5px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontFamily: "'Manrope', sans-serif",
-              }}
-            >
-              <Icon name={t.icon} size={16} strokeWidth={1.9} />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
 
       <main className="at-home-main" style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
         {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} background={background} />}
