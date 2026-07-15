@@ -28,6 +28,7 @@ model User {
   createdAt          DateTime          @default(now())
   achievements       UserAchievement[]
   transactions       CoinTransaction[]
+  checkmarks         Checkmark[]
 }
 
 model CoinTransaction {
@@ -114,5 +115,27 @@ model Place {
   createdAt  DateTime  @default(now())
   reviewedAt DateTime?
 
+  checkmarks Checkmark[]
+
   @@index([status])
+}
+
+// A verified visit: the user came to a Place, photographed it, and the AI
+// (or the offline fallback) confirmed the visit. XP/coins are awarded once.
+model Checkmark {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  placeId        Int
+  photo          String // data URL of the photo the user took at the point
+  distanceMeters Float // distance from the point when the photo was taken
+  aiVerified     Boolean
+  aiReason       String?
+  xpAwarded      Int
+  createdAt      DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  place Place @relation(fields: [placeId], references: [id])
+
+  // A place can be counted for a user only once.
+  @@unique([userId, placeId])
 }
