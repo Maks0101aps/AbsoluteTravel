@@ -482,3 +482,8 @@ export function getFriendLocation(viewerId: number, targetId: number) {
 export function setLocationVisibility(userId: number, visible: boolean) {
   return call<{ userId: number; visible: boolean }>('PUT', '/api/users/me/location-visible', { userId, visible });
 }
+
+export function updateProfile(userId: number, payload: { name: string; avatar: string }) {
+  return call<{ ok: boolean; userId: number }>('POST', '/api/users/profile', { userId, ...payload });
+}
+
