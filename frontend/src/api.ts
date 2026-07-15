@@ -163,7 +163,15 @@ export function getAdvisorStatus() {
   return call<{ available: boolean; model: string }>('GET', '/api/ai/status');
 }
 
-export function askAdvisor(payload: { message: string; topic?: string; history?: AdvisorTurn[] }) {
+export function askAdvisor(payload: {
+  message: string;
+  topic?: string;
+  history?: AdvisorTurn[];
+  lat?: number;
+  lng?: number;
+  city?: string;
+  region?: string;
+}) {
   return call<{ reply: string }>('POST', '/api/ai/chat', payload);
 }
 

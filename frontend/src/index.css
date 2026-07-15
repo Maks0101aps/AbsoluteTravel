@@ -110,6 +110,9 @@ a:hover {
   /* ---- home page ---- */
   .at-home-nav { padding: 12px 18px !important; }
   .at-home-main { padding: 40px 18px 64px !important; }
+
+  /* ---- explore map: stack map + detail panel on narrow screens ---- */
+  .at-explore-grid { grid-template-columns: 1fr !important; }
 }
 
 @media (max-width: 560px) {
