@@ -25,10 +25,52 @@ model User {
   rank               String            @default("mandrivnyk")
   unlockedItems      String            @default("[]") // JSON array of purchased cosmetic ids
   currentDestination String?
+  // Live-GPS privacy toggle: when false, friends never see this user's dot.
+  locationVisible    Boolean           @default(true)
   createdAt          DateTime          @default(now())
   achievements       UserAchievement[]
   transactions       CoinTransaction[]
   checkmarks         Checkmark[]
+
+  sentFriendRequests     Friend[]  @relation("FriendSender")
+  receivedFriendRequests Friend[]  @relation("FriendReceiver")
+  sentMessages           Message[] @relation("MessageSender")
+  receivedMessages       Message[] @relation("MessageReceiver")
+}
+
+// A friendship edge. One row per pair: sender is who initiated the request.
+// SQLite has no enums, so status is a constrained string:
+// PENDING | ACCEPTED | DECLINED.
+model Friend {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("FriendSender", fields: [senderId], references: [id])
+  receiver User @relation("FriendReceiver", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId, status])
+  @@index([senderId, status])
+}
+
+// A direct chat message between two friends. readAt is null until the
+// recipient opens the thread (read receipts).
+model Message {
+  id         Int       @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  text       String
+  createdAt  DateTime  @default(now())
+  readAt     DateTime?
+
+  sender   User @relation("MessageSender", fields: [senderId], references: [id])
+  receiver User @relation("MessageReceiver", fields: [receiverId], references: [id])
+
+  @@index([senderId, receiverId, id])
+  @@index([receiverId, readAt])
 }
 
 model CoinTransaction {
