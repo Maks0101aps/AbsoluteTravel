@@ -403,7 +403,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
     const timer = setInterval(() => {
       getUnreadCounts(userId).then(setUnread).catch(() => {});
       const fid = activeIdRef.current;
-      if (fid) {
+      if (fid && fid !== 'advisor') {
         getChatHistory(userId, fid)
           .then(({ messages: msgs }) => setMessages((prev) => mergeMessages(prev, msgs)))
           .catch(() => {});
@@ -481,7 +481,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
   };
 
   const loadOlder = () => {
-    if (!activeId || messages.length === 0) return;
+    if (!activeId || activeId === 'advisor' || messages.length === 0) return;
     getChatHistory(userId, activeId, 50, messages[0].id)
       .then(({ messages: older, hasMore: more }) => {
         setMessages((prev) => mergeMessages(prev, older));
@@ -560,7 +560,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
   };
 
   const sendVoiceMessage = async (base64data: string) => {
-    if (!activeId) return;
+    if (!activeId || activeId === 'advisor') return;
     setSending(true);
     setError(null);
     const text = `[voice:${base64data}]`;
@@ -616,7 +616,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
 
   const send = async () => {
     const text = input.trim();
-    if (!text || !activeId || sending) return;
+    if (!text || !activeId || activeId === 'advisor' || sending) return;
     setSending(true);
     setError(null);
     try {
