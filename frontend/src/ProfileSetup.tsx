@@ -24,7 +24,7 @@ interface ProfileSetupProps {
   user: AuthUser;
   onComplete: (profile: ProfileCustomization) => void;
   onSkip: () => void;
-  onUserUpdate?: (patch: { coins: number; unlockedItems: string[] }) => void;
+  onUserUpdate?: (patch: Partial<AuthUser>) => void;
 }
 
 // ---- shared bits ----------------------------------------------------------

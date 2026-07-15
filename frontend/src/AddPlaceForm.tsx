@@ -146,7 +146,8 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 100,
+        // Above Leaflet's control/pane stack (~1000) so the background map never bleeds through.
+        zIndex: 2000,
         background: 'rgba(4,16,11,0.72)',
         backdropFilter: 'blur(6px)',
         display: 'flex',

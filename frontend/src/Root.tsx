@@ -123,8 +123,10 @@ function Root() {
     }
   };
 
-  // Persist coin/unlocked changes coming from the in-app shop.
-  const handleUserUpdate = (patch: { coins: number; unlockedItems: string[] }) => {
+  // Merge server-side changes (coins/unlockedItems from the shop, or
+  // xp/coins/level from a verified visit) into the stored user, same
+  // persistence path as the onboarding reward above.
+  const handleUserUpdate = (patch: Partial<AuthUser>) => {
     setUser((prev) => {
       if (!prev) return prev;
       const next = { ...prev, ...patch };
@@ -155,7 +157,7 @@ function Root() {
   }
 
   if (view === 'home' && user) {
-    return <HomePage user={user} onLogout={handleLogout} onEditProfile={() => setView('setup')} />;
+    return <HomePage user={user} onLogout={handleLogout} onEditProfile={() => setView('setup')} onUserUpdate={handleUserUpdate} />;
   }
 
   if (view === 'auth') {

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PLACES, CATEGORY_META, CATEGORY_ORDER, DIFFICULTY_META, DIFFICULTY_ORDER, type Place, type PlaceCategory } from './data/places';
-import { getPlaces } from './api';
+import { getPlaces, type VerifyCheckmarkResult } from './api';
 import AddPlaceForm from './AddPlaceForm';
+import VerifyVisitModal from './VerifyVisitModal';
 import LeafletMap from './LeafletMap';
 import { Icon, type IconName } from './icons';
 
@@ -19,6 +20,12 @@ const CATEGORY_ICON: Record<PlaceCategory, IconName> = {
 interface ExploreMapProps {
   accent?: string;
   submitterName?: string;
+  // The logged-in user's id (enables visit verification). Undefined = guest.
+  userId?: number;
+  // Place ids the user has already verified (opened).
+  openedPlaceIds?: Set<string | number>;
+  // Called after a successful verification: award XP/coins and mark opened.
+  onVerified?: (placeId: string | number, result: VerifyCheckmarkResult) => void;
 }
 
 function CategoryBadge({ category }: { category: PlaceCategory }) {
@@ -67,13 +74,14 @@ function DifficultyBadge({ difficulty }: { difficulty: number }) {
   );
 }
 
-function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
+function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds, onVerified }: ExploreMapProps) {
   const [places, setPlaces] = useState<Place[]>(PLACES);
   const [activeId, setActiveId] = useState<string | number | null>(null);
   const [hoverId, setHoverId] = useState<string | number | null>(null);
   const [filter, setFilter] = useState<PlaceCategory | 'all'>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<number | 'all'>('all');
   const [showForm, setShowForm] = useState(false);
+  const [verifyPlace, setVerifyPlace] = useState<Place | null>(null);
 
   // Load live places from the backend; fall back to the bundled dataset.
   const loadPlaces = () => {
@@ -180,6 +188,9 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
         <div
           style={{
             position: 'relative',
+            // Contain Leaflet's internal z-indexes (panes/controls go up to ~1000)
+            // so they can't paint over overlays like the "add place" modal.
+            isolation: 'isolate',
             flex: '1 1 460px',
             minWidth: '300px',
             background: '#081E15',
@@ -207,7 +218,11 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
               border: '1px solid rgba(255,255,255,0.10)',
               borderRadius: '16px',
               padding: '22px',
-              minHeight: '200px',
+              // Fixed height + internal scroll: hovering different places swaps the
+              // content without changing this panel's outer size, so the list below
+              // never shifts under the cursor (which otherwise caused a hover flicker loop).
+              height: 'clamp(320px, 46vh, 440px)',
+              overflowY: 'auto',
             }}
           >
             {shown ? (
@@ -215,6 +230,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   <CategoryBadge category={shown.category} />
                   <DifficultyBadge difficulty={shown.difficulty ?? 1} />
+                  {openedPlaceIds?.has(shown.id) && <OpenedBadge />}
                 </div>
                 <div style={{ fontFamily: "'Lora', serif", fontSize: '22px', fontWeight: 500, margin: '12px 0 4px' }}>
                   {shown.name}
@@ -251,6 +267,33 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
                   <div style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.4)', marginTop: '10px' }}>
                     Додав: {shown.submittedBy}
                   </div>
+                )}
+
+                {/* Visit verification — only for logged-in users on not-yet-opened places. */}
+                {userId != null && !openedPlaceIds?.has(shown.id) && (
+                  <button
+                    onClick={() => setVerifyPlace(shown)}
+                    style={{
+                      marginTop: '16px',
+                      width: '100%',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      background: accent,
+                      color: '#071F16',
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '12px 18px',
+                      fontSize: '13.5px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontFamily: "'Manrope', sans-serif",
+                    }}
+                  >
+                    <Icon name="camera" size={16} strokeWidth={1.9} />
+                    Верифікувати відвідування
+                  </button>
                 )}
               </>
             ) : (
@@ -290,6 +333,11 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
                   <span style={{ fontSize: '13px', fontWeight: 600, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {place.name}
                   </span>
+                  {openedPlaceIds?.has(place.id) && (
+                    <span title="Відкрито" style={{ display: 'inline-flex', alignItems: 'center', color: '#3FA66B', flex: '0 0 auto' }}>
+                      <Icon name="check" size={14} strokeWidth={2.6} />
+                    </span>
+                  )}
                   <span style={{ fontSize: '11px', color: 'rgba(244,241,232,0.45)', flex: '0 0 auto' }}>{meta.label}</span>
                 </button>
               );
@@ -306,7 +354,40 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
           onApproved={() => loadPlaces()}
         />
       )}
+
+      {verifyPlace && userId != null && (
+        <VerifyVisitModal
+          place={verifyPlace}
+          userId={userId}
+          accent={accent}
+          onClose={() => setVerifyPlace(null)}
+          onVerified={(result) => onVerified?.(verifyPlace.id, result)}
+        />
+      )}
     </div>
+  );
+}
+
+function OpenedBadge() {
+  const color = '#3FA66B';
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '5px',
+        fontSize: '11px',
+        fontWeight: 700,
+        color,
+        background: `${color}22`,
+        border: `1px solid ${color}55`,
+        borderRadius: '999px',
+        padding: '3px 9px',
+      }}
+    >
+      <Icon name="check" size={13} strokeWidth={2.4} />
+      Відкрито
+    </span>
   );
 }
 
