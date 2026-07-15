@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import type { FriendUser } from './api';
+import { AVATARS } from './data/profileOptions';
+import { Icon } from './icons';
 
 const CREAM = '#F4F1E8';
 
@@ -33,17 +35,39 @@ export function OnlineDot({ online, size = 10 }: { online: boolean; size?: numbe
 }
 
 export function UserAvatar({ user, size = 44 }: { user: Pick<FriendUser, 'avatar' | 'name' | 'online'>; size?: number }) {
-  return (
-    <div style={{ position: 'relative', width: `${size}px`, height: `${size}px`, flex: '0 0 auto' }}>
+  const avatarOpt = AVATARS.find((a) => a.id === user.avatar);
+
+  const commonStyle: React.CSSProperties = {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    objectFit: 'cover',
+  };
+
+  const renderInner = () => {
+    if (avatarOpt) {
+      return (
+        <div style={{ ...commonStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', background: avatarOpt.gradient }}>
+          <Icon name={avatarOpt.icon} size={size * 0.46} stroke="rgba(244,241,232,0.95)" strokeWidth={1.7} />
+        </div>
+      );
+    }
+    return (
       <img
         src={user.avatar}
         alt={user.name}
-        style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', background: '#081E15', border: '1px solid rgba(255,255,255,0.15)' }}
+        style={{ ...commonStyle, background: '#081E15', border: '1px solid rgba(255,255,255,0.15)' }}
         onError={(e) => {
           e.currentTarget.src = '/assets/avatar_default.svg';
           e.currentTarget.onerror = null;
         }}
       />
+    );
+  };
+
+  return (
+    <div style={{ position: 'relative', width: `${size}px`, height: `${size}px`, flex: '0 0 auto' }}>
+      {renderInner()}
       <span style={{ position: 'absolute', right: '-1px', bottom: '-1px', display: 'inline-flex' }}>
         <OnlineDot online={user.online} />
       </span>
