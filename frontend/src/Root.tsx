@@ -123,8 +123,9 @@ function Root() {
     }
   };
 
-  // Merge server-side changes (xp/coins/level from a verified visit) into the
-  // stored user, same persistence path as the onboarding reward above.
+  // Merge server-side changes (coins/unlockedItems from the shop, or
+  // xp/coins/level from a verified visit) into the stored user, same
+  // persistence path as the onboarding reward above.
   const handleUserUpdate = (patch: Partial<AuthUser>) => {
     setUser((prev) => {
       if (!prev) return prev;
@@ -152,7 +153,7 @@ function Root() {
   }
 
   if (view === 'setup' && user) {
-    return <ProfileSetup user={user} onComplete={handleProfileComplete} onSkip={() => setView('home')} />;
+    return <ProfileSetup user={user} onComplete={handleProfileComplete} onSkip={() => setView('home')} onUserUpdate={handleUserUpdate} />;
   }
 
   if (view === 'home' && user) {
