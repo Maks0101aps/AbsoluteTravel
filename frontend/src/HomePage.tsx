@@ -19,7 +19,7 @@ type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'advisor' | 'profile';
 
 const TABS: { id: Tab; label: string; icon: IconName }[] = [
   { id: 'map', label: 'Мапа мандрівок', icon: 'map' },
-  { id: 'friends', label: 'Друзі', icon: 'backpack' },
+  { id: 'friends', label: 'Друзі', icon: 'users' },
   { id: 'leaderboard', label: 'Рейтинг', icon: 'trophy' },
   { id: 'chat', label: 'Чат', icon: 'messageSquare' },
   { id: 'advisor', label: 'ШІ-порадник', icon: 'compass' },
@@ -186,7 +186,7 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
                 transition: 'all 0.2s ease',
               }}
             >
-              <Icon name="coin" size={14} strokeWidth={1.9} stroke="#F0C64B" />
+              <Icon name="shoppingBag" size={14} strokeWidth={1.9} stroke="#F0C64B" />
               Магазин
             </button>
           )}
@@ -233,8 +233,8 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
         )}
         {tab === 'friends' && <FriendsPage userId={user.id} accent={accent} onMessage={openChatWith} />}
         {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} />}
-        {tab === 'chat' && <ChatPage userId={user.id} accent={accent} initialFriendId={chatFriendId} />}
-        {tab === 'advisor' && <AiAdvisor accent={accent} userName={p?.displayName ?? user.name} />}
+        {tab === 'chat' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId={chatFriendId} />}
+        {tab === 'advisor' && <AiAdvisor accent={accent} user={user} userName={p?.displayName ?? user.name} />}
       </main>
     </div>
   );
@@ -306,7 +306,7 @@ function ProfileTab({
 
       <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: '0 0 12px' }}>Готово, {p.displayName}!</h2>
       <p style={{ fontSize: '15px', lineHeight: 1.7, color: 'rgba(244,241,232,0.65)', maxWidth: '520px', margin: 0 }}>
-        Відкрий вкладку «Мапа мандрівок», щоб дослідити цікаві місця України, або запитай поради у «ШІ-порадника».
+        Відкрий вкладку «Мапа мандрівок», щоб дослідити цікаві місця України, або запитай поради у «ШІ-порадника» у розділі «Чат».
       </p>
     </>
   );
