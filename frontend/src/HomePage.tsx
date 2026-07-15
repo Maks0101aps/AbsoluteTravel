@@ -234,7 +234,7 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
         {tab === 'friends' && <FriendsPage userId={user.id} accent={accent} onMessage={openChatWith} />}
         {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} />}
         {tab === 'chat' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId={chatFriendId} />}
-        {tab === 'advisor' && <AiAdvisor accent={accent} userName={p?.displayName ?? user.name} />}
+        {tab === 'advisor' && <AiAdvisor accent={accent} user={user} userName={p?.displayName ?? user.name} />}
       </main>
     </div>
   );
