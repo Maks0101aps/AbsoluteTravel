@@ -118,7 +118,7 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
       overflow: tab === 'chat' ? 'hidden' : 'visible'
     }}>
       {/* navbar */}
-      <nav className="at-home-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '12px 24px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'nowrap' }}>
+      <nav className="at-home-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '12px 24px', background: BG, borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'nowrap' }}>
         <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '36px', width: 'auto', display: 'block', flexShrink: 0 }} />
 
         {/* navigation tabs — tightened padding/gaps so everything fits on one line */}
