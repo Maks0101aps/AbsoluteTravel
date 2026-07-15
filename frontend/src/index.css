@@ -167,3 +167,10 @@ a:hover {
   0%, 100% { opacity: 0.45; }
   50% { opacity: 1; }
 }
+
+/* Live-GPS pulse around the current user's dot on the map */
+@keyframes atLivePulse {
+  0% { transform: scale(0.7); opacity: 0.9; }
+  70% { transform: scale(1.9); opacity: 0; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
