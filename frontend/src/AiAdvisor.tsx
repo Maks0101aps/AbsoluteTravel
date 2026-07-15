@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { askAdvisor, getAdvisorStatus, type AdvisorTurn } from './api';
+import { askAdvisor, getAdvisorStatus, type AdvisorTurn, type AuthUser } from './api';
 import { Icon, type IconName } from './icons';
 
 const CREAM = '#F4F1E8';
@@ -7,6 +7,7 @@ const BG = '#071F16';
 
 interface AiAdvisorProps {
   accent?: string;
+  user?: AuthUser;
   userName?: string;
 }
 
