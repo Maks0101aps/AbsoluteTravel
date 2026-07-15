@@ -12,6 +12,8 @@ import { PlacesController } from './places/places.controller';
 import { PlacesService } from './places/places.service';
 import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
+import { CheckmarksController } from './checkmarks/checkmarks.controller';
+import { CheckmarksService } from './checkmarks/checkmarks.service';
 
 @Module({
   imports: [],
@@ -22,6 +24,7 @@ import { AdminService } from './admin/admin.service';
     AiController,
     PlacesController,
     AdminController,
+    CheckmarksController,
   ],
   providers: [
     AppService,
@@ -30,6 +33,7 @@ import { AdminService } from './admin/admin.service';
     AiService,
     PlacesService,
     AdminService,
+    CheckmarksService,
     PrismaService,
   ],
 })
