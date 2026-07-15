@@ -120,7 +120,12 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
       .then((data) => {
         if (Array.isArray(data) && data.length) {
           setPlaces(data);
-          setActiveId((cur) => cur ?? data[0].id);
+          setActiveId((cur) => {
+            if (cur === null || !data.some((p) => p.id === cur)) {
+              return data[0].id;
+            }
+            return cur;
+          });
         }
       })
       .catch(() => {
