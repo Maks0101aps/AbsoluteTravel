@@ -34,7 +34,14 @@ export const AVATARS: AvatarOption[] = [
   { id: 'a10', icon: 'flame', gradient: 'linear-gradient(135deg,#3FA6A0,#1E6B67)', lock: { type: 'free' } },
   { id: 'a11', icon: 'shield', gradient: 'linear-gradient(135deg,#9AA4B0,#4A5560)', lock: { type: 'level', level: 5 } },
   { id: 'a12', icon: 'moon', gradient: 'linear-gradient(135deg,#B07A4B,#5E3C1E)', lock: { type: 'level', level: 10 } },
-  { id: 'a13', icon: 'sun', gradient: 'linear-gradient(135deg,#8C5A3C,#4A2C16)', lock: { type: 'coins', price: 500 } },
+  // --- premium avatars (coins) ---
+  { id: 'a15', icon: 'star', gradient: 'linear-gradient(135deg,#F0C64B,#B07A16)', lock: { type: 'coins', price: 300 } },
+  { id: 'a16', icon: 'flame', gradient: 'linear-gradient(135deg,#F0713F,#8C2E16)', lock: { type: 'coins', price: 400 } },
+  { id: 'a17', icon: 'feather', gradient: 'linear-gradient(135deg,#7CC6E1,#2E6B8C)', lock: { type: 'coins', price: 450 } },
+  { id: 'a13', icon: 'sun', gradient: 'linear-gradient(135deg,#F5A742,#B85C10)', lock: { type: 'coins', price: 500 } },
+  { id: 'a18', icon: 'shield', gradient: 'linear-gradient(135deg,#8A7CDF,#3A2E8C)', lock: { type: 'coins', price: 650 } },
+  { id: 'a19', icon: 'moon', gradient: 'linear-gradient(135deg,#5A6ED8,#241E6B)', lock: { type: 'coins', price: 800 } },
+  { id: 'a20', icon: 'trophy', gradient: 'linear-gradient(135deg,#F0C64B,#8C6510)', lock: { type: 'coins', price: 1000 } },
   { id: 'a14', icon: 'crown', gradient: 'linear-gradient(135deg,#E7C34B,#B0851A)', lock: { type: 'coins', price: 1500 } },
 ];
 
@@ -70,7 +77,13 @@ export const BACKGROUNDS: BackgroundOption[] = [
   { id: 'scenic2', label: 'Долина', css: "linear-gradient(180deg,rgba(7,31,22,0.5),rgba(7,31,22,0.9)),url('/assets/scenic_gallery_2.avif') center/cover", lock: { type: 'free' } },
   { id: 'emerald', label: 'Смарагд', css: 'linear-gradient(135deg,#0B3B29,#071F16)', lock: { type: 'free' } },
   { id: 'scenic3', label: 'Захід сонця', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/scenic_gallery_3.avif') center/cover", lock: { type: 'level', level: 5 } },
+  // --- premium backgrounds (coins) ---
+  { id: 'ocean', label: 'Океан', css: 'linear-gradient(135deg,#0B3B4A,#071F2E)', lock: { type: 'coins', price: 350 } },
+  { id: 'ember', label: 'Багаття', css: 'linear-gradient(135deg,#3B1A0B,#2E0F07)', lock: { type: 'coins', price: 450 } },
+  { id: 'midnight', label: 'Опівніч', css: 'linear-gradient(135deg,#141B3B,#07091F)', lock: { type: 'coins', price: 600 } },
   { id: 'aurora', label: 'Аврора', css: 'linear-gradient(135deg,#12324a,#3a1a5e)', lock: { type: 'coins', price: 800 } },
+  { id: 'sakura', label: 'Сакура', css: 'linear-gradient(135deg,#4A1B34,#2E0F22)', lock: { type: 'coins', price: 1000 } },
+  { id: 'cosmos', label: 'Космос', css: 'radial-gradient(circle at 30% 20%,#3a1a5e,#0b1030 60%,#050616)', lock: { type: 'coins', price: 1300 } },
 ];
 
 // --- Avatar frames ---
