@@ -3,6 +3,12 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { CATEGORY_META, DIFFICULTY_META, type Place } from './data/places';
 import { AVATARS } from './data/profileOptions';
+import { cellPolygon } from './exploration/h3';
+
+// Explored-territory hexes. Soft green, translucent — they tint the map you've
+// walked without hiding it.
+const HEX_FILL = '#3FA66B';
+const HEX_STROKE = 'rgba(155,216,180,0.55)';
 
 const ICON_PATHS: Record<string, string> = {
   compass: '<circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z" />',
@@ -147,6 +153,11 @@ interface LeafletMapProps {
   // Live layer: current user + friends, rendered above the place markers.
   liveMarkers?: LiveMarker[];
 
+  // Territory-exploration layer: H3 cell ids to paint as hexes, and the single
+  // cell that was just unlocked (gets the one-shot reveal glow).
+  exploredCells?: string[];
+  revealedCell?: string | null;
+
   height?: string;
 }
 
@@ -280,12 +291,15 @@ function LeafletMap({
   onPick,
   accent = '#3FA66B',
   liveMarkers,
+  exploredCells,
+  revealedCell,
   height = '460px',
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string | number, L.Marker>>(new Map());
   const liveMarkersRef = useRef<Map<string | number, L.Marker>>(new Map());
+  const hexLayersRef = useRef<Map<string, L.Polygon>>(new Map());
   const pinMarkerRef = useRef<L.Marker | null>(null);
   const [zoom, setZoom] = useState<number>(6);
 
@@ -452,6 +466,47 @@ function LeafletMap({
       }
     });
   }, [places, activeId, hoverId, zoom]);
+
+  // --- sync explored-territory hexes ------------------------------------------
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const existing = hexLayersRef.current;
+    const cells = exploredCells ?? [];
+    const nextIds = new Set(cells);
+
+    // Drop hexes no longer present (e.g. after logout/user switch).
+    for (const [id, layer] of existing) {
+      if (!nextIds.has(id)) {
+        layer.remove();
+        existing.delete(id);
+      }
+    }
+
+    cells.forEach((cellId) => {
+      if (existing.has(cellId)) return;
+      // A freshly-unlocked cell is created with the reveal class so its glow
+      // animation plays exactly once, then settles into the resting hex style.
+      const isReveal = cellId === revealedCell;
+      let polygon: L.Polygon;
+      try {
+        polygon = L.polygon(cellPolygon(cellId), {
+          className: isReveal ? 'at-hex at-hex-reveal' : 'at-hex',
+          color: HEX_STROKE,
+          weight: 1,
+          fillColor: HEX_FILL,
+          fillOpacity: 0.16,
+          opacity: 0.5,
+          interactive: false,
+        });
+      } catch {
+        return; // ignore an invalid cell id rather than break the layer
+      }
+      polygon.addTo(map);
+      existing.set(cellId, polygon);
+    });
+  }, [exploredCells, revealedCell]);
 
   // --- sync live GPS markers (self + friends) ----------------------------------
   useEffect(() => {

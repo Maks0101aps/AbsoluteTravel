@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getUnreadCounts, getUserCheckmarks, type AuthUser, type VerifyCheckmarkResult } from './api';
+import { getUnreadCounts, getUserCheckmarks, type AuthUser, type VerifyCheckmarkResult, type VisitCellResult } from './api';
 import ProfileAvatar from './ProfileAvatar';
 import XpBar from './XpBar';
 import ExploreMap from './ExploreMap';
@@ -102,6 +102,13 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
       coins: (user.coins ?? 0) + result.coinsAwarded,
       level: result.newLevel,
     });
+  };
+
+  // A new territory cell was unlocked. The server returns the authoritative new
+  // totals, so apply them directly rather than incrementing (avoids drift when
+  // several cells unlock in quick succession).
+  const handleExplored = (result: VisitCellResult) => {
+    onUserUpdate?.({ xp: result.newXp, level: result.newLevel });
   };
 
   const maxWidth = tab === 'profile' ? '860px' : '1140px';
@@ -220,6 +227,7 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
             userId={user.id}
             openedPlaceIds={openedPlaceIds}
             onVerified={handleVerified}
+            onExplored={handleExplored}
             onMessageFriend={openChatWith}
           />
         )}
