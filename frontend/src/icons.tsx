@@ -4,11 +4,7 @@ export type IconName =
   | 'compass' | 'mountain' | 'pine' | 'tent' | 'map' | 'signpost' | 'binoculars'
   | 'flame' | 'backpack' | 'feather' | 'shield' | 'moon' | 'sun' | 'crown'
   | 'leaf' | 'boot' | 'camera' | 'flag' | 'trophy'
-<<<<<<< HEAD
   | 'user' | 'users' | 'shoppingBag' | 'image' | 'target' | 'star' | 'sparkle'
-=======
-  | 'user' | 'image' | 'target' | 'star' | 'sparkle'
->>>>>>> f8bcb29c9980d78f99e478568c6d62cf4e008fbe
   | 'lock' | 'coin' | 'pencil' | 'close' | 'check' | 'plus' | 'arrowLeft' | 'arrowRight' | 'messageSquare' | 'mic' | 'smile' | 'hexagon';
 
 const PATHS: Record<IconName, React.ReactNode> = {
@@ -50,10 +46,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
   mic: <><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><path d="M12 18v4" /><path d="M8 22h8" /></>,
   smile: <><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><path d="M9 9h.01" /><path d="M15 9h.01" /></>,
   hexagon: <path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z" />,
-<<<<<<< HEAD
 
-=======
->>>>>>> f8bcb29c9980d78f99e478568c6d62cf4e008fbe
 };
 
 interface IconProps {
