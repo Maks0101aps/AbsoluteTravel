@@ -180,6 +180,9 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
         <div
           style={{
             position: 'relative',
+            // Contain Leaflet's internal z-indexes (panes/controls go up to ~1000)
+            // so they can't paint over overlays like the "add place" modal.
+            isolation: 'isolate',
             flex: '1 1 460px',
             minWidth: '300px',
             background: '#081E15',
@@ -207,7 +210,11 @@ function ExploreMap({ accent = '#3FA66B', submitterName }: ExploreMapProps) {
               border: '1px solid rgba(255,255,255,0.10)',
               borderRadius: '16px',
               padding: '22px',
-              minHeight: '200px',
+              // Fixed height + internal scroll: hovering different places swaps the
+              // content without changing this panel's outer size, so the list below
+              // never shifts under the cursor (which otherwise caused a hover flicker loop).
+              height: 'clamp(320px, 46vh, 440px)',
+              overflowY: 'auto',
             }}
           >
             {shown ? (
