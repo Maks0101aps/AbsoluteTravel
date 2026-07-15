@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getUserCheckmarks, type AuthUser, type VerifyCheckmarkResult } from './api';
 import ProfileAvatar from './ProfileAvatar';
+import XpBar from './XpBar';
 import ExploreMap from './ExploreMap';
 import AiAdvisor from './AiAdvisor';
 import { BACKGROUNDS, BADGES } from './data/profileOptions';
@@ -169,7 +170,9 @@ function ProfileTab({
         {p.effectId === 'glow' && (
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', ['--glow-color' as any]: `${accent}80`, animation: 'softGlow 3.5s ease-in-out infinite' }} />
         )}
-        <div style={{ position: 'relative', padding: '34px 30px', display: 'flex', alignItems: 'center', gap: '22px', flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', padding: '24px 30px 30px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          <XpBar xp={user.xp} accent={accent} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '22px', flexWrap: 'wrap' }}>
           <ProfileAvatar avatarId={p.avatarId} customAvatar={p.customAvatar} frameId={p.frameId} color={accent} size={104} />
           <div style={{ flex: '1 1 240px', minWidth: '220px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
@@ -191,6 +194,7 @@ function ProfileTab({
           <button onClick={onEditProfile} style={{ background: 'rgba(255,255,255,0.12)', color: CREAM, border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(6px)' }}>
             Редагувати
           </button>
+          </div>
         </div>
       </div>
 
