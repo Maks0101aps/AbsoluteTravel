@@ -5,11 +5,13 @@ import type { IconName } from '../icons';
 export type Lock =
   | { type: 'free' }
   | { type: 'level'; level: number }
-  | { type: 'coins'; price: number };
+  | { type: 'coins'; price: number }
+  | { type: 'case' }; // obtainable only from loot cases
 
 export function lockLabel(lock: Lock): string | null {
   if (lock.type === 'free') return null;
   if (lock.type === 'level') return `Рівень ${lock.level}`;
+  if (lock.type === 'case') return 'З кейсу';
   return `${lock.price} монет`;
 }
 
@@ -43,6 +45,10 @@ export const AVATARS: AvatarOption[] = [
   { id: 'a19', icon: 'moon', gradient: 'linear-gradient(135deg,#5A6ED8,#241E6B)', lock: { type: 'coins', price: 800 } },
   { id: 'a20', icon: 'trophy', gradient: 'linear-gradient(135deg,#F0C64B,#8C6510)', lock: { type: 'coins', price: 1000 } },
   { id: 'a14', icon: 'crown', gradient: 'linear-gradient(135deg,#E7C34B,#B0851A)', lock: { type: 'coins', price: 1500 } },
+  // --- case-exclusive avatars (only from loot cases) ---
+  { id: 'a21', icon: 'sparkle', gradient: 'linear-gradient(135deg,#D32CE6,#6A1580)', lock: { type: 'case' } },
+  { id: 'a22', icon: 'trophy', gradient: 'linear-gradient(135deg,#5BB8F5,#1E5A8C)', lock: { type: 'case' } },
+  { id: 'a23', icon: 'crown', gradient: 'linear-gradient(135deg,#EB4B4B,#7A1818)', lock: { type: 'case' } },
 ];
 
 // --- Profile accent colors ---
@@ -84,6 +90,11 @@ export const BACKGROUNDS: BackgroundOption[] = [
   { id: 'aurora', label: 'Аврора', css: 'linear-gradient(135deg,#12324a,#3a1a5e)', lock: { type: 'coins', price: 800 } },
   { id: 'sakura', label: 'Сакура', css: 'linear-gradient(135deg,#4A1B34,#2E0F22)', lock: { type: 'coins', price: 1000 } },
   { id: 'cosmos', label: 'Космос', css: 'radial-gradient(circle at 30% 20%,#3a1a5e,#0b1030 60%,#050616)', lock: { type: 'coins', price: 1300 } },
+  // --- case-exclusive backgrounds (only from loot cases) ---
+  { id: 'glacier', label: 'Льодовик', css: 'linear-gradient(135deg,#2E5A6E,#0B2430)', lock: { type: 'case' } },
+  { id: 'volcano', label: 'Вулкан', css: 'linear-gradient(135deg,#5E1A12,#2A0A06)', lock: { type: 'case' } },
+  { id: 'nebula', label: 'Туманність', css: 'radial-gradient(circle at 35% 25%,#5A2A8C,#231152 55%,#0A0620)', lock: { type: 'case' } },
+  { id: 'mirage', label: 'Міраж', css: 'linear-gradient(135deg,#C9922E,#5E3A0F)', lock: { type: 'case' } },
 ];
 
 // --- Avatar frames ---
@@ -101,6 +112,10 @@ export const FRAMES: FrameOption[] = [
   { id: 'glow', label: 'Сяйво', ring: 'glow', lock: { type: 'free' } },
   { id: 'gold', label: 'Золота', ring: 'gold', lock: { type: 'level', level: 10 } },
   { id: 'gem', label: 'Самоцвіт', ring: 'gem', lock: { type: 'coins', price: 1200 } },
+  // --- case-exclusive frames (only from loot cases) ---
+  { id: 'frost', label: 'Іній', ring: 'frost', lock: { type: 'case' } },
+  { id: 'magma', label: 'Магма', ring: 'magma', lock: { type: 'case' } },
+  { id: 'prism', label: 'Призма', ring: 'prism', lock: { type: 'case' } },
 ];
 
 // --- Profile badges (small emblems shown next to the level pill) ---
@@ -118,6 +133,9 @@ export const BADGES: BadgeOption[] = [
   { id: 'explorer', icon: 'flag', label: 'Дослідник', lock: { type: 'level', level: 5 } },
   { id: 'mountaineer', icon: 'mountain', label: 'Підкорювач вершин', lock: { type: 'level', level: 10 } },
   { id: 'legend', icon: 'trophy', label: 'Легенда', lock: { type: 'coins', price: 1000 } },
+  // --- case-exclusive badges (only from loot cases) ---
+  { id: 'voyager', icon: 'compass', label: 'Вояжер', lock: { type: 'case' } },
+  { id: 'pathfinder', icon: 'signpost', label: 'Шукач шляхів', lock: { type: 'case' } },
 ];
 
 // --- Card effects (visual flourish over the whole card) ---

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { purchaseItem, type AuthUser, type ProfileCustomization } from './api';
+import { purchaseItem, openCase, getCasesState, type AuthUser, type ProfileCustomization } from './api';
 import ProfileAvatar from './ProfileAvatar';
 import ProfileShop, { type EquipKey } from './ProfileShop';
 import XpBar from './XpBar';
@@ -150,6 +150,7 @@ function ProfileSetup({ user, onComplete, onSkip, onUserUpdate, autoOpenShop, on
   const [shopOpen, setShopOpen] = useState(false);
   const [buying, setBuying] = useState<string | null>(null);
   const [shopError, setShopError] = useState<string | null>(null);
+  const [openedCaseIds, setOpenedCaseIds] = useState<string[]>([]);
 
   const [active, setActive] = useState<EditorKey | null>(null);
   const [anchor, setAnchor] = useState<AnchorRect | null>(null);
@@ -162,6 +163,26 @@ function ProfileSetup({ user, onComplete, onSkip, onUserUpdate, autoOpenShop, on
     onAutoShopConsumed?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoOpenShop]);
+
+  // Which one-time cases (the free starter) the user has already opened.
+  useEffect(() => {
+    if (!shopOpen) return;
+    getCasesState(user.id)
+      .then((s) => setOpenedCaseIds(s.openedCaseIds))
+      .catch(() => {
+        // non-blocking: cases still openable, server enforces the once-only rule
+      });
+  }, [shopOpen, user.id]);
+
+  const handleOpenCase = async (caseId: string) => {
+    const res = await openCase(user.id, caseId);
+    setCoins(res.coins);
+    setOwned(res.unlockedItems);
+    onUserUpdate?.({ coins: res.coins, unlockedItems: res.unlockedItems });
+    // The free starter case can only be opened once — remember it locally.
+    setOpenedCaseIds((prev) => (prev.includes(caseId) ? prev : [...prev, caseId]));
+    return res;
+  };
 
   // An item is usable if it's free, its level is reached, or it has been purchased.
   const canUse = (lock: Lock, id: string): boolean => {
@@ -468,8 +489,10 @@ function ProfileSetup({ user, onComplete, onSkip, onUserUpdate, autoOpenShop, on
           buying={buying}
           error={shopError}
           selections={{ avatarId, customAvatar, backgroundId, frameId, color, badges, effectId }}
+          openedCaseIds={openedCaseIds}
           onBuy={handleBuy}
           onEquip={equip}
+          onOpenCase={handleOpenCase}
           onClose={() => setShopOpen(false)}
         />
       )}
