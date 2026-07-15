@@ -510,68 +510,69 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
   const totalUnread = Object.values(unread).reduce((s, n) => s + n, 0);
 
   return (
-    <div style={{ fontFamily: "'Manrope', sans-serif", color: CREAM }}>
-      <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 3vw, 34px)', margin: '0 0 18px' }}>
-        Розмови з друзями
-        {!wsConnected && (
-          <span style={{ marginLeft: '12px', fontSize: '12px', fontFamily: "'Manrope', sans-serif", fontWeight: 700, color: '#E0A54E', background: 'rgba(224,165,78,0.15)', border: '1px solid rgba(224,165,78,0.4)', borderRadius: '999px', padding: '4px 10px', verticalAlign: 'middle' }}>
-            офлайн-режим · оновлення кожні 5 с
-          </span>
-        )}
-      </h2>
-
-      <div style={{ display: 'flex', gap: '18px', alignItems: 'stretch', height: 'clamp(440px, 62vh, 640px)' }}>
+    <div style={{ fontFamily: "'Manrope', sans-serif", color: CREAM, height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', flex: 1 }}>
+      <div style={{ display: 'flex', gap: '0', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
         {/* sidebar: friends with unread badges */}
-        <div style={{ flex: '0 0 264px', minWidth: '220px', background: PANEL, borderRadius: '16px', border: '1px solid rgba(255,255,255,0.09)', overflowY: 'auto', padding: '10px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(244,241,232,0.45)', padding: '6px 8px 10px' }}>
-            ДРУЗІ {totalUnread > 0 && <span style={{ color: accent }}>· {totalUnread} нових</span>}
+        <div style={{ flex: '0 0 280px', minWidth: '220px', minHeight: 0, background: PANEL, borderRight: '1px solid rgba(255,255,255,0.09)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(244,241,232,0.45)' }}>
+              ДРУЗІ {totalUnread > 0 && <span style={{ color: accent }}>· {totalUnread} нових</span>}
+            </span>
+            {!wsConnected && (
+              <span title="офлайн-режим · оновлення кожні 5 с" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#E0A54E', background: 'rgba(224,165,78,0.15)', border: '1px solid rgba(224,165,78,0.4)', borderRadius: '999px', padding: '2px 8px' }}>
+                офлайн
+              </span>
+            )}
           </div>
-          {friends.length === 0 && (
-            <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.5)', padding: '8px' }}>
-              Немає друзів для листування. Додай їх у вкладці «Друзі».
-            </div>
-          )}
-          {friends.map((f) => {
-            const n = unread[f.id] ?? 0;
-            const isActive = f.id === activeId;
-            return (
-              <button
-                key={f.id}
-                onClick={() => setActiveId(f.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  width: '100%',
-                  textAlign: 'left',
-                  background: isActive ? `${accent}22` : 'transparent',
-                  border: `1px solid ${isActive ? `${accent}66` : 'transparent'}`,
-                  borderRadius: '12px',
-                  padding: '9px 10px',
-                  cursor: 'pointer',
-                  color: CREAM,
-                  fontFamily: "'Manrope', sans-serif",
-                }}
-              >
-                <UserAvatar user={f} size={36} />
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: '13.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
-                  <span style={{ display: 'block', fontSize: '11px', color: f.online ? accent : 'rgba(244,241,232,0.4)' }}>
-                    {f.online ? 'онлайн' : 'офлайн'}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
+            {friends.length === 0 && (
+              <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.5)', padding: '8px' }}>
+                Немає друзів для листування. Додай їх у вкладці «Друзі».
+              </div>
+            )}
+            {friends.map((f) => {
+              const n = unread[f.id] ?? 0;
+              const isActive = f.id === activeId;
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => setActiveId(f.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    width: '100%',
+                    textAlign: 'left',
+                    background: isActive ? `${accent}22` : 'transparent',
+                    border: `1px solid ${isActive ? `${accent}66` : 'transparent'}`,
+                    borderRadius: '12px',
+                    padding: '9px 10px',
+                    cursor: 'pointer',
+                    color: CREAM,
+                    fontFamily: "'Manrope', sans-serif",
+                    marginBottom: '4px',
+                  }}
+                >
+                  <UserAvatar user={f} size={36} />
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: '13.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
+                    <span style={{ display: 'block', fontSize: '11px', color: f.online ? accent : 'rgba(244,241,232,0.4)' }}>
+                      {f.online ? 'онлайн' : 'офлайн'}
+                    </span>
                   </span>
-                </span>
-                {n > 0 && (
-                  <span style={{ background: accent, color: '#071F16', fontSize: '11px', fontWeight: 800, borderRadius: '999px', padding: '2px 8px', flex: '0 0 auto' }}>
-                    {n}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+                  {n > 0 && (
+                    <span style={{ background: accent, color: '#071F16', fontSize: '11px', fontWeight: 800, borderRadius: '999px', padding: '2px 8px', flex: '0 0 auto' }}>
+                      {n}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* thread */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: '#081E15', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.09)' }}>
+        <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', background: '#081E15' }}>
           {!activeFriend ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(244,241,232,0.45)', fontSize: '14px', padding: '20px', textAlign: 'center' }}>
               Обери друга ліворуч, щоб почати розмову 💬
