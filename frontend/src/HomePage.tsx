@@ -14,14 +14,13 @@ const CREAM = '#F4F1E8';
 const BG = '#071F16';
 const DEFAULT_ACCENT = '#3FA66B';
 
-type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'advisor' | 'profile';
+type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'profile';
 
 const TABS: { id: Tab; label: string; icon: IconName }[] = [
   { id: 'map', label: 'Мапа мандрівок', icon: 'map' },
-  { id: 'friends', label: 'Друзі', icon: 'backpack' },
+  { id: 'friends', label: 'Друзі', icon: 'users' },
   { id: 'leaderboard', label: 'Рейтинг', icon: 'trophy' },
   { id: 'chat', label: 'Чат', icon: 'messageSquare' },
-  { id: 'advisor', label: 'ШІ-порадник', icon: 'compass' },
   { id: 'profile', label: 'Профіль', icon: 'user' },
 ];
 
@@ -110,11 +109,11 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
       fontFamily: "'Manrope', sans-serif", 
       background: BG, 
       color: CREAM, 
-      height: (tab === 'chat' || tab === 'advisor') ? '100dvh' : 'auto',
+      height: tab === 'chat' ? '100dvh' : 'auto',
       minHeight: '100dvh', 
       display: 'flex', 
       flexDirection: 'column',
-      overflow: (tab === 'chat' || tab === 'advisor') ? 'hidden' : 'visible'
+      overflow: tab === 'chat' ? 'hidden' : 'visible'
     }}>
       {/* navbar */}
       <nav className="at-home-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '12px 24px', background: BG, borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'nowrap' }}>
@@ -178,7 +177,7 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
                 transition: 'all 0.2s ease',
               }}
             >
-              <Icon name="coin" size={14} strokeWidth={1.9} stroke="#F0C64B" />
+              <Icon name="shoppingBag" size={14} strokeWidth={1.9} stroke="#F0C64B" />
               Магазин
             </button>
           )}
@@ -210,7 +209,7 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
         </div>
       </nav>
 
-      <main className={`at-home-main ${(tab === 'chat' || tab === 'advisor') ? 'at-chat-main-tab' : ''}`} style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
+      <main className={`at-home-main ${tab === 'chat' ? 'at-chat-main-tab' : ''}`} style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
         {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} background={background} />}
         {tab === 'map' && (
           <ExploreMap
@@ -225,7 +224,6 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
         {tab === 'friends' && <FriendsPage userId={user.id} accent={accent} onMessage={openChatWith} />}
         {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} />}
         {tab === 'chat' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId={chatFriendId} />}
-        {tab === 'advisor' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId="advisor" hideSidebar={true} />}
       </main>
     </div>
   );
@@ -297,7 +295,7 @@ function ProfileTab({
 
       <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: '0 0 12px' }}>Готово, {p.displayName}!</h2>
       <p style={{ fontSize: '15px', lineHeight: 1.7, color: 'rgba(244,241,232,0.65)', maxWidth: '520px', margin: 0 }}>
-        Відкрий вкладку «Мапа мандрівок», щоб дослідити цікаві місця України, або запитай поради у «ШІ-порадника».
+        Відкрий вкладку «Мапа мандрівок», щоб дослідити цікаві місця України, або запитай поради у «ШІ-порадника» у розділі «Чат».
       </p>
     </>
   );
