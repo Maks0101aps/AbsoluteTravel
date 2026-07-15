@@ -112,6 +112,45 @@ const PLACE_SYSTEM_PROMPT = `Ти — модератор карти цікави
 Відповідай ЛИШЕ валідним JSON без пояснень навколо, у форматі:
 {"decision":"approve"|"reject"|"review","reason":"коротке пояснення українською (1-2 речення)","score":число_від_0_до_1}`;
 
+// --- Visit verification -----------------------------------------------------
+
+// What the verifier receives about a claimed visit.
+export interface VisitVerificationInput {
+  placeName: string;
+  placeDescription: string;
+  // Reference photos of the place (data URLs), if any.
+  placePhotos: string[];
+  // The photo the user just took at the point (data URL).
+  userPhoto: string;
+}
+
+export interface VisitVerificationResult {
+  verified: boolean;
+  reason: string;
+  // True only when a real model produced the verdict (vs. offline fallback).
+  verifiedByAi: boolean;
+}
+
+const VISIT_SYSTEM_PROMPT = `Ти — верифікатор відвідувань місць для застосунку Absolute Travel.
+Користувач стверджує, що дійшов до конкретного місця на карті, і надсилає фото, яке щойно там зробив.
+Твоє завдання — вирішити, чи це фото реально знято в цьому місці, судячи з візуальної схожості
+з описом місця та референс-фотографіями (якщо вони є).
+
+ПІДТВЕРДИТИ (verified: true), якщо:
+- Фото користувача правдоподібно зроблене в цьому місці: краєвид, споруда, природа чи деталі
+  збігаються з описом та/або референс-фото.
+- Це реальна фотографія локації (не скриншот, не мем, не випадкове фото зі стоку).
+
+ВІДХИЛИТИ (verified: false), якщо:
+- Фото явно не стосується цього місця або зняте деінде.
+- Це скриншот, мем, фото людини крупним планом, випадкове або неприйнятне зображення.
+- Немає жодної візуальної схожості з описом чи референс-фото.
+
+Якщо бракує впевненості, але фото виглядає доречним — краще підтвердити.
+
+Відповідай ЛИШЕ валідним JSON без пояснень навколо, у форматі:
+{"verified":true|false,"reason":"коротке пояснення українською (1-2 речення)"}`;
+
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
@@ -312,6 +351,107 @@ export class AiService {
       moderatedByAi: false,
     };
   }
+
+  /**
+   * Verify that a user's photo was really taken at the given place, by comparing
+   * it against the place description and reference photos.
+   *
+   * Gracefully degrades: without an API key (or on any failure) it approves the
+   * visit so the feature is never blocked when the model is unavailable.
+   */
+  async verifyVisit(input: VisitVerificationInput): Promise<VisitVerificationResult> {
+    const key = this.apiKey;
+    if (!key) {
+      return {
+        verified: true,
+        reason: 'AI-перевірку не налаштовано, зараховано автоматично.',
+        verifiedByAi: false,
+      };
+    }
+
+    // Multimodal request: place details as text + reference photos + user photo.
+    const parts: Array<{ text: string } | { inline_data: { mime_type: string; data: string } }> =
+      [];
+
+    parts.push({
+      text:
+        `Перевір відвідування цього місця:\n` +
+        `Назва: ${input.placeName}\n` +
+        `Опис: ${input.placeDescription}\n\n` +
+        (input.placePhotos.length
+          ? `Спершу — ${Math.min(input.placePhotos.length, 3)} референс-фото цього місця, ` +
+            `а потім фото, яке щойно зробив користувач. Оціни візуальну схожість.`
+          : `Референс-фото немає. Оціни, чи фото користувача правдоподібно зняте в цьому місці за описом.`),
+    });
+
+    for (const photo of input.placePhotos.slice(0, 3)) {
+      const parsed = parseDataUrl(photo);
+      if (parsed) {
+        parts.push({ inline_data: { mime_type: parsed.mimeType, data: parsed.base64 } });
+      }
+    }
+
+    parts.push({ text: 'Фото користувача:' });
+    const userParsed = parseDataUrl(input.userPhoto);
+    if (userParsed) {
+      parts.push({ inline_data: { mime_type: userParsed.mimeType, data: userParsed.base64 } });
+    }
+
+    const body = {
+      system_instruction: { parts: [{ text: VISIT_SYSTEM_PROMPT }] },
+      contents: [{ role: 'user', parts }],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 400,
+        responseMimeType: 'application/json',
+      },
+    };
+
+    const url = `${GEMINI_ENDPOINT}/${this.model}:generateContent`;
+
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      this.logger.error('Gemini visit verification request failed', err as Error);
+      return this.visitFallback('Не вдалося зв’язатися з ШІ-перевіркою.');
+    }
+
+    const data: any = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      const detail = data?.error?.message ?? `HTTP ${res.status}`;
+      this.logger.error(`Gemini visit verification error: ${detail}`);
+      return this.visitFallback('ШІ-перевірка тимчасово недоступна.');
+    }
+
+    const raw: string =
+      data?.candidates?.[0]?.content?.parts
+        ?.map((p: { text?: string }) => p?.text ?? '')
+        .join('')
+        .trim() ?? '';
+
+    const verdict = parseVisitJson(raw);
+    if (!verdict) {
+      this.logger.warn(`Could not parse visit JSON: ${raw.slice(0, 200)}`);
+      return this.visitFallback('ШІ-перевірка повернула неоднозначну відповідь.');
+    }
+
+    return { ...verdict, verifiedByAi: true };
+  }
+
+  // On any failure the visit is approved so the feature keeps working.
+  private visitFallback(reason: string): VisitVerificationResult {
+    return {
+      verified: true,
+      reason: `${reason} Відвідування зараховано автоматично.`,
+      verifiedByAi: false,
+    };
+  }
 }
 
 // Split a `data:<mime>;base64,<data>` URL into its parts. Returns null if the
@@ -348,4 +488,23 @@ function parseModerationJson(raw: string): Omit<PlaceModerationResult, 'moderate
   const reason = String(parsed?.reason ?? '').trim() || 'Без додаткового пояснення.';
 
   return { decision, reason, score };
+}
+
+// Best-effort parse of the visit-verification JSON verdict.
+function parseVisitJson(raw: string): Omit<VisitVerificationResult, 'verifiedByAi'> | null {
+  if (!raw) return null;
+  const start = raw.indexOf('{');
+  const end = raw.lastIndexOf('}');
+  if (start === -1 || end === -1 || end < start) return null;
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(raw.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+
+  const verified = Boolean(parsed?.verified);
+  const reason = String(parsed?.reason ?? '').trim() || 'Без додаткового пояснення.';
+  return { verified, reason };
 }

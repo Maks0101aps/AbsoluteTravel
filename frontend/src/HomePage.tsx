@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { AuthUser } from './api';
+import { useEffect, useState } from 'react';
+import { getUserCheckmarks, type AuthUser, type VerifyCheckmarkResult } from './api';
 import ProfileAvatar from './ProfileAvatar';
 import ExploreMap from './ExploreMap';
 import AiAdvisor from './AiAdvisor';
@@ -22,13 +22,40 @@ interface HomePageProps {
   user: AuthUser;
   onLogout: () => void;
   onEditProfile: () => void;
+  // Persist updated user fields (xp/coins/level) after a verified visit.
+  onUserUpdate?: (patch: Partial<AuthUser>) => void;
 }
 
-function HomePage({ user, onLogout, onEditProfile }: HomePageProps) {
+function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps) {
   const p = user.profile;
   const accent = p?.color ?? DEFAULT_ACCENT;
   const background = BACKGROUNDS.find((b) => b.id === p?.backgroundId);
   const [tab, setTab] = useState<Tab>('map');
+  const [openedPlaceIds, setOpenedPlaceIds] = useState<Set<string | number>>(new Set());
+
+  // Load the places this user has already verified, to show "opened" badges.
+  useEffect(() => {
+    let cancelled = false;
+    getUserCheckmarks(user.id)
+      .then((marks) => {
+        if (!cancelled) setOpenedPlaceIds(new Set(marks.map((m) => m.placeId)));
+      })
+      .catch(() => {
+        // non-blocking: no badges if the call fails
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user.id]);
+
+  const handleVerified = (placeId: string | number, result: VerifyCheckmarkResult) => {
+    setOpenedPlaceIds((prev) => new Set(prev).add(placeId));
+    onUserUpdate?.({
+      xp: user.xp + result.xpAwarded,
+      coins: (user.coins ?? 0) + result.coinsAwarded,
+      level: result.newLevel,
+    });
+  };
 
   const maxWidth = tab === 'profile' ? '860px' : '1140px';
 
@@ -91,7 +118,15 @@ function HomePage({ user, onLogout, onEditProfile }: HomePageProps) {
 
       <main className="at-home-main" style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
         {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} background={background} />}
-        {tab === 'map' && <ExploreMap accent={accent} submitterName={p?.displayName ?? user.name} />}
+        {tab === 'map' && (
+          <ExploreMap
+            accent={accent}
+            submitterName={p?.displayName ?? user.name}
+            userId={user.id}
+            openedPlaceIds={openedPlaceIds}
+            onVerified={handleVerified}
+          />
+        )}
         {tab === 'advisor' && <AiAdvisor accent={accent} userName={p?.displayName ?? user.name} />}
       </main>
     </div>

@@ -203,6 +203,54 @@ export function submitPlace(payload: PlaceSubmission) {
   return call<SubmitPlaceResult>('POST', '/api/places/submit', payload);
 }
 
+// --- Visit verification (checkmarks) ---------------------------------------
+
+export interface VerifyCheckmarkPayload {
+  userId: number;
+  placeId: number;
+  lat: number;
+  lng: number;
+  photo: string;
+}
+
+export interface VerifyCheckmarkResult {
+  verified: boolean;
+  xpAwarded: number;
+  coinsAwarded: number;
+  newLevel: number;
+  leveledUp: boolean;
+  reason: string;
+}
+
+export interface Checkmark {
+  id: number;
+  placeId: number;
+  distanceMeters: number;
+  aiVerified: boolean;
+  aiReason: string | null;
+  xpAwarded: number;
+  createdAt: string;
+  place: {
+    id: number;
+    name: string;
+    region: string;
+    category: PlaceCategory;
+    difficulty: number;
+    lat: number;
+    lng: number;
+  };
+}
+
+/** Verify a claimed visit; awards XP/coins on success. */
+export function verifyCheckmark(payload: VerifyCheckmarkPayload) {
+  return call<VerifyCheckmarkResult>('POST', '/api/checkmarks/verify', payload);
+}
+
+/** Places the user has already verified. */
+export function getUserCheckmarks(userId: number) {
+  return call<Checkmark[]>('GET', `/api/checkmarks/user/${userId}`);
+}
+
 // --- Admin accounts & auth -------------------------------------------------
 
 export interface AdminAccount {
