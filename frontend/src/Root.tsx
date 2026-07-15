@@ -8,6 +8,7 @@ import {
   earnCoins,
   adminMe,
   adminLogout,
+  updateProfile,
   type AuthUser,
   type ProfileCustomization,
   type AdminSession,
@@ -100,14 +101,21 @@ function Root() {
 
   const handleProfileComplete = (profile: ProfileCustomization) => {
     let userId: number | null = null;
+    const avatar = profile.customAvatar || profile.avatarId;
     setUser((prev) => {
       if (!prev) return prev;
       userId = prev.id;
-      const next = { ...prev, name: profile.displayName, profile };
+      const next = { ...prev, name: profile.displayName, avatar, profile };
       persist(next);
       return next;
     });
     setView('home');
+
+    if (userId !== null) {
+      updateProfile(userId, { name: profile.displayName, avatar }).catch((err) => {
+        console.error('Failed to save profile changes to backend:', err);
+      });
+    }
 
     // Reward the one-time onboarding bonus (server is idempotent per reason).
     if (userId !== null) {

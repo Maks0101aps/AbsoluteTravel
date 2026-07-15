@@ -55,7 +55,9 @@ export function useLiveGps(userId: number | undefined, enabled = true): LiveGpsS
     };
   }, [userId, enabled]);
 
-  // Publish own position every 15 seconds while sharing is on.
+  // Watch the device position continuously and publish to the socket at most
+  // once per PUBLISH_INTERVAL_MS. watchPosition yields more accurate/stable
+  // fixes than periodic getCurrentPosition, especially on mobile GPS.
   useEffect(() => {
     if (!userId || !enabled) return;
     if (!('geolocation' in navigator)) {
@@ -64,33 +66,34 @@ export function useLiveGps(userId: number | undefined, enabled = true): LiveGpsS
     }
 
     let stopped = false;
-    const publish = () => {
-      if (stopped || !sharingRef.current) return;
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          if (stopped) return;
-          const lat = Number(pos.coords.latitude.toFixed(6));
-          const lng = Number(pos.coords.longitude.toFixed(6));
-          setSelfPosition({ lat, lng });
-          setGeoError(null);
-          getSocket(userId).then((socket) => {
-            if (!stopped && socket.connected) socket.emit('location:update', { lat, lng });
-          });
-        },
-        (err) => {
-          if (!stopped) setGeoError(err.code === err.PERMISSION_DENIED ? 'Доступ до геолокації заборонено' : 'Не вдалося визначити позицію');
-        },
-        { enableHighAccuracy: true, timeout: 10_000, maximumAge: 10_000 },
-      );
-    };
+    let lastPublishedAt = 0;
 
-    publish();
-    const timer = setInterval(() => {
-      publish();
-      setTick((t) => t + 1);
-    }, PUBLISH_INTERVAL_MS);
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        if (stopped || !sharingRef.current) return;
+        const lat = Number(pos.coords.latitude.toFixed(6));
+        const lng = Number(pos.coords.longitude.toFixed(6));
+        setSelfPosition({ lat, lng });
+        setGeoError(null);
+
+        const now = Date.now();
+        if (now - lastPublishedAt < PUBLISH_INTERVAL_MS) return;
+        lastPublishedAt = now;
+        getSocket(userId).then((socket) => {
+          if (!stopped && socket.connected) socket.emit('location:update', { lat, lng });
+        });
+      },
+      (err) => {
+        if (!stopped) setGeoError(err.code === err.PERMISSION_DENIED ? 'Доступ до геолокації заборонено' : 'Не вдалося визначити позицію');
+      },
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 },
+    );
+
+    // Keep staleness flags fresh even without new position events.
+    const timer = setInterval(() => setTick((t) => t + 1), PUBLISH_INTERVAL_MS);
     return () => {
       stopped = true;
+      navigator.geolocation.clearWatch(watchId);
       clearInterval(timer);
     };
   }, [userId, enabled, sharing]);

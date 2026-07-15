@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getMyRank, getXpLeaderboard, type MyRank, type XpLeaderboardRow } from './api';
+import { UserAvatar } from './UserCard';
 
 const CREAM = '#F4F1E8';
 const PANEL = '#0B2B20';
@@ -73,15 +74,7 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B' }: Leaderboard
             marginBottom: '22px',
           }}
         >
-          <img
-            src={me.user.avatarUrl}
-            alt={me.user.name}
-            style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${accent}` }}
-            onError={(e) => {
-              e.currentTarget.src = '/assets/avatar_default.avif';
-              e.currentTarget.onerror = null;
-            }}
-          />
+          <UserAvatar user={{ avatar: me.user.avatarUrl, name: me.user.name, online: true }} size={52} />
           <div style={{ flex: '1 1 180px' }}>
             <div style={{ fontSize: '15px', fontWeight: 800 }}>{me.user.name}</div>
             <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.6)' }}>
@@ -174,15 +167,7 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B' }: Leaderboard
                 <div style={{ width: '40px', textAlign: 'center', fontSize: row.rank <= 3 ? '20px' : '14px', fontWeight: 800, color: row.rank <= 3 ? GOLD : 'rgba(244,241,232,0.55)', flex: '0 0 auto' }}>
                   {MEDALS[row.rank - 1] ?? `#${row.rank}`}
                 </div>
-                <img
-                  src={row.avatarUrl}
-                  alt={row.name}
-                  style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)', flex: '0 0 auto' }}
-                  onError={(e) => {
-                    e.currentTarget.src = '/assets/avatar_default.avif';
-                    e.currentTarget.onerror = null;
-                  }}
-                />
+                <UserAvatar user={{ avatar: row.avatarUrl, name: row.name, online: false }} size={40} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700 }}>

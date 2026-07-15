@@ -21,7 +21,7 @@ const TABS: { id: Tab; label: string; icon: IconName }[] = [
   { id: 'map', label: 'Мапа мандрівок', icon: 'map' },
   { id: 'friends', label: 'Друзі', icon: 'backpack' },
   { id: 'leaderboard', label: 'Рейтинг', icon: 'trophy' },
-  { id: 'chat', label: 'Чат', icon: 'feather' },
+  { id: 'chat', label: 'Чат', icon: 'messageSquare' },
   { id: 'advisor', label: 'ШІ-порадник', icon: 'compass' },
   { id: 'profile', label: 'Профіль', icon: 'user' },
 ];
@@ -107,7 +107,16 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
   const maxWidth = tab === 'profile' ? '860px' : '1140px';
 
   return (
-    <div style={{ fontFamily: "'Manrope', sans-serif", background: BG, color: CREAM, minHeight: '100vh' }}>
+    <div style={{ 
+      fontFamily: "'Manrope', sans-serif", 
+      background: BG, 
+      color: CREAM, 
+      height: tab === 'chat' ? '100dvh' : 'auto',
+      minHeight: '100dvh', 
+      display: 'flex', 
+      flexDirection: 'column',
+      overflow: tab === 'chat' ? 'hidden' : 'visible'
+    }}>
       {/* navbar */}
       <nav className="at-home-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '12px 24px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'nowrap' }}>
         <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '36px', width: 'auto', display: 'block', flexShrink: 0 }} />
@@ -202,7 +211,7 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
         </div>
       </nav>
 
-      <main className="at-home-main" style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
+      <main className={`at-home-main ${tab === 'chat' ? 'at-chat-main-tab' : ''}`} style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
         {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} background={background} />}
         {tab === 'map' && (
           <ExploreMap
