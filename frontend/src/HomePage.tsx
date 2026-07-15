@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
-import { getUserCheckmarks, type AuthUser, type VerifyCheckmarkResult } from './api';
+import { getUnreadCounts, getUserCheckmarks, type AuthUser, type VerifyCheckmarkResult } from './api';
 import ProfileAvatar from './ProfileAvatar';
 import XpBar from './XpBar';
 import ExploreMap from './ExploreMap';
 import AiAdvisor from './AiAdvisor';
+import FriendsPage from './FriendsPage';
+import LeaderboardPage from './LeaderboardPage';
+import ChatPage from './ChatPage';
+import { getSocket, closeSocket } from './socket';
 import { BACKGROUNDS, BADGES } from './data/profileOptions';
 import { Icon, type IconName } from './icons';
 
@@ -11,10 +15,13 @@ const CREAM = '#F4F1E8';
 const BG = '#071F16';
 const DEFAULT_ACCENT = '#3FA66B';
 
-type Tab = 'map' | 'advisor' | 'profile';
+type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'advisor' | 'profile';
 
 const TABS: { id: Tab; label: string; icon: IconName }[] = [
   { id: 'map', label: 'Мапа мандрівок', icon: 'map' },
+  { id: 'friends', label: 'Друзі', icon: 'backpack' },
+  { id: 'leaderboard', label: 'Рейтинг', icon: 'trophy' },
+  { id: 'chat', label: 'Чат', icon: 'feather' },
   { id: 'advisor', label: 'ШІ-порадник', icon: 'compass' },
   { id: 'profile', label: 'Профіль', icon: 'user' },
 ];
@@ -33,6 +40,44 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
   const background = BACKGROUNDS.find((b) => b.id === p?.backgroundId);
   const [tab, setTab] = useState<Tab>('map');
   const [openedPlaceIds, setOpenedPlaceIds] = useState<Set<string | number>>(new Set());
+  // Preselected friend when jumping into chat from "Написати" buttons.
+  const [chatFriendId, setChatFriendId] = useState<number | null>(null);
+  const [totalUnread, setTotalUnread] = useState(0);
+
+  const openChatWith = (friendId: number) => {
+    setChatFriendId(friendId);
+    setTab('chat');
+  };
+
+  // Connect the realtime socket for the session; keep the chat unread badge fresh.
+  useEffect(() => {
+    let disposed = false;
+    let cleanup = () => {};
+    const refreshUnread = () => {
+      getUnreadCounts(user.id)
+        .then((counts) => {
+          if (!disposed) setTotalUnread(Object.values(counts).reduce((s, n) => s + n, 0));
+        })
+        .catch(() => {});
+    };
+    refreshUnread();
+    getSocket(user.id).then((socket) => {
+      if (disposed) return;
+      const onMessage = () => refreshUnread();
+      socket.on('chat:message', onMessage);
+      cleanup = () => socket.off('chat:message', onMessage);
+    });
+    return () => {
+      disposed = true;
+      cleanup();
+      closeSocket();
+    };
+  }, [user.id]);
+
+  // Opening the chat tab clears the badge (threads mark themselves read).
+  useEffect(() => {
+    if (tab === 'chat') setTotalUnread(0);
+  }, [tab]);
 
   // Load the places this user has already verified, to show "opened" badges.
   useEffect(() => {
@@ -92,6 +137,11 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
               >
                 <Icon name={t.icon} size={15} strokeWidth={1.9} />
                 {t.label}
+                {t.id === 'chat' && totalUnread > 0 && (
+                  <span style={{ background: accent, color: BG, fontSize: '10px', fontWeight: 800, borderRadius: '999px', padding: '1px 7px', marginLeft: '2px' }}>
+                    {totalUnread}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -126,8 +176,12 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
             userId={user.id}
             openedPlaceIds={openedPlaceIds}
             onVerified={handleVerified}
+            onMessageFriend={openChatWith}
           />
         )}
+        {tab === 'friends' && <FriendsPage userId={user.id} accent={accent} onMessage={openChatWith} />}
+        {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} />}
+        {tab === 'chat' && <ChatPage userId={user.id} accent={accent} initialFriendId={chatFriendId} />}
         {tab === 'advisor' && <AiAdvisor accent={accent} userName={p?.displayName ?? user.name} />}
       </main>
     </div>
