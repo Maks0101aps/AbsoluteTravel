@@ -18,7 +18,7 @@ model User {
   city               String?
   region             String?
   name               String
-  avatar             String            @default("/assets/avatar_default.avif")
+  avatar             String            @default("/assets/avatar_default.svg")
   level              Int               @default(1)
   xp                 Int               @default(0)
   coins              Int               @default(0)
