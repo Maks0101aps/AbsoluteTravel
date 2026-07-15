@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { purchaseItem, type AuthUser, type ProfileCustomization } from './api';
 import ProfileAvatar from './ProfileAvatar';
 import ProfileShop, { type EquipKey } from './ProfileShop';
+import XpBar from './XpBar';
 import Popover, { type AnchorRect } from './Popover';
 import { Icon, type IconName } from './icons';
 import {
@@ -14,6 +15,7 @@ import {
   lockLabel,
   type Lock,
 } from './data/profileOptions';
+import { MAX_LEVEL } from './data/leveling';
 
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
@@ -288,7 +290,9 @@ function ProfileSetup({ user, onComplete, onSkip, onUserUpdate }: ProfileSetupPr
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', ['--glow-color' as any]: `${color}80`, animation: 'softGlow 3.5s ease-in-out infinite' }} />
             )}
 
-            <div style={{ position: 'relative', padding: '34px 30px', display: 'flex', alignItems: 'flex-start', gap: '22px', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', padding: '24px 30px 30px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              <XpBar xp={user.xp} accent={color} />
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '22px', flexWrap: 'wrap' }}>
               {/* avatar + frame edit dot */}
               <div ref={avatarRef} style={{ position: 'relative', flex: '0 0 auto' }}>
                 <Editable accent={color} active={active === 'avatar'} radius={999} onOpen={(el) => openAt('avatar', el)}>
@@ -375,6 +379,7 @@ function ProfileSetup({ user, onComplete, onSkip, onUserUpdate }: ProfileSetupPr
                     {bio.trim() || 'Додай короткий опис про себе…'}
                   </div>
                 </Editable>
+              </div>
               </div>
             </div>
           </div>
@@ -638,15 +643,11 @@ function ProfileSetup({ user, onComplete, onSkip, onUserUpdate }: ProfileSetupPr
 
           {active === 'level' && (
             <div>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontFamily: "'Lora', serif", fontSize: '20px' }}>Рівень {user.level}</span>
-                <span style={{ fontSize: '12px', color: 'rgba(244,241,232,0.6)' }}>{user.xp} XP</span>
-              </div>
-              <div style={{ height: '8px', borderRadius: '999px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden', marginBottom: '10px' }}>
-                <div style={{ width: `${Math.min(100, (user.xp % 1000) / 10)}%`, height: '100%', background: color, transition: 'width 0.3s ease' }} />
+              <div style={{ marginBottom: '12px' }}>
+                <XpBar xp={user.xp} accent={color} />
               </div>
               <p style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.6)', lineHeight: 1.5, margin: 0 }}>
-                Досліджуй місця, проходь маршрути та виконуй завдання, щоб отримувати XP і відкривати нові аватари, рамки й ефекти.
+                Досліджуй місця, проходь маршрути та виконуй завдання, щоб отримувати XP і відкривати нові аватари, рамки й ефекти. Максимальний рівень — {MAX_LEVEL}.
               </p>
             </div>
           )}

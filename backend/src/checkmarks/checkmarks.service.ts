@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { AiService } from '../ai/ai.service';
+import { levelFromXp } from '../leveling';
 
 export interface VerifyCheckmarkDto {
   userId?: number;
@@ -178,11 +179,6 @@ function haversine(lat1: number, lng1: number, lat2: number, lng2: number): numb
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
-}
-
-// Simple level curve: level = 1 + floor(sqrt(xp / 50)).
-function levelFromXp(xp: number): number {
-  return 1 + Math.floor(Math.sqrt(Math.max(0, xp) / 50));
 }
 
 function parsePhotos(raw: string): string[] {
