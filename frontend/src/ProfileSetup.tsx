@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { purchaseItem, type AuthUser, type ProfileCustomization } from './api';
 import ProfileAvatar from './ProfileAvatar';
 import ProfileShop, { type EquipKey } from './ProfileShop';
@@ -27,6 +27,9 @@ interface ProfileSetupProps {
   onComplete: (profile: ProfileCustomization) => void;
   onSkip: () => void;
   onUserUpdate?: (patch: Partial<AuthUser>) => void;
+  /** Open the shop popup as soon as this screen mounts (e.g. navbar "Магазин" entry). */
+  autoOpenShop?: boolean;
+  onAutoShopConsumed?: () => void;
 }
 
 // ---- shared bits ----------------------------------------------------------
@@ -129,7 +132,7 @@ function Editable({
 
 // ---- main -----------------------------------------------------------------
 
-function ProfileSetup({ user, onComplete, onSkip, onUserUpdate }: ProfileSetupProps) {
+function ProfileSetup({ user, onComplete, onSkip, onUserUpdate, autoOpenShop, onAutoShopConsumed }: ProfileSetupProps) {
   const init = user.profile;
   const [avatarId, setAvatarId] = useState(init?.avatarId ?? AVATARS[0].id);
   const [customAvatar, setCustomAvatar] = useState<string | undefined>(init?.customAvatar);
@@ -150,6 +153,15 @@ function ProfileSetup({ user, onComplete, onSkip, onUserUpdate }: ProfileSetupPr
 
   const [active, setActive] = useState<EditorKey | null>(null);
   const [anchor, setAnchor] = useState<AnchorRect | null>(null);
+
+  // Jumped here from the navbar "Магазин" entry — open the shop immediately.
+  useEffect(() => {
+    if (!autoOpenShop) return;
+    setShopError(null);
+    setShopOpen(true);
+    onAutoShopConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenShop]);
 
   // An item is usable if it's free, its level is reached, or it has been purchased.
   const canUse = (lock: Lock, id: string): boolean => {
@@ -430,38 +442,6 @@ function ProfileSetup({ user, onComplete, onSkip, onUserUpdate }: ProfileSetupPr
                 </button>
               );
             })}
-
-            {/* ---- shop entry ---- */}
-            <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '4px 4px' }} />
-            <button
-              data-editable
-              onClick={(e) => { e.stopPropagation(); setShopError(null); setShopOpen(true); }}
-              title="Магазин"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                width: '128px',
-                padding: '11px 12px',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                border: '1px solid rgba(240,198,75,0.45)',
-                background: 'rgba(240,198,75,0.12)',
-                color: '#F0C64B',
-                fontFamily: "'Manrope', sans-serif",
-                fontSize: '13px',
-                fontWeight: 700,
-                transition: 'all 0.18s ease',
-              }}
-            >
-              <Icon name="coin" size={17} strokeWidth={1.9} stroke="#F0C64B" />
-              Магазин
-            </button>
-            {/* live coin balance under the shop button */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 700, color: 'rgba(240,198,75,0.85)', paddingTop: '2px' }}>
-              <Icon name="coin" size={13} strokeWidth={1.9} stroke="rgba(240,198,75,0.85)" />
-              {coins} монет
-            </div>
           </div>
         </div>
 

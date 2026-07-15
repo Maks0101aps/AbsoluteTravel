@@ -30,11 +30,12 @@ interface HomePageProps {
   user: AuthUser;
   onLogout: () => void;
   onEditProfile: () => void;
+  onOpenShop?: () => void;
   // Persist updated user fields (xp/coins/level) after a verified visit.
   onUserUpdate?: (patch: Partial<AuthUser>) => void;
 }
 
-function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps) {
+function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: HomePageProps) {
   const p = user.profile;
   const accent = p?.color ?? DEFAULT_ACCENT;
   const background = BACKGROUNDS.find((b) => b.id === p?.backgroundId);
@@ -108,11 +109,11 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
   return (
     <div style={{ fontFamily: "'Manrope', sans-serif", background: BG, color: CREAM, minHeight: '100vh' }}>
       {/* navbar */}
-      <nav className="at-home-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 40px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap' }}>
-        <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '40px', width: 'auto', display: 'block' }} />
-        
-        {/* navigation tabs */}
-        <div className="at-home-nav-tabs" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+      <nav className="at-home-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '12px 24px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'nowrap' }}>
+        <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '36px', width: 'auto', display: 'block', flexShrink: 0 }} />
+
+        {/* navigation tabs — tightened padding/gaps so everything fits on one line */}
+        <div className="at-home-nav-tabs" style={{ display: 'flex', alignItems: 'center', gap: '3px', flexWrap: 'nowrap', flex: '1 1 auto', minWidth: 0, justifyContent: 'center' }}>
           {TABS.map((t) => {
             const isActive = tab === t.id;
             return (
@@ -122,46 +123,80 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '8px',
+                  gap: '5px',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
                   background: isActive ? `${accent}1F` : 'transparent',
                   border: `1px solid ${isActive ? `${accent}66` : 'transparent'}`,
                   color: isActive ? accent : 'rgba(244,241,232,0.65)',
-                  borderRadius: '10px',
-                  padding: '8px 14px',
-                  fontSize: '13px',
+                  borderRadius: '9px',
+                  padding: '7px 9px',
+                  fontSize: '12.5px',
                   fontWeight: 700,
                   cursor: 'pointer',
                   fontFamily: "'Manrope', sans-serif",
                   transition: 'all 0.2s ease',
                 }}
               >
-                <Icon name={t.icon} size={15} strokeWidth={1.9} />
+                <Icon name={t.icon} size={14} strokeWidth={1.9} />
                 {t.label}
                 {t.id === 'chat' && totalUnread > 0 && (
-                  <span style={{ background: accent, color: BG, fontSize: '10px', fontWeight: 800, borderRadius: '999px', padding: '1px 7px', marginLeft: '2px' }}>
+                  <span style={{ background: accent, color: BG, fontSize: '10px', fontWeight: 800, borderRadius: '999px', padding: '1px 6px', marginLeft: '1px' }}>
                     {totalUnread}
                   </span>
                 )}
               </button>
             );
           })}
+          {onOpenShop && (
+            <button
+              onClick={onOpenShop}
+              title="Магазин"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
+                background: 'rgba(240,198,75,0.12)',
+                border: '1px solid rgba(240,198,75,0.35)',
+                color: '#F0C64B',
+                borderRadius: '9px',
+                padding: '7px 9px',
+                fontSize: '12.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: "'Manrope', sans-serif",
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Icon name="coin" size={14} strokeWidth={1.9} stroke="#F0C64B" />
+              Магазин
+            </button>
+          )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div title="Монети" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#F0C64B', background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.3)', borderRadius: '999px', padding: '6px 12px', fontSize: '13px', fontWeight: 700 }}>
-            <Icon name="coin" size={16} strokeWidth={1.9} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <div title="Монети" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#F0C64B', background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.3)', borderRadius: '999px', padding: '6px 10px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}>
+            <Icon name="coin" size={15} strokeWidth={1.9} />
             {user.coins ?? 0}
           </div>
           <div className="at-home-userinfo" style={{ textAlign: 'right', lineHeight: 1.3 }}>
-            <div style={{ fontSize: '13.5px', fontWeight: 700 }}>{user.name}</div>
-            <div style={{ fontSize: '11px', color: 'rgba(244,241,232,0.5)' }}>Рівень {user.level}</div>
+            <div style={{ fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap' }}>{user.name}</div>
+            <div style={{ fontSize: '10.5px', color: 'rgba(244,241,232,0.5)', whiteSpace: 'nowrap' }}>Рівень {user.level}</div>
           </div>
-          {p ? (
-            <ProfileAvatar avatarId={p.avatarId} customAvatar={p.customAvatar} frameId={p.frameId} color={accent} size={38} />
-          ) : (
-            <img src={user.avatar} alt={user.name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: `1.5px solid ${accent}` }} onError={(e) => (e.currentTarget.style.display = 'none')} />
-          )}
-          <button onClick={onLogout} style={{ background: 'transparent', color: 'rgba(244,241,232,0.7)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '10px', padding: '9px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+          <button
+            onClick={() => setTab('profile')}
+            title="Мій профіль"
+            style={{ background: 'transparent', border: 'none', padding: 0, lineHeight: 0, cursor: 'pointer', flexShrink: 0, borderRadius: '50%' }}
+          >
+            {p ? (
+              <ProfileAvatar avatarId={p.avatarId} customAvatar={p.customAvatar} frameId={p.frameId} color={accent} size={36} />
+            ) : (
+              <img src={user.avatar} alt={user.name} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: `1.5px solid ${accent}` }} onError={(e) => (e.currentTarget.style.display = 'none')} />
+            )}
+          </button>
+          <button onClick={onLogout} style={{ background: 'transparent', color: 'rgba(244,241,232,0.7)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '10px', padding: '8px 13px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             Вийти
           </button>
         </div>
