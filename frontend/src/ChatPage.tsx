@@ -67,7 +67,10 @@ function VoiceMessagePlayer({ text, mine }: { text: string; mine: boolean }) {
     audioRef.current = audio;
     const onTimeUpdate = () => setCurrentTime(audio.currentTime);
     const onLoadedMetadata = () => setDuration(audio.duration || 0);
-    const onEnded = () => setPlaying(false);
+    const onEnded = () => {
+      setPlaying(false);
+      setCurrentTime(audio.duration || 0);
+    };
 
     audio.addEventListener('timeupdate', onTimeUpdate);
     audio.addEventListener('loadedmetadata', onLoadedMetadata);
@@ -80,6 +83,21 @@ function VoiceMessagePlayer({ text, mine }: { text: string; mine: boolean }) {
       audio.removeEventListener('ended', onEnded);
     };
   }, [audioUrl]);
+
+  useEffect(() => {
+    if (!playing) return;
+    let animationFrameId: number;
+    const updateProgress = () => {
+      if (audioRef.current && !audioRef.current.paused) {
+        setCurrentTime(audioRef.current.currentTime);
+        animationFrameId = requestAnimationFrame(updateProgress);
+      }
+    };
+    animationFrameId = requestAnimationFrame(updateProgress);
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [playing]);
 
   const toggle = () => {
     if (!audioRef.current) return;
@@ -141,6 +159,7 @@ function VoiceMessagePlayer({ text, mine }: { text: string; mine: boolean }) {
           type="range"
           min={0}
           max={duration || 100}
+          step="any"
           value={currentTime}
           onChange={(e) => handleSeek(Number(e.target.value))}
           style={{
@@ -180,6 +199,12 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeIdRef = useRef<number | null>(activeId);
   activeIdRef.current = activeId;
+
+  const [isHolding, setIsHolding] = useState(false);
+  const pressStartTimeRef = useRef<number>(0);
+  const isHoldingRef = useRef<boolean>(false);
+  const buttonRectRef = useRef<DOMRect | null>(null);
+  const shouldSendRef = useRef<boolean>(true);
 
   const activeFriend = useMemo(() => friends.find((f) => f.id === activeId) ?? null, [friends, activeId]);
 
@@ -287,6 +312,68 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages.length, activeId]);
 
+  useEffect(() => {
+    const handleGlobalRelease = (e: MouseEvent | TouchEvent) => {
+      if (!isHoldingRef.current) return;
+
+      const elapsed = Date.now() - pressStartTimeRef.current;
+      if (elapsed > 350) {
+        // It was a hold! We stop and decide whether to send or cancel.
+        let clientX = 0;
+        let clientY = 0;
+        if ('changedTouches' in e && e.changedTouches.length > 0) {
+          clientX = e.changedTouches[0].clientX;
+          clientY = e.changedTouches[0].clientY;
+        } else if ('clientX' in e) {
+          clientX = e.clientX;
+          clientY = e.clientY;
+        }
+
+        let shouldSend = true;
+        if (buttonRectRef.current) {
+          const rect = buttonRectRef.current;
+          // If they dragged left by more than 40px, or moved vertically by more than 80px, we cancel
+          const draggedLeft = clientX < rect.left - 40;
+          const draggedFar = Math.abs(clientY - (rect.top + rect.height / 2)) > 80 || Math.abs(clientX - (rect.left + rect.width / 2)) > 120;
+          
+          if (draggedLeft || draggedFar) {
+            shouldSend = false;
+          }
+        }
+
+        stopRecording(shouldSend);
+      } else {
+        // It was a quick click! We reset holding state but keep recording.
+        setIsHolding(false);
+        isHoldingRef.current = false;
+      }
+    };
+
+    window.addEventListener('mouseup', handleGlobalRelease);
+    window.addEventListener('touchend', handleGlobalRelease, { passive: true });
+
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalRelease);
+      window.removeEventListener('touchend', handleGlobalRelease);
+    };
+  }, []);
+
+  const handleMicPressStart = (e: React.MouseEvent<HTMLButtonElement> | React.TouchEvent<HTMLButtonElement>) => {
+    if ('button' in e && e.button !== 0) return;
+    
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    buttonRectRef.current = rect;
+    pressStartTimeRef.current = Date.now();
+    isHoldingRef.current = true;
+    setIsHolding(true);
+    
+    void startRecording();
+  };
+
   const loadOlder = () => {
     if (!activeId || messages.length === 0) return;
     getChatHistory(userId, activeId, 50, messages[0].id)
@@ -299,6 +386,7 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
 
   const startRecording = async () => {
     try {
+      shouldSendRef.current = true;
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = [];
       const mediaRecorder = new MediaRecorder(stream);
@@ -314,7 +402,7 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         stream.getTracks().forEach((track) => track.stop());
 
-        if (audioChunksRef.current.length > 0) {
+        if (shouldSendRef.current && audioChunksRef.current.length > 0) {
           const reader = new FileReader();
           reader.readAsDataURL(audioBlob);
           reader.onloadend = () => {
@@ -340,10 +428,17 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
     } catch (err) {
       console.error('Failed to start recording:', err);
       setError('Не вдалося отримати доступ до мікрофона');
+      setIsRecording(false);
+      setIsHolding(false);
+      isHoldingRef.current = false;
     }
   };
 
   const stopRecording = (shouldSend: boolean) => {
+    shouldSendRef.current = shouldSend;
+    setIsHolding(false);
+    isHoldingRef.current = false;
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -640,6 +735,11 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
                       }} />
                       <span style={{ color: CREAM, fontSize: '13.5px', fontFamily: "'Manrope', sans-serif" }}>
                         Запис голосу… {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+                        {isHolding && (
+                          <span style={{ opacity: 0.7, fontSize: '12px', marginLeft: '6px' }}>
+                            (відпустіть для надсилання, проведіть вліво для скасування)
+                          </span>
+                        )}
                       </span>
                     </div>
 
@@ -704,7 +804,8 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
 
                     {/* Mic button */}
                     <button
-                      onClick={startRecording}
+                      onMouseDown={handleMicPressStart}
+                      onTouchStart={handleMicPressStart}
                       style={{
                         background: 'transparent',
                         border: 'none',
@@ -715,6 +816,7 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
                         alignItems: 'center',
                         justifyContent: 'center',
                         borderRadius: '50%',
+                        touchAction: 'none',
                       }}
                     >
                       <Icon name="mic" size={22} />
