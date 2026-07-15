@@ -174,3 +174,14 @@ a:hover {
   70% { transform: scale(1.9); opacity: 0; }
   100% { transform: scale(1.9); opacity: 0; }
 }
+
+/* Enforce full screen layout for the Chat tab without margins and paddings */
+.at-chat-main-tab {
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
