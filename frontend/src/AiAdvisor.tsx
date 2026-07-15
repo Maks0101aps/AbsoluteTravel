@@ -57,18 +57,40 @@ function FormattedText({ text }: { text: string }) {
   );
 }
 
-function AiAdvisor({ accent = '#3FA66B', userName }: AiAdvisorProps) {
+function AiAdvisor({ accent = '#3FA66B', user, userName }: AiAdvisorProps) {
   const [messages, setMessages] = useState<AdvisorTurn[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [available, setAvailable] = useState<boolean | null>(null);
+  const [gpsPosition, setGpsPosition] = useState<{ lat: number; lng: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getAdvisorStatus()
       .then((s) => setAvailable(s.available))
       .catch(() => setAvailable(null));
+  }, []);
+
+  // Track current GPS coordinates in real-time
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          setGpsPosition({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        (err) => {
+          console.warn('Geolocation watch failed or denied', err);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+      return () => {
+        navigator.geolocation.clearWatch(watchId);
+      };
+    }
   }, []);
 
   useEffect(() => {
@@ -87,7 +109,15 @@ function AiAdvisor({ accent = '#3FA66B', userName }: AiAdvisorProps) {
     setLoading(true);
 
     try {
-      const { reply } = await askAdvisor({ message, topic, history });
+      const { reply } = await askAdvisor({
+        message,
+        topic,
+        history,
+        lat: gpsPosition?.lat ?? undefined,
+        lng: gpsPosition?.lng ?? undefined,
+        city: user?.city ?? undefined,
+        region: user?.region ?? undefined,
+      });
       setMessages((cur) => [...cur, { role: 'model', text: reply }]);
     } catch (e: any) {
       setError(e?.message ?? 'Не вдалося отримати відповідь');

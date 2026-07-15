@@ -9,10 +9,7 @@ import { cellPolygon } from './exploration/h3';
 // walked without hiding it.
 const HEX_FILL = '#3FA66B';
 const HEX_STROKE = 'rgba(155,216,180,0.55)';
-<<<<<<< HEAD
 
-=======
->>>>>>> f8bcb29c9980d78f99e478568c6d62cf4e008fbe
 
 const ICON_PATHS: Record<string, string> = {
   compass: '<circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z" />',
@@ -161,10 +158,7 @@ interface LeafletMapProps {
   // cell that was just unlocked (gets the one-shot reveal glow).
   exploredCells?: string[];
   revealedCell?: string | null;
-<<<<<<< HEAD
-=======
 
->>>>>>> f8bcb29c9980d78f99e478568c6d62cf4e008fbe
   height?: string;
 }
 
@@ -514,10 +508,7 @@ function LeafletMap({
       existing.set(cellId, polygon);
     });
   }, [exploredCells, revealedCell]);
-<<<<<<< HEAD
-=======
 
->>>>>>> f8bcb29c9980d78f99e478568c6d62cf4e008fbe
   // --- sync live GPS markers (self + friends) ----------------------------------
   useEffect(() => {
     const map = mapRef.current;

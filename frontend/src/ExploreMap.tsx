@@ -103,10 +103,6 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
     selfPosition,
     onExplored,
   );
-<<<<<<< HEAD
-=======
-
->>>>>>> f8bcb29c9980d78f99e478568c6d62cf4e008fbe
   const liveMarkers: LiveMarker[] = useMemo(() => {
     const markers: LiveMarker[] = [];
     if (selfPosition && sharing && userId != null) {
@@ -303,11 +299,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
               </div>
             </>
           )}
-<<<<<<< HEAD
-=======
 
-
->>>>>>> f8bcb29c9980d78f99e478568c6d62cf4e008fbe
           {/* live-GPS controls (logged-in users only) */}
           {userId != null && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '10px', padding: '0 4px' }}>
@@ -329,11 +321,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
                 }}
               >
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: sharing ? '#4D9DE0' : 'rgba(244,241,232,0.3)' }} />
-<<<<<<< HEAD
                 {sharing ? 'Геолокація увімкнена — друзі бачать тебе' : 'Геолокація вимкнена'}
-=======
-                {sharing ? 'Геолокація увімкнена — відкривай територію на ходу' : 'Геолокація вимкнена'}
->>>>>>> f8bcb29c9980d78f99e478568c6d62cf4e008fbe
               </button>
               <span style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.45)' }}>
                 {geoError ?? `Друзів на мапі: ${friendDots.length} · Клітинок відкрито: ${totalCells}`}
