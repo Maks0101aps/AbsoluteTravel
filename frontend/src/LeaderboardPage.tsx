@@ -78,7 +78,7 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B' }: Leaderboard
             alt={me.user.name}
             style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', border: `2px solid ${accent}` }}
             onError={(e) => {
-              e.currentTarget.src = '/assets/avatar_default.avif';
+              e.currentTarget.src = '/assets/avatar_default.svg';
               e.currentTarget.onerror = null;
             }}
           />
@@ -179,7 +179,7 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B' }: Leaderboard
                   alt={row.name}
                   style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)', flex: '0 0 auto' }}
                   onError={(e) => {
-                    e.currentTarget.src = '/assets/avatar_default.avif';
+                    e.currentTarget.src = '/assets/avatar_default.svg';
                     e.currentTarget.onerror = null;
                   }}
                 />

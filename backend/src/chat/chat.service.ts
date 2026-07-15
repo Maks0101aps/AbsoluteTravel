@@ -69,8 +69,14 @@ export class ChatService {
     const friendId = this.parseId(rawFriendId, 'friendId');
     const text = String(rawText ?? '').trim();
     if (!text) throw new BadRequestException('Повідомлення не може бути порожнім');
-    if (text.length > MAX_TEXT_LENGTH) {
-      throw new BadRequestException(`Повідомлення задовге (максимум ${MAX_TEXT_LENGTH} символів)`);
+    const isVoice = text.startsWith('[voice:');
+    const limit = isVoice ? 500000 : MAX_TEXT_LENGTH;
+    if (text.length > limit) {
+      throw new BadRequestException(
+        isVoice
+          ? 'Голосове повідомлення занадто довге'
+          : `Повідомлення задовге (максимум ${MAX_TEXT_LENGTH} символів)`,
+      );
     }
     // A stale client session (userId from before a DB reseed) would otherwise
     // fail requireFriendship silently as "not friends" or crash Message.create
