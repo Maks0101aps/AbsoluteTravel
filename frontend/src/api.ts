@@ -57,9 +57,27 @@ export interface ProfileCustomization {
 
 let cachedPort: number | null = null;
 
+// Base URL of the backend for non-fetch transports (socket.io). Scans the
+// same candidate ports as call() and locks onto the first that answers.
+export async function resolveApiBase(): Promise<string> {
+  if (cachedPort) return `http://localhost:${cachedPort}`;
+  for (const port of [3000, 3001, 3002, 3003, 3004, 3005]) {
+    try {
+      const res = await fetch(`http://localhost:${port}/api/places`, { method: 'GET' });
+      if (res.ok) {
+        cachedPort = port;
+        return `http://localhost:${port}`;
+      }
+    } catch {
+      // connection failed, try next port
+    }
+  }
+  return 'http://localhost:3000';
+}
+
 // Core request that scans the candidate backend ports and returns the raw JSON body.
 async function call<T>(
-  method: 'GET' | 'POST' | 'DELETE',
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   path: string,
   body?: unknown,
   extraHeaders?: Record<string, string>,
@@ -327,4 +345,140 @@ export function adminDeletePlace(token: string, id: number) {
 
 export function adminUpdatePlace(token: string, id: number, payload: PlaceUpdate) {
   return call<AdminPlace>('POST', `/api/places/admin/${id}/update`, payload, adminHeaders(token));
+}
+
+// --- Friends -----------------------------------------------------------------
+
+export interface FriendUser {
+  id: number;
+  username: string;
+  name: string;
+  avatar: string;
+  level: number;
+  xp: number;
+  region: string | null;
+  city: string | null;
+  online: boolean;
+  lastSeenAt: string | null;
+}
+
+export interface FriendEntry extends FriendUser {
+  friendshipId: number;
+  since: string;
+}
+
+export interface FriendRequest {
+  id: number;
+  createdAt: string;
+  sender: FriendUser;
+}
+
+export type FriendRelation = 'none' | 'friends' | 'outgoing' | 'incoming' | 'declined';
+
+export interface UserSearchResult extends FriendUser {
+  relation: FriendRelation;
+  friendshipId: number | null;
+}
+
+export function getFriends(userId: number) {
+  return call<FriendEntry[]>('GET', `/api/friends?userId=${userId}`);
+}
+
+export function getFriendRequests(userId: number) {
+  return call<FriendRequest[]>('GET', `/api/friends/requests?userId=${userId}`);
+}
+
+export function sendFriendRequest(userId: number, target: { targetUserId?: number; username?: string }) {
+  return call<{ id: number; status: string }>('POST', '/api/friends/request', { userId, ...target });
+}
+
+export function acceptFriendRequest(requestId: number, userId: number) {
+  return call<{ id: number; status: string; friend: FriendUser }>('POST', `/api/friends/accept/${requestId}`, { userId });
+}
+
+/** Remove a friend, cancel an outgoing request, or decline an incoming one. */
+export function removeFriend(friendshipId: number, userId: number) {
+  return call<{ ok: boolean; id: number }>('DELETE', `/api/friends/${friendshipId}?userId=${userId}`);
+}
+
+export function searchUsers(userId: number, query: string) {
+  return call<UserSearchResult[]>('GET', `/api/friends/search?userId=${userId}&q=${encodeURIComponent(query)}`);
+}
+
+// --- XP leaderboard ----------------------------------------------------------
+
+export interface XpLeaderboardRow {
+  rank: number;
+  userId: number;
+  username: string;
+  name: string;
+  avatarUrl: string;
+  level: number;
+  xp: number;
+  region: string | null;
+}
+
+export interface MyRank {
+  user: XpLeaderboardRow;
+  global: { rank: number; total: number };
+  regional: { region: string; rank: number; total: number } | null;
+}
+
+export function getXpLeaderboard(type: 'global' | 'regional', region?: string, limit = 100) {
+  const params = new URLSearchParams({ type, limit: String(limit) });
+  if (region) params.set('region', region);
+  return call<XpLeaderboardRow[]>('GET', `/api/leaderboard?${params.toString()}`);
+}
+
+export function getMyRank(userId: number) {
+  return call<MyRank>('GET', `/api/leaderboard/me?userId=${userId}`);
+}
+
+// --- Friend chat ---------------------------------------------------------------
+
+export interface ChatMessage {
+  id: number;
+  senderId: number;
+  receiverId: number;
+  text: string;
+  createdAt: string;
+  readAt: string | null;
+}
+
+export function getChatHistory(userId: number, friendId: number, limit = 50, before?: number) {
+  const params = new URLSearchParams({ userId: String(userId), limit: String(limit) });
+  if (before) params.set('before', String(before));
+  return call<{ messages: ChatMessage[]; hasMore: boolean }>('GET', `/api/chat/${friendId}?${params.toString()}`);
+}
+
+/** REST fallback when the WebSocket is disconnected. */
+export function sendChatMessage(userId: number, friendId: number, text: string) {
+  return call<ChatMessage>('POST', `/api/chat/${friendId}`, { userId, text });
+}
+
+export function markChatRead(userId: number, friendId: number) {
+  return call<{ ok: boolean; read: number }>('POST', `/api/chat/${friendId}/read`, { userId });
+}
+
+/** Unread message counts keyed by sender id. */
+export function getUnreadCounts(userId: number) {
+  return call<Record<string, number>>('GET', `/api/chat/unread?userId=${userId}`);
+}
+
+// --- Live GPS ------------------------------------------------------------------
+
+export interface LiveLocation {
+  userId: number;
+  lat: number;
+  lng: number;
+  updatedAt: string;
+}
+
+/** A friend's last known location; the server enforces friends-only access. */
+export function getFriendLocation(viewerId: number, targetId: number) {
+  return call<LiveLocation>('GET', `/api/users/${targetId}/location?viewerId=${viewerId}`);
+}
+
+export function setLocationVisibility(userId: number, visible: boolean) {
+  return call<{ userId: number; visible: boolean }>('PUT', '/api/users/me/location-visible', { userId, visible });
 }

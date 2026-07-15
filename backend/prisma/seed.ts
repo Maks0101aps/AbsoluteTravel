@@ -149,6 +149,8 @@ CITIES.forEach((city) => {
 
 async function main() {
   // Clean up
+  await prisma.message.deleteMany();
+  await prisma.friend.deleteMany();
   await prisma.coinTransaction.deleteMany();
   await prisma.userAchievement.deleteMany();
   await prisma.achievement.deleteMany();
@@ -297,6 +299,28 @@ async function main() {
       userId: oleksiy.id,
       achievementId: ach2.id,
     },
+  });
+
+  // Demo friendships: the seeded travellers already know each other, and one
+  // pending request is left for the demo of the requests inbox.
+  await prisma.friend.createMany({
+    data: [
+      { senderId: oleksiy.id, receiverId: mariya.id, status: 'ACCEPTED' },
+      { senderId: dmytro.id, receiverId: oleksiy.id, status: 'ACCEPTED' },
+      { senderId: mariya.id, receiverId: dmytro.id, status: 'ACCEPTED' },
+      { senderId: iryna.id, receiverId: oleksiy.id, status: 'PENDING' },
+    ],
+  });
+
+  // A short demo conversation between friends.
+  const now = Date.now();
+  await prisma.message.createMany({
+    data: [
+      { senderId: mariya.id, receiverId: oleksiy.id, text: 'Привіт! Ти вже був на Синевирі?', createdAt: new Date(now - 1000 * 60 * 60 * 5), readAt: new Date(now - 1000 * 60 * 60 * 4) },
+      { senderId: oleksiy.id, receiverId: mariya.id, text: 'Ще ні, планую на вихідні. Поїдеш зі мною?', createdAt: new Date(now - 1000 * 60 * 60 * 4), readAt: new Date(now - 1000 * 60 * 60 * 3) },
+      { senderId: mariya.id, receiverId: oleksiy.id, text: 'Так! Візьми дощовик — у горах мінлива погода 🌦️', createdAt: new Date(now - 1000 * 60 * 30) },
+      { senderId: dmytro.id, receiverId: oleksiy.id, text: 'Готовий до Говерли наступного місяця?', createdAt: new Date(now - 1000 * 60 * 60 * 24) },
+    ],
   });
 
   console.log('Database seeded successfully!');
