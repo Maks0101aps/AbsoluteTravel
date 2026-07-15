@@ -120,7 +120,12 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
       .then((data) => {
         if (Array.isArray(data) && data.length) {
           setPlaces(data);
-          setActiveId((cur) => cur ?? data[0].id);
+          setActiveId((cur) => {
+            if (cur === null || !data.some((p) => p.id === cur)) {
+              return data[0].id;
+            }
+            return cur;
+          });
         }
       })
       .catch(() => {
@@ -214,7 +219,10 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
         ))}
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'flex-start' }}>
+      {/* Fixed-width grid (not flex-grow) so the map/panel split never shifts
+          based on how much content the selected place has — the detail panel
+          always occupies the same 380px regardless of what's shown inside it. */}
+      <div className="at-explore-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 380px', gap: '24px', alignItems: 'flex-start' }}>
         {/* map */}
         <div
           style={{
@@ -222,8 +230,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
             // Contain Leaflet's internal z-indexes (panes/controls go up to ~1000)
             // so they can't paint over overlays like the "add place" modal.
             isolation: 'isolate',
-            flex: '1 1 460px',
-            minWidth: '300px',
+            minWidth: 0,
             background: '#081E15',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: '18px',
@@ -318,7 +325,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
         </div>
 
         {/* detail panel */}
-        <div style={{ flex: '1 1 260px', minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div
             style={{
               background: PANEL,

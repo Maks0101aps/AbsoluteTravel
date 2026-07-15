@@ -216,6 +216,59 @@ function getClusters(places: Place[], map: L.Map, clusterRadiusPixels = 40): (Pl
   return result;
 }
 
+// Where a marker should actually be drawn. Because clustering is done per
+// difficulty, markers of *different* difficulties can still land on the exact
+// same coordinates and overlap. This fans any such colliding group out onto a
+// small ring around their shared centre so every level stays visible.
+interface Rendered {
+  item: Place | Cluster;
+  lat: number;
+  lng: number;
+}
+
+function itemLatLng(item: Place | Cluster): [number, number] {
+  return 'isCluster' in item ? [item.centerLat, item.centerLng] : [item.lat, item.lng];
+}
+
+function spreadOverlaps(items: (Place | Cluster)[], map: L.Map, thresholdPixels = 28): Rendered[] {
+  const pts = items.map((item) => {
+    const [lat, lng] = itemLatLng(item);
+    return { item, lat, lng, pt: map.latLngToLayerPoint([lat, lng]) };
+  });
+
+  const used = new Array(pts.length).fill(false);
+  const out: Rendered[] = [];
+
+  for (let i = 0; i < pts.length; i++) {
+    if (used[i]) continue;
+    used[i] = true;
+    const group = [i];
+    for (let j = i + 1; j < pts.length; j++) {
+      if (!used[j] && pts[i].pt.distanceTo(pts[j].pt) < thresholdPixels) {
+        used[j] = true;
+        group.push(j);
+      }
+    }
+
+    if (group.length === 1) {
+      out.push({ item: pts[i].item, lat: pts[i].lat, lng: pts[i].lng });
+      continue;
+    }
+
+    // Fan the colliding markers evenly around their pixel centroid.
+    const cx = group.reduce((s, k) => s + pts[k].pt.x, 0) / group.length;
+    const cy = group.reduce((s, k) => s + pts[k].pt.y, 0) / group.length;
+    const radius = 16 + group.length * 3;
+    group.forEach((k, idx) => {
+      const angle = (2 * Math.PI * idx) / group.length - Math.PI / 2;
+      const ll = map.layerPointToLatLng(L.point(cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)));
+      out.push({ item: pts[k].item, lat: ll.lat, lng: ll.lng });
+    });
+  }
+
+  return out;
+}
+
 function LeafletMap({
   places,
   activeId,
@@ -330,7 +383,10 @@ function LeafletMap({
 
     const existing = markersRef.current;
     const clusteredItems = getClusters(places ?? [], map, 50);
-    const nextIds = new Set(clusteredItems.map((item) => ('isCluster' in item ? item.id : item.id)));
+    // Fan out markers that would otherwise overlap (e.g. different difficulties
+    // at the same coordinates) so every level stays visible.
+    const rendered = spreadOverlaps(clusteredItems, map, 28);
+    const nextIds = new Set(rendered.map(({ item }) => ('isCluster' in item ? item.id : item.id)));
 
     // Remove markers for places no longer present.
     for (const [id, marker] of existing) {
@@ -340,18 +396,18 @@ function LeafletMap({
       }
     }
 
-    clusteredItems.forEach((item) => {
+    rendered.forEach(({ item, lat, lng }) => {
       if ('isCluster' in item) {
         const isHovered = item.places.some((p) => p.id === hoverId);
         const isActive = item.places.some((p) => p.id === activeId);
         const activeState = isActive || isHovered;
-        
+
         const color = DIFFICULTY_META[item.difficulty]?.color ?? '#3FA66B';
         const diffLabel = DIFFICULTY_META[item.difficulty]?.label ?? '';
-        
+
         let marker = existing.get(item.id);
         if (!marker) {
-          marker = L.marker([item.centerLat, item.centerLng], { icon: clusterIcon(color, item.places.length, activeState) });
+          marker = L.marker([lat, lng], { icon: clusterIcon(color, item.places.length, activeState) });
           marker.on('click', () => {
             map.flyTo([item.centerLat, item.centerLng], map.getZoom() + 2, { duration: 0.5 });
             if (item.places.length > 0) {
@@ -362,7 +418,7 @@ function LeafletMap({
           existing.set(item.id, marker);
         } else {
           marker.setIcon(clusterIcon(color, item.places.length, activeState));
-          marker.setLatLng([item.centerLat, item.centerLng]);
+          marker.setLatLng([lat, lng]);
         }
 
         const maxToShow = 4;
@@ -378,7 +434,7 @@ function LeafletMap({
         const color = difficultyColor(place);
         let marker = existing.get(place.id);
         if (!marker) {
-          marker = L.marker([place.lat, place.lng], { icon: dotIcon(color, isActive) });
+          marker = L.marker([lat, lng], { icon: dotIcon(color, isActive) });
           marker.on('click', () => stateRef.current.onSelect?.(place.id));
           marker.on('mouseover', () => stateRef.current.onHover?.(place.id));
           marker.on('mouseout', () => stateRef.current.onHover?.(null));
@@ -391,7 +447,7 @@ function LeafletMap({
           existing.set(place.id, marker);
         } else {
           marker.setIcon(dotIcon(color, isActive));
-          marker.setLatLng([place.lat, place.lng]);
+          marker.setLatLng([lat, lng]);
         }
       }
     });
