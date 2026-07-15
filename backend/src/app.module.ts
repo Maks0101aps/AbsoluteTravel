@@ -1,7 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaService } from './prisma.service';
+// PrismaService now comes from the global PrismaModule.
+import { PrismaModule } from './prisma.module';
+import { RealtimeModule } from './realtime/realtime.module';
+import { FriendsModule } from './friends/friends.module';
+import { LeaderboardModule } from './leaderboard/leaderboard.module';
+import { ChatModule } from './chat/chat.module';
+import { LocationsModule } from './locations/locations.module';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { EconomyController } from './economy/economy.controller';
@@ -16,7 +22,14 @@ import { CheckmarksController } from './checkmarks/checkmarks.controller';
 import { CheckmarksService } from './checkmarks/checkmarks.service';
 
 @Module({
-  imports: [],
+  imports: [
+    PrismaModule,
+    RealtimeModule,
+    FriendsModule,
+    LeaderboardModule,
+    ChatModule,
+    LocationsModule,
+  ],
   controllers: [
     AppController,
     AuthController,
@@ -34,7 +47,6 @@ import { CheckmarksService } from './checkmarks/checkmarks.service';
     PlacesService,
     AdminService,
     CheckmarksService,
-    PrismaService,
   ],
 })
 export class AppModule {}

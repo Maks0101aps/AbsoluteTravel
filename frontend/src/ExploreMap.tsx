@@ -3,8 +3,13 @@ import { PLACES, CATEGORY_META, CATEGORY_ORDER, DIFFICULTY_META, DIFFICULTY_ORDE
 import { getPlaces, type VerifyCheckmarkResult } from './api';
 import AddPlaceForm from './AddPlaceForm';
 import VerifyVisitModal from './VerifyVisitModal';
-import LeafletMap from './LeafletMap';
+import LeafletMap, { type LiveMarker } from './LeafletMap';
+import { useLiveGps, type FriendDot } from './useLiveGps';
+import { UserAvatar } from './UserCard';
 import { Icon, type IconName } from './icons';
+
+// Distinct dot colors for friends on the live map.
+const FRIEND_COLORS = ['#E0A54E', '#5BB8F5', '#C77DDB', '#E58784', '#6FCF97', '#F2C94C'];
 
 const CREAM = '#F4F1E8';
 const PANEL = '#0B2B20';
@@ -26,6 +31,8 @@ interface ExploreMapProps {
   openedPlaceIds?: Set<string | number>;
   // Called after a successful verification: award XP/coins and mark opened.
   onVerified?: (placeId: string | number, result: VerifyCheckmarkResult) => void;
+  // Open the chat tab with this friend (from the live-map mini profile card).
+  onMessageFriend?: (friendId: number) => void;
 }
 
 function CategoryBadge({ category }: { category: PlaceCategory }) {
@@ -74,7 +81,7 @@ function DifficultyBadge({ difficulty }: { difficulty: number }) {
   );
 }
 
-function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds, onVerified }: ExploreMapProps) {
+function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds, onVerified, onMessageFriend }: ExploreMapProps) {
   const [places, setPlaces] = useState<Place[]>(PLACES);
   const [activeId, setActiveId] = useState<string | number | null>(null);
   const [hoverId, setHoverId] = useState<string | number | null>(null);
@@ -82,6 +89,30 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
   const [difficultyFilter, setDifficultyFilter] = useState<number | 'all'>('all');
   const [showForm, setShowForm] = useState(false);
   const [verifyPlace, setVerifyPlace] = useState<Place | null>(null);
+  const [selectedFriend, setSelectedFriend] = useState<FriendDot | null>(null);
+
+  // Live GPS: own pulsing dot + friends' dots (server broadcasts every 10s).
+  const { selfPosition, friendDots, sharing, geoError, setSharing } = useLiveGps(userId);
+
+  const liveMarkers: LiveMarker[] = useMemo(() => {
+    const markers: LiveMarker[] = [];
+    if (selfPosition && sharing && userId != null) {
+      markers.push({ id: 'self', ...selfPosition, color: '#4D9DE0', label: 'Ти тут', pulse: true });
+    }
+    friendDots.forEach((d, i) => {
+      markers.push({
+        id: `friend-${d.userId}`,
+        lat: d.lat,
+        lng: d.lng,
+        color: FRIEND_COLORS[i % FRIEND_COLORS.length],
+        label: `${d.friend.name}${d.stale ? ' · давно не оновлювалось' : ''}`,
+        avatar: d.friend.avatar,
+        dimmed: d.stale,
+        onClick: () => setSelectedFriend(d),
+      });
+    });
+    return markers;
+  }, [selfPosition, sharing, userId, friendDots]);
 
   // Load live places from the backend; fall back to the bundled dataset.
   const loadPlaces = () => {
@@ -206,8 +237,84 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
             hoverId={hoverId}
             onSelect={(id) => setActiveId(id)}
             onHover={(id) => setHoverId(id)}
+            liveMarkers={userId != null ? liveMarkers : undefined}
             height="clamp(320px, 60vh, 560px)"
           />
+
+          {/* live-GPS controls (logged-in users only) */}
+          {userId != null && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '10px', padding: '0 4px' }}>
+              <button
+                onClick={() => setSharing(!sharing)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: sharing ? 'rgba(77,157,224,0.15)' : 'transparent',
+                  border: `1px solid ${sharing ? 'rgba(77,157,224,0.55)' : 'rgba(255,255,255,0.15)'}`,
+                  color: sharing ? '#4D9DE0' : 'rgba(244,241,232,0.6)',
+                  borderRadius: '999px',
+                  padding: '7px 14px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: sharing ? '#4D9DE0' : 'rgba(244,241,232,0.3)' }} />
+                {sharing ? 'Геолокація увімкнена — друзі бачать тебе' : 'Геолокація вимкнена'}
+              </button>
+              <span style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.45)' }}>
+                {geoError ?? `Друзів на мапі: ${friendDots.length}`}
+              </span>
+            </div>
+          )}
+
+          {/* friend mini profile card */}
+          {selectedFriend && (
+            <div
+              style={{
+                position: 'absolute',
+                left: '20px',
+                bottom: '20px',
+                zIndex: 20,
+                background: '#0B2B20',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '16px',
+                padding: '14px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                boxShadow: '0 16px 40px -10px rgba(0,0,0,0.7)',
+                maxWidth: '320px',
+              }}
+            >
+              <UserAvatar user={selectedFriend.friend} size={46} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: CREAM }}>{selectedFriend.friend.name}</div>
+                <div style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.55)' }}>
+                  Рівень {selectedFriend.friend.level} · {selectedFriend.friend.xp} XP
+                </div>
+                <div style={{ fontSize: '11px', color: selectedFriend.stale ? '#E0A54E' : accent }}>
+                  {selectedFriend.stale ? 'Давно не оновлювалось' : `Оновлено ${new Date(selectedFriend.updatedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}`}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '0 0 auto' }}>
+                <button
+                  onClick={() => onMessageFriend?.(selectedFriend.friend.id)}
+                  style={{ background: accent, color: '#071F16', border: 'none', borderRadius: '9px', padding: '7px 13px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}
+                >
+                  Написати
+                </button>
+                <button
+                  onClick={() => setSelectedFriend(null)}
+                  style={{ background: 'transparent', color: 'rgba(244,241,232,0.6)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '9px', padding: '6px 13px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}
+                >
+                  Закрити
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* detail panel */}

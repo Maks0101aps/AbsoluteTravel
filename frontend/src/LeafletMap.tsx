@@ -27,6 +27,52 @@ function dotIcon(color: string, active: boolean) {
   });
 }
 
+// Live-GPS marker: pulsing dot for the current user, avatar-thumbnail dot for
+// friends. `dimmed` greys out friends not seen for a while.
+export interface LiveMarker {
+  id: string | number;
+  lat: number;
+  lng: number;
+  color: string;
+  label: string;
+  avatar?: string;
+  pulse?: boolean;
+  dimmed?: boolean;
+  onClick?: () => void;
+}
+
+// Avatar URLs and display names come from other users — escape/validate them
+// before they reach divIcon HTML or tooltips (both are parsed as HTML).
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function safeAvatarUrl(url: string): string {
+  return /^(\/|https?:\/\/|data:image\/)/.test(url) ? url : '/assets/avatar_default.avif';
+}
+
+function liveIcon(m: LiveMarker) {
+  const size = 34;
+  const ring = m.pulse
+    ? `<div style="position:absolute;inset:-7px;border-radius:50%;background:${m.color}55;animation:atLivePulse 2s ease-out infinite;"></div>`
+    : '';
+  const inner = m.avatar
+    ? `<img src="${escapeHtml(safeAvatarUrl(m.avatar))}" onerror="this.src='/assets/avatar_default.avif';this.onerror=null;" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"/>`
+    : `<div style="width:100%;height:100%;border-radius:50%;background:${m.color};"></div>`;
+  const grey = m.dimmed ? 'filter:grayscale(1);opacity:0.55;' : '';
+  return L.divIcon({
+    className: '',
+    html: `<div style="position:relative;width:${size}px;height:${size}px;${grey}">${ring}<div style="position:relative;width:100%;height:100%;border-radius:50%;border:3px solid ${m.color};box-shadow:0 3px 10px rgba(0,0,0,0.45);overflow:hidden;background:#0B2B20;">${inner}</div></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
 function pinIcon(color: string) {
   return L.divIcon({
     className: '',
@@ -60,6 +106,9 @@ interface LeafletMapProps {
   pin?: { lat: number; lng: number } | null;
   onPick?: (lat: number, lng: number) => void;
   accent?: string;
+
+  // Live layer: current user + friends, rendered above the place markers.
+  liveMarkers?: LiveMarker[];
 
   height?: string;
 }
@@ -140,11 +189,13 @@ function LeafletMap({
   pin,
   onPick,
   accent = '#3FA66B',
+  liveMarkers,
   height = '460px',
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string | number, L.Marker>>(new Map());
+  const liveMarkersRef = useRef<Map<string | number, L.Marker>>(new Map());
   const pinMarkerRef = useRef<L.Marker | null>(null);
   const [zoom, setZoom] = useState<number>(6);
 
@@ -278,7 +329,7 @@ function LeafletMap({
         }
 
         const maxToShow = 4;
-        const placeNames = item.places.slice(0, maxToShow).map((p) => p.name).join(', ');
+        const placeNames = item.places.slice(0, maxToShow).map((p) => escapeHtml(p.name)).join(', ');
         const suffix = item.places.length > maxToShow ? ` та ще ${item.places.length - maxToShow}...` : '';
         marker.bindTooltip(`<strong>Складність: ${diffLabel} (${item.places.length} місць)</strong><br/><span style="font-size:11px;opacity:0.85">${placeNames}${suffix}</span>`, {
           direction: 'top',
@@ -295,7 +346,7 @@ function LeafletMap({
           marker.on('mouseover', () => stateRef.current.onHover?.(place.id));
           marker.on('mouseout', () => stateRef.current.onHover?.(null));
           const diffLabel = DIFFICULTY_META[place.difficulty ?? 1]?.label ?? '';
-          marker.bindTooltip(`${place.name}${diffLabel ? ` · ${diffLabel}` : ''}`, {
+          marker.bindTooltip(`${escapeHtml(place.name)}${diffLabel ? ` · ${diffLabel}` : ''}`, {
             direction: 'top',
             offset: [0, -8],
           });
@@ -308,6 +359,40 @@ function LeafletMap({
       }
     });
   }, [places, activeId, hoverId, zoom]);
+
+  // --- sync live GPS markers (self + friends) ----------------------------------
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const existing = liveMarkersRef.current;
+    const next = liveMarkers ?? [];
+    const nextIds = new Set(next.map((m) => m.id));
+
+    for (const [id, marker] of existing) {
+      if (!nextIds.has(id)) {
+        marker.remove();
+        existing.delete(id);
+      }
+    }
+
+    next.forEach((m) => {
+      let marker = existing.get(m.id);
+      if (!marker) {
+        marker = L.marker([m.lat, m.lng], { icon: liveIcon(m), zIndexOffset: 1000 });
+        marker.addTo(map);
+        existing.set(m.id, marker);
+      } else {
+        marker.setIcon(liveIcon(m));
+        marker.setLatLng([m.lat, m.lng]);
+      }
+      marker.off('click');
+      if (m.onClick) marker.on('click', m.onClick);
+      marker.unbindTooltip();
+      // Leaflet renders tooltip strings as HTML — escape the user-derived label.
+      marker.bindTooltip(escapeHtml(m.label), { direction: 'top', offset: [0, -18] });
+    });
+  }, [liveMarkers]);
 
   // --- sync the single draggable pick pin -------------------------------------
   useEffect(() => {
