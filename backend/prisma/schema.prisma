@@ -21,9 +21,23 @@ model User {
   avatar             String            @default("/assets/avatar_default.avif")
   level              Int               @default(1)
   xp                 Int               @default(0)
+  coins              Int               @default(0)
+  rank               String            @default("mandrivnyk")
+  unlockedItems      String            @default("[]") // JSON array of purchased cosmetic ids
   currentDestination String?
   createdAt          DateTime          @default(now())
   achievements       UserAchievement[]
+  transactions       CoinTransaction[]
+}
+
+model CoinTransaction {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  amount    Int // signed: + earn, - spend
+  reason    String // 'profile_complete' | 'achievement:<id>' | 'purchase:<itemId>' | ...
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Destination {
@@ -53,4 +67,49 @@ model UserAchievement {
   achievement Achievement @relation(fields: [achievementId], references: [id])
 
   @@id([userId, achievementId])
+}
+
+// Admin account for the moderation panel. There is always exactly one super
+// admin (isSuper) whose login/password come from env and are re-synced on boot;
+// it cannot be deleted. Super admins and regular admins can create more admins.
+model Admin {
+  id        Int      @id @default(autoincrement())
+  login     String   @unique
+  password  String // bcrypt hash
+  name      String   @default("Адміністратор")
+  isSuper   Boolean  @default(false)
+  createdBy String?
+  createdAt DateTime @default(now())
+}
+
+// A place on the explore map. Covers both admin-curated entries and
+// user-submitted ones that must pass AI moderation before going public.
+model Place {
+  id          Int    @id @default(autoincrement())
+  name        String
+  region      String
+  category    String // nature | mountains | history | city | coast
+  description String
+  bestSeason  String @default("Будь-коли")
+
+  // Geolocation is mandatory — real WGS84 coordinates.
+  lat Float
+  lng Float
+
+  // JSON array of image data URLs. At least 2 are required on submission.
+  photos String @default("[]")
+
+  status      String  @default("pending") // pending | approved | rejected
+  source      String  @default("user") // user | admin
+  submittedBy String? // display name / email of the submitter
+
+  // AI moderation verdict.
+  aiDecision String? // approve | reject | review
+  aiReason   String?
+  aiScore    Float?
+
+  createdAt  DateTime  @default(now())
+  reviewedAt DateTime?
+
+  @@index([status])
 }

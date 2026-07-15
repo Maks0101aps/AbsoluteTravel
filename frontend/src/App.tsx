@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import './App.css';
+import { UA_PATH, UA_CONTOURS, UA_CITIES } from './data/ukraineMap';
 
 interface Achievement {
   id: number;
@@ -27,31 +28,6 @@ interface Destination {
   verified: boolean;
   xpReward: number;
 }
-
-// Simplified real-world outline of Ukraine (incl. Crimea), viewBox 0 0 720 480
-const UA_PATH = "M357.5,61.1 L369.4,63.0 L377.4,52.2 L387.0,54.6 L419.9,50.0 L440.1,77.0 L432.2,86.6 L434.9,101.4 L460.1,103.7 L471.4,124.4 L470.7,133.8 L511.0,150.5 L535.3,143.0 L554.9,165.3 L573.4,164.8 L620.1,180.3 L620.5,194.3 L607.6,219.2 L614.6,245.5 L609.6,261.4 L579.0,264.9 L562.6,278.2 L561.6,299.4 L536.3,303.2 L515.2,318.6 L485.5,321.1 L458.2,338.9 L460.1,368.5 L475.6,380.0 L507.9,377.2 L501.7,394.2 L467.0,402.4 L424.0,430.0 L406.4,420.3 L413.4,397.9 L378.7,384.0 L384.3,374.8 L414.7,359.0 L405.5,348.1 L356.2,336.0 L354.0,318.3 L324.6,324.1 L312.9,350.4 L288.3,385.6 L274.0,377.4 L259.1,385.1 L244.9,376.3 L252.9,371.1 L258.4,354.8 L267.1,339.6 L264.9,331.0 L271.5,327.2 L274.6,333.8 L293.3,335.2 L301.7,331.7 L295.8,326.9 L298.0,319.8 L287.0,307.7 L282.4,287.7 L270.8,279.9 L273.1,263.8 L258.8,251.0 L245.7,249.2 L222.4,234.3 L201.3,239.0 L193.7,246.1 L180.4,246.1 L172.4,257.2 L149.0,261.8 L138.2,269.1 L123.4,257.5 L103.1,257.3 L83.5,252.0 L69.8,262.2 L67.6,249.4 L50.0,236.5 L56.2,217.3 L65.0,204.9 L71.9,207.6 L63.7,186.2 L92.5,146.6 L108.2,141.0 L111.6,127.7 L95.7,86.1 L110.9,84.2 L128.2,71.3 L152.8,70.2 L184.8,74.0 L220.2,85.4 L245.2,86.4 L257.1,93.2 L269.0,84.9 L277.3,96.1 L305.9,93.8 L318.5,98.4 L320.5,74.4 L330.3,64.0 Z";
-
-// Nested inset "elevation contour" outlines derived from UA_PATH for map texture
-const UA_CONTOURS = [
-  "M353.9,78.6 L364.6,80.3 L371.8,70.6 L380.4,72.8 L410.0,68.6 L428.2,92.9 L421.1,101.6 L423.5,114.9 L446.2,117.0 L456.4,135.6 L455.7,144.0 L492.0,159.1 L513.9,152.3 L531.5,172.4 L548.2,171.9 L590.2,185.9 L590.6,198.5 L579.0,220.9 L585.3,244.6 L580.8,258.9 L553.2,262.0 L538.5,274.0 L537.6,293.1 L514.8,296.5 L495.8,310.4 L469.1,312.6 L444.5,328.6 L446.2,355.3 L460.2,365.6 L489.2,363.1 L483.6,378.4 L452.4,385.8 L413.7,410.6 L397.9,401.9 L404.2,381.7 L372.9,369.2 L378.0,360.9 L405.3,346.7 L397.1,336.9 L352.7,326.0 L350.7,310.1 L324.3,315.3 L313.7,339.0 L291.6,370.7 L278.7,363.3 L265.3,370.2 L252.5,362.3 L259.7,357.6 L264.7,342.9 L272.5,329.3 L270.5,321.5 L276.5,318.1 L279.3,324.0 L296.1,325.3 L303.6,322.2 L298.3,317.8 L300.3,311.4 L290.4,300.6 L286.3,282.6 L275.8,275.5 L277.9,261.0 L265.0,249.5 L253.2,247.9 L232.3,234.5 L213.3,238.7 L206.4,245.1 L194.5,245.1 L187.3,255.1 L166.2,259.2 L156.5,265.8 L143.2,255.4 L124.9,255.2 L107.3,250.4 L94.9,259.6 L93.0,248.1 L77.1,236.5 L82.7,219.2 L90.6,208.0 L96.8,210.5 L89.4,191.2 L115.4,155.6 L129.5,150.5 L132.6,138.6 L118.2,101.1 L131.9,99.4 L147.5,87.8 L169.6,86.8 L198.4,90.2 L230.3,100.5 L252.8,101.4 L263.5,107.5 L274.2,100.0 L281.7,110.1 L307.4,108.0 L318.8,112.2 L320.6,90.6 L329.4,81.2 Z",
-  "M344.8,122.4 L352.5,123.6 L357.7,116.6 L364.0,118.2 L385.4,115.2 L398.5,132.7 L393.3,139.0 L395.1,148.6 L411.5,150.1 L418.8,163.6 L418.4,169.7 L444.6,180.5 L460.4,175.6 L473.1,190.1 L485.1,189.8 L515.5,199.9 L515.7,209.0 L507.4,225.2 L511.9,242.3 L508.7,252.6 L488.8,254.9 L478.1,263.5 L477.5,277.3 L461.0,279.8 L447.3,289.8 L428.0,291.4 L410.2,303.0 L411.5,322.2 L421.6,329.7 L442.6,327.9 L438.5,338.9 L416.0,344.3 L388.0,362.2 L376.6,355.9 L381.1,341.3 L358.6,332.3 L362.2,326.3 L382.0,316.0 L376.0,309.0 L343.9,301.1 L342.5,289.6 L323.4,293.4 L315.8,310.5 L299.8,333.3 L290.5,328.0 L280.8,333.0 L271.6,327.3 L276.8,323.9 L280.4,313.3 L286.0,303.4 L284.6,297.8 L288.9,295.4 L290.9,299.7 L303.1,300.6 L308.5,298.3 L304.7,295.2 L306.1,290.6 L299.0,282.7 L296.0,269.7 L288.4,264.6 L289.9,254.2 L280.6,245.8 L272.1,244.7 L257.0,235.0 L243.3,238.0 L238.3,242.7 L229.7,242.7 L224.5,249.9 L209.3,252.9 L202.2,257.6 L192.6,250.1 L179.4,249.9 L166.7,246.5 L157.8,253.1 L156.4,244.8 L144.9,236.4 L148.9,223.9 L154.7,215.9 L159.2,217.6 L153.8,203.7 L172.5,178.0 L182.7,174.3 L185.0,165.7 L174.6,138.7 L184.5,137.4 L195.7,129.0 L211.7,128.3 L232.5,130.8 L255.5,138.2 L271.8,138.9 L279.5,143.3 L287.3,137.9 L292.7,145.2 L311.3,143.7 L319.4,146.7 L320.7,131.1 L327.1,124.3 Z",
-];
-
-// Marker coordinates of major cities inside UA_PATH (viewBox 720x480), mapped from real lat/lon
-const UA_CITIES = {
-  kyiv: { x: 314, y: 142 },
-  lviv: { x: 110, y: 171 },
-  odesa: { x: 333, y: 296 },
-  kharkiv: { x: 488, y: 172 },
-  dnipro: { x: 457, y: 237 },
-  zaporizhzhia: { x: 460, y: 266 },
-  vinnytsia: { x: 250, y: 200 },
-  ivanofrankivsk: { x: 131, y: 210 },
-  poltava: { x: 442, y: 183 },
-  cherkasy: { x: 363, y: 190 },
-  lutsk: { x: 150, y: 128 },
-  mykolaiv: { x: 361, y: 305 },
-};
 
 function MapDot({ x, y, r = 6, color = '#3FA66B', pulse = false, delay = '0s' }: { x: number; y: number; r?: number; color?: string; pulse?: boolean; delay?: string }) {
   return (
@@ -187,7 +163,16 @@ function App({ onStart }: { onStart?: () => void } = {}) {
   const [achievements, setAchievements] = useState<Achievement[]>(DEFAULT_ACHIEVEMENTS);
 
   const [showToast, setShowToast] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [, setLoading] = useState(true);
+
+  const navLinks = [
+    { href: '#features', label: 'Як це працює' },
+    { href: '#features', label: 'Можливості' },
+    { href: '#map', label: 'Карта' },
+    { href: '#progress', label: 'Досягнення' },
+    { href: '#cta', label: 'Контакти' },
+  ];
 
   useEffect(() => {
     const tryFetch = async (port: number) => {
@@ -224,31 +209,52 @@ function App({ onStart }: { onStart?: () => void } = {}) {
     <div style={{ fontFamily: "'Manrope', sans-serif", background: '#071F16', color: '#F4F1E8', minHeight: '100vh', overflowX: 'hidden' }}>
       
       {/* ============ NAVBAR ============ */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', padding: '14px 40px', background: 'rgba(7,31,22,0.8)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <nav className="at-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', padding: '14px 40px', background: 'rgba(7,31,22,0.8)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <a href="#top" style={{ display: 'flex', alignItems: 'center', flex: '0 0 auto' }}>
           <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '42px', width: 'auto', display: 'block' }} />
         </a>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '36px', flexWrap: 'wrap', justifyContent: 'center', fontSize: '13.5px', fontWeight: 500, color: 'rgba(244,241,232,0.85)' }}>
-          <a href="#features" style={{ transition: 'color 0.2s' }}>Як це працює</a>
-          <a href="#features" style={{ transition: 'color 0.2s' }}>Можливості</a>
-          <a href="#map" style={{ transition: 'color 0.2s' }}>Карта</a>
-          <a href="#progress" style={{ transition: 'color 0.2s' }}>Досягнення</a>
-          <a href="#cta" style={{ transition: 'color 0.2s' }}>Контакти</a>
+        <div className="at-nav-links" style={{ display: 'flex', alignItems: 'center', gap: '36px', flexWrap: 'wrap', justifyContent: 'center', fontSize: '13.5px', fontWeight: 500, color: 'rgba(244,241,232,0.85)' }}>
+          {navLinks.map((l, i) => (
+            <a key={i} href={l.href} style={{ transition: 'color 0.2s' }}>{l.label}</a>
+          ))}
         </div>
-        <button onClick={onStart} style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#9BD8B4', fontFamily: "'Manrope', sans-serif", fontSize: '13.5px', fontWeight: 700, padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', cursor: 'pointer', transition: 'all 0.2s' }}>
+        <button className="at-nav-cta" onClick={onStart} style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#9BD8B4', fontFamily: "'Manrope', sans-serif", fontSize: '13.5px', fontWeight: 700, padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', cursor: 'pointer', transition: 'all 0.2s' }}>
           Почати дослідження
         </button>
+
+        {/* mobile hamburger */}
+        <button className="at-burger" aria-label="Меню" aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}>
+          {menuOpen ? (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12" /><path d="M18 6l-12 12" /></svg>
+          ) : (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" /></svg>
+          )}
+        </button>
+
+        {/* mobile dropdown menu */}
+        {menuOpen && (
+          <div className="at-mobile-menu" style={{ position: 'absolute', top: '100%', left: 0, right: 0, flexDirection: 'column', gap: '2px', padding: '10px 14px 18px', background: 'rgba(7,31,22,0.98)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 40px -12px rgba(0,0,0,0.6)' }}>
+            {navLinks.map((l, i) => (
+              <a key={i} href={l.href} onClick={() => setMenuOpen(false)} style={{ padding: '14px 12px', fontSize: '15px', fontWeight: 600, color: 'rgba(244,241,232,0.9)', borderRadius: '10px' }}>
+                {l.label}
+              </a>
+            ))}
+            <button onClick={() => { setMenuOpen(false); onStart?.(); }} style={{ marginTop: '8px', width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#3FA66B', color: '#071F16', fontFamily: "'Manrope', sans-serif", fontSize: '15px', fontWeight: 700, padding: '15px 22px', borderRadius: '12px', border: 'none', cursor: 'pointer' }}>
+              Почати дослідження
+            </button>
+          </div>
+        )}
       </nav>
 
       {/* ============ HERO ============ */}
-      <header id="top" style={{ position: 'relative', padding: '90px 40px 110px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 70px)' }}>
+      <header id="top" className="at-hero" style={{ position: 'relative', padding: '90px 40px 110px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 70px)' }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/assets/forest_bg.avif')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18, mixBlendMode: 'color-dodge', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(7,31,22,0.2) 0%, rgba(7,31,22,0.85) 60%, #071F16 100%)', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 50% at 25% 35%, rgba(63,166,107,0.15), transparent 70%)', pointerEvents: 'none' }}></div>
 
-        <div style={{ position: 'relative', maxWidth: '1240px', width: '100%', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '56px', alignItems: 'center' }}>
+        <div className="at-hero-inner" style={{ position: 'relative', maxWidth: '1240px', width: '100%', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '56px', alignItems: 'center' }}>
           {/* left copy */}
-          <div style={{ flex: '1 1 420px', minWidth: '320px', animation: 'fadeUp 0.7s ease both' }}>
+          <div className="at-hero-copy" style={{ flex: '1 1 420px', minWidth: '320px', animation: 'fadeUp 0.7s ease both' }}>
             <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B', marginBottom: '22px' }}>EXPLORE UKRAINE</div>
             <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(38px, 4.6vw, 58px)', lineHeight: 1.14, margin: '0 0 26px', color: '#F4F1E8' }}>
               Відкрий Україну.<br />Разом із друзями.
@@ -256,7 +262,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
             <p style={{ fontSize: '15.5px', lineHeight: 1.7, color: 'rgba(244,241,232,0.68)', maxWidth: '440px', margin: '0 0 34px' }}>
               Absolute Travel — соціальна платформа для дослідження України. Знаходь цікаві місця, проходь маршрути, виконуй завдання та створюй свою карту відкриттів разом із друзями.
             </p>
-            <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '44px' }}>
+            <div className="at-hero-btns" style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '44px' }}>
               <button onClick={onStart} style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#3FA66B', color: '#071F16', fontFamily: "'Manrope', sans-serif", fontSize: '14px', fontWeight: 700, padding: '15px 26px', borderRadius: '12px', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>
                 Почати дослідження
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
@@ -269,8 +275,8 @@ function App({ onStart }: { onStart?: () => void } = {}) {
           </div>
 
           {/* right: app preview */}
-          <div style={{ flex: '1 1 500px', minWidth: '340px', position: 'relative', perspective: '1200px', transformStyle: 'preserve-3d', animation: 'fadeUp 0.7s 0.15s ease both' }}>
-            <div style={{ position: 'relative', background: 'rgba(8,26,18,0.92)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '18px', boxShadow: '0 30px 60px -15px rgba(0,0,0,0.8), 0 0 50px rgba(63, 166, 107, 0.15)', overflow: 'visible', transform: 'rotateY(-15deg) rotateX(6deg) rotateZ(1deg)', transformStyle: 'preserve-3d' }}>
+          <div className="at-preview-col" style={{ flex: '1 1 500px', minWidth: '340px', position: 'relative', perspective: '1200px', transformStyle: 'preserve-3d', animation: 'fadeUp 0.7s 0.15s ease both' }}>
+            <div className="at-preview-card" style={{ position: 'relative', background: 'rgba(8,26,18,0.92)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '18px', boxShadow: '0 30px 60px -15px rgba(0,0,0,0.8), 0 0 50px rgba(63, 166, 107, 0.15)', overflow: 'visible', transform: 'rotateY(-15deg) rotateX(6deg) rotateZ(1deg)', transformStyle: 'preserve-3d' }}>
               {/* app top bar */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '22px', padding: '13px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(244,241,232,0.8)" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path></svg>
@@ -337,7 +343,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
 
               {/* floating toast */}
               {showToast && (
-                <div style={{ position: 'absolute', top: '54px', right: '-18px', width: '190px', background: 'rgba(11,43,32,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', padding: '12px 14px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', animation: 'fadeIn 0.8s 0.5s both', transform: 'translateZ(25px)', transformStyle: 'preserve-3d' }}>
+                <div className="at-toast" style={{ position: 'absolute', top: '54px', right: '-18px', width: '190px', background: 'rgba(11,43,32,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', padding: '12px 14px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', animation: 'fadeIn 0.8s 0.5s both', transform: 'translateZ(25px)', transformStyle: 'preserve-3d' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
                     <img src="/assets/carpathians_thumb.avif" alt="Карпати" style={{ width: '30px', height: '30px', borderRadius: '8px', objectFit: 'cover', flex: '0 0 auto', border: '1px solid rgba(255,255,255,0.1)' }} />
                     <div style={{ fontSize: '10.5px', lineHeight: 1.4 }}>
@@ -353,7 +359,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
               )}
 
               {/* floating place card */}
-              <div style={{ position: 'absolute', bottom: '-26px', right: '-22px', width: '200px', background: 'rgba(11,43,32,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '14px', padding: '13px', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', animation: 'fadeIn 0.8s 0.8s both', transform: 'translateZ(32px)', transformStyle: 'preserve-3d' }}>
+              <div className="at-placecard" style={{ position: 'absolute', bottom: '-26px', right: '-22px', width: '200px', background: 'rgba(11,43,32,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '14px', padding: '13px', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', animation: 'fadeIn 0.8s 0.8s both', transform: 'translateZ(32px)', transformStyle: 'preserve-3d' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '3px' }}>
                   <div style={{ fontSize: '13px', fontWeight: 800 }}>Львів</div>
                 </div>
@@ -373,7 +379,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       </header>
 
       {/* ============ FEATURES ============ */}
-      <section id="features" style={{ maxWidth: '1240px', margin: '0 auto', padding: '40px 40px 30px' }}>
+      <section id="features" className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '40px 40px 30px' }}>
         <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B', marginBottom: '14px' }}>МОЖЛИВОСТІ</div>
         <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(28px, 3.2vw, 40px)', margin: '0 0 40px', color: '#F4F1E8' }}>Україна, яку ти ще не бачив</h2>
 
@@ -451,8 +457,8 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       </section>
 
       {/* ============ MAP ============ */}
-      <section id="map" style={{ maxWidth: '1240px', margin: '0 auto', padding: '10px 40px' }}>
-        <div style={{ background: '#081E15', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '40px', display: 'flex', flexWrap: 'wrap', gap: '40px', position: 'relative', overflow: 'hidden' }}>
+      <section id="map" className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '10px 40px' }}>
+        <div className="at-panel" style={{ background: '#081E15', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '40px', display: 'flex', flexWrap: 'wrap', gap: '40px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 55% 65% at 60% 45%, rgba(63,166,107,0.08), transparent 70%)' }}></div>
           {/* text col */}
           <div style={{ position: 'relative', flex: '0 1 280px', minWidth: '240px', display: 'flex', flexDirection: 'column' }}>
@@ -519,8 +525,8 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       </section>
 
       {/* ============ PROGRESS ============ */}
-      <section id="progress" style={{ maxWidth: '1240px', margin: '0 auto', padding: '20px 40px 10px' }}>
-        <div style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '36px 40px', display: 'flex', flexWrap: 'wrap', gap: '36px', alignItems: 'center' }}>
+      <section id="progress" className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '20px 40px 10px' }}>
+        <div className="at-panel" style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '36px 40px', display: 'flex', flexWrap: 'wrap', gap: '36px', alignItems: 'center' }}>
           {/* text */}
           <div style={{ flex: '1 1 260px', minWidth: '240px' }}>
             <div style={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B', marginBottom: '16px' }}>ПРОГРЕС</div>
@@ -562,8 +568,8 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       </section>
 
       {/* ============ FRIENDS ============ */}
-      <section style={{ maxWidth: '1240px', margin: '0 auto', padding: '20px 40px 40px' }}>
-        <div style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '32px 36px', display: 'flex', flexWrap: 'wrap', gap: '28px', alignItems: 'stretch' }}>
+      <section className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '20px 40px 40px' }}>
+        <div className="at-panel" style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '32px 36px', display: 'flex', flexWrap: 'wrap', gap: '28px', alignItems: 'stretch' }}>
           <div style={{ flex: '0 1 220px', minWidth: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px' }}>
             <div style={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B' }}>ДРУЗІ</div>
             <div style={{ fontFamily: "'Lora', serif", fontSize: '23px', fontWeight: 500, lineHeight: 1.35 }}>Досліджуйте разом ще цікавіше</div>
@@ -586,7 +592,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       </section>
 
       {/* ============ CTA ============ */}
-      <section id="cta" style={{ position: 'relative', padding: '110px 40px 130px', overflow: 'hidden', textAlign: 'center' }}>
+      <section id="cta" className="at-cta" style={{ position: 'relative', padding: '110px 40px 130px', overflow: 'hidden', textAlign: 'center' }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/assets/forest_bg.avif')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18, mixBlendMode: 'color-dodge', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, #071F16 0%, rgba(7,31,22,0.85) 60%, rgba(7,31,22,0.2) 100%)', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 50% 60% at 50% 100%, rgba(63,166,107,0.15), transparent 70%)', pointerEvents: 'none' }}></div>

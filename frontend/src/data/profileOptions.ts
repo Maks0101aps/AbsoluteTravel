@@ -1,0 +1,122 @@
+// Customization options for the profile editor.
+// Locked items carry a human-readable reason (level requirement or coin price).
+import type { IconName } from '../icons';
+
+export type Lock =
+  | { type: 'free' }
+  | { type: 'level'; level: number }
+  | { type: 'coins'; price: number };
+
+export function lockLabel(lock: Lock): string | null {
+  if (lock.type === 'free') return null;
+  if (lock.type === 'level') return `Рівень ${lock.level}`;
+  return `${lock.price} монет`;
+}
+
+// --- Avatars: a themed line icon on a tinted disc, no image files required ---
+export interface AvatarOption {
+  id: string;
+  icon: IconName;
+  gradient: string;
+  lock: Lock;
+}
+
+export const AVATARS: AvatarOption[] = [
+  { id: 'a1', icon: 'compass', gradient: 'linear-gradient(135deg,#3FA66B,#1E6B44)', lock: { type: 'free' } },
+  { id: 'a2', icon: 'mountain', gradient: 'linear-gradient(135deg,#4B9FE1,#1E4E8C)', lock: { type: 'free' } },
+  { id: 'a3', icon: 'pine', gradient: 'linear-gradient(135deg,#2FA35A,#0F4A2C)', lock: { type: 'free' } },
+  { id: 'a4', icon: 'tent', gradient: 'linear-gradient(135deg,#C98A4B,#7A4E1E)', lock: { type: 'free' } },
+  { id: 'a5', icon: 'map', gradient: 'linear-gradient(135deg,#E7B84B,#B07A16)', lock: { type: 'free' } },
+  { id: 'a6', icon: 'backpack', gradient: 'linear-gradient(135deg,#5FB98C,#276B4C)', lock: { type: 'free' } },
+  { id: 'a7', icon: 'signpost', gradient: 'linear-gradient(135deg,#8A7CD8,#463C8C)', lock: { type: 'free' } },
+  { id: 'a8', icon: 'binoculars', gradient: 'linear-gradient(135deg,#E1734B,#8C381E)', lock: { type: 'free' } },
+  { id: 'a9', icon: 'feather', gradient: 'linear-gradient(135deg,#6E7B8A,#2E3A46)', lock: { type: 'free' } },
+  { id: 'a10', icon: 'flame', gradient: 'linear-gradient(135deg,#3FA6A0,#1E6B67)', lock: { type: 'free' } },
+  { id: 'a11', icon: 'shield', gradient: 'linear-gradient(135deg,#9AA4B0,#4A5560)', lock: { type: 'level', level: 5 } },
+  { id: 'a12', icon: 'moon', gradient: 'linear-gradient(135deg,#B07A4B,#5E3C1E)', lock: { type: 'level', level: 10 } },
+  { id: 'a13', icon: 'sun', gradient: 'linear-gradient(135deg,#8C5A3C,#4A2C16)', lock: { type: 'coins', price: 500 } },
+  { id: 'a14', icon: 'crown', gradient: 'linear-gradient(135deg,#E7C34B,#B0851A)', lock: { type: 'coins', price: 1500 } },
+];
+
+// --- Profile accent colors ---
+export interface ColorOption {
+  id: string;
+  value: string;
+  lock: Lock;
+}
+
+export const COLORS: ColorOption[] = [
+  { id: 'green', value: '#3FA66B', lock: { type: 'free' } },
+  { id: 'teal', value: '#3FA6A0', lock: { type: 'free' } },
+  { id: 'blue', value: '#4B9FE1', lock: { type: 'free' } },
+  { id: 'violet', value: '#8A7CDF', lock: { type: 'free' } },
+  { id: 'amber', value: '#E7B84B', lock: { type: 'free' } },
+  { id: 'coral', value: '#E1734B', lock: { type: 'free' } },
+  { id: 'gold', value: '#F0C64B', lock: { type: 'coins', price: 500 } },
+  { id: 'crimson', value: '#D14B6A', lock: { type: 'level', level: 5 } },
+];
+
+// --- Profile backgrounds (free ones use existing assets or gradients) ---
+export interface BackgroundOption {
+  id: string;
+  label: string;
+  css: string; // value for `background`
+  lock: Lock;
+}
+
+export const BACKGROUNDS: BackgroundOption[] = [
+  { id: 'forest', label: 'Ліс', css: "linear-gradient(180deg,rgba(7,31,22,0.55),rgba(7,31,22,0.9)),url('/assets/forest_bg.avif') center/cover", lock: { type: 'free' } },
+  { id: 'scenic1', label: 'Гори', css: "linear-gradient(180deg,rgba(7,31,22,0.5),rgba(7,31,22,0.9)),url('/assets/scenic_gallery_1.avif') center/cover", lock: { type: 'free' } },
+  { id: 'scenic2', label: 'Долина', css: "linear-gradient(180deg,rgba(7,31,22,0.5),rgba(7,31,22,0.9)),url('/assets/scenic_gallery_2.avif') center/cover", lock: { type: 'free' } },
+  { id: 'emerald', label: 'Смарагд', css: 'linear-gradient(135deg,#0B3B29,#071F16)', lock: { type: 'free' } },
+  { id: 'scenic3', label: 'Захід сонця', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/scenic_gallery_3.avif') center/cover", lock: { type: 'level', level: 5 } },
+  { id: 'aurora', label: 'Аврора', css: 'linear-gradient(135deg,#12324a,#3a1a5e)', lock: { type: 'coins', price: 800 } },
+];
+
+// --- Avatar frames ---
+export interface FrameOption {
+  id: string;
+  label: string;
+  // ring is applied as border/box-shadow around the avatar
+  ring: string;
+  lock: Lock;
+}
+
+export const FRAMES: FrameOption[] = [
+  { id: 'none', label: 'Без рамки', ring: 'none', lock: { type: 'free' } },
+  { id: 'solid', label: 'Класична', ring: 'accent', lock: { type: 'free' } },
+  { id: 'glow', label: 'Сяйво', ring: 'glow', lock: { type: 'free' } },
+  { id: 'gold', label: 'Золота', ring: 'gold', lock: { type: 'level', level: 10 } },
+  { id: 'gem', label: 'Самоцвіт', ring: 'gem', lock: { type: 'coins', price: 1200 } },
+];
+
+// --- Profile badges (small emblems shown next to the level pill) ---
+export interface BadgeOption {
+  id: string;
+  icon: IconName;
+  label: string;
+  lock: Lock;
+}
+
+export const BADGES: BadgeOption[] = [
+  { id: 'newcomer', icon: 'leaf', label: 'Новачок', lock: { type: 'free' } },
+  { id: 'hiker', icon: 'boot', label: 'Турист', lock: { type: 'free' } },
+  { id: 'photographer', icon: 'camera', label: 'Фотограф', lock: { type: 'free' } },
+  { id: 'explorer', icon: 'flag', label: 'Дослідник', lock: { type: 'level', level: 5 } },
+  { id: 'mountaineer', icon: 'mountain', label: 'Підкорювач вершин', lock: { type: 'level', level: 10 } },
+  { id: 'legend', icon: 'trophy', label: 'Легенда', lock: { type: 'coins', price: 1000 } },
+];
+
+// --- Card effects (visual flourish over the whole card) ---
+export interface EffectOption {
+  id: string;
+  label: string;
+  lock: Lock;
+}
+
+export const EFFECTS: EffectOption[] = [
+  { id: 'none', label: 'Без ефекту', lock: { type: 'free' } },
+  { id: 'glow', label: 'Мʼяке сяйво', lock: { type: 'free' } },
+  { id: 'aurora', label: 'Аврора', lock: { type: 'level', level: 5 } },
+  { id: 'sparkle', label: 'Іскри', lock: { type: 'coins', price: 900 } },
+];

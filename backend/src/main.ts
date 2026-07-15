@@ -1,10 +1,16 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
+
+  // Place submissions carry base64 photos, so raise the body-size limit well
+  // above Express's 100kb default.
+  app.use(json({ limit: '25mb' }));
+  app.use(urlencoded({ extended: true, limit: '25mb' }));
 
   let port = parseInt(process.env.PORT ?? '3000', 10);
   const maxTries = 10;

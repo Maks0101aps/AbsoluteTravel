@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { UKRAINE_REGIONS } from './data/ukraine';
-import { loginUser, registerUser, type AuthUser } from './api';
+import { loginUser, registerUser, adminLogin, type AuthUser, type AdminSession } from './api';
 
 const GREEN = '#3FA66B';
 const LIGHT = '#9BD8B4';
@@ -9,6 +9,8 @@ const BG = '#071F16';
 
 interface AuthPageProps {
   onAuth: (user: AuthUser) => void;
+  // Called when the entered credentials match an admin account.
+  onAdminAuth: (session: AdminSession) => void;
   onBack: () => void;
 }
 
@@ -36,7 +38,7 @@ const labelStyle: React.CSSProperties = {
 
 const fieldWrap: React.CSSProperties = { marginBottom: '16px' };
 
-function AuthPage({ onAuth, onBack }: AuthPageProps) {
+function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
   const [mode, setMode] = useState<'register' | 'login'>('register');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -75,10 +77,24 @@ function AuthPage({ onAuth, onBack }: AuthPageProps) {
 
     setLoading(true);
     try {
-      const user =
-        mode === 'register'
-          ? await registerUser({ username: username.trim(), email: email.trim(), password, region, city })
-          : await loginUser({ email: email.trim(), password });
+      if (mode === 'register') {
+        const user = await registerUser({ username: username.trim(), email: email.trim(), password, region, city });
+        onAuth(user);
+        return;
+      }
+
+      // Login: the same form serves participants and admins. Try admin
+      // credentials first — if they match, go straight to the admin menu.
+      try {
+        const session = await adminLogin(email.trim(), password);
+        onAdminAuth(session);
+        return;
+      } catch {
+        // Not an admin account (or wrong admin creds) — fall back to a normal
+        // participant login below.
+      }
+
+      const user = await loginUser({ email: email.trim(), password });
       onAuth(user);
     } catch (err: any) {
       setError(err?.message || 'Сталася помилка. Спробуйте ще раз.');
@@ -107,6 +123,7 @@ function AuthPage({ onAuth, onBack }: AuthPageProps) {
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 55% at 50% 30%, rgba(63,166,107,0.16), transparent 70%)', pointerEvents: 'none' }} />
 
       <div
+        className="at-auth-card"
         style={{
           position: 'relative',
           width: '100%',
@@ -181,14 +198,14 @@ function AuthPage({ onAuth, onBack }: AuthPageProps) {
           )}
 
           <div style={fieldWrap}>
-            <label style={labelStyle}>Електронна пошта</label>
+            <label style={labelStyle}>{mode === 'register' ? 'Електронна пошта' : 'Пошта або логін'}</label>
             <input
               style={inputStyle}
-              type="email"
+              type={mode === 'register' ? 'email' : 'text'}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
+              placeholder={mode === 'register' ? 'you@example.com' : 'Пошта або логін'}
+              autoComplete="username"
               onFocus={(e) => (e.currentTarget.style.borderColor = GREEN)}
               onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)')}
             />
