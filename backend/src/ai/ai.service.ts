@@ -18,6 +18,10 @@ export interface ChatDto {
   topic?: string;
   // Prior turns so the advisor keeps context across the conversation.
   history?: ChatTurn[];
+  lat?: number;
+  lng?: number;
+  city?: string;
+  region?: string;
 }
 
 // Base persona shared by every request. Kept in Ukrainian because the whole
@@ -202,8 +206,18 @@ export class AiService {
     const userText = message || 'Порадь, будь ласка, з цієї теми.';
     contents.push({ role: 'user', parts: [{ text: `${userText}${topicHint}` }] });
 
+    let locationContext = '';
+    if (dto.lat !== undefined && dto.lng !== undefined) {
+      locationContext += `\n\nПоточні реальні GPS-координати пристрою користувача в реальному часі: ${dto.lat.toFixed(6)}, ${dto.lng.toFixed(6)}.`;
+      locationContext += `\nЦе його справжнє географічне місцезнаходження прямо зараз. Навіть якщо в його профілі вказано інше місто або область (наприклад, ${dto.city || 'не вказано'}, ${dto.region || 'не вказано'}), ти повинен повністю ігнорувати місто з профілю й рекомендувати туристичні об'єкти виключно на основі вказаних поточних GPS-координат пристрою!`;
+    } else if (dto.city || dto.region) {
+      const parts = [dto.city, dto.region].filter(Boolean);
+      locationContext += `\nМісцезнаходження користувача з профілю: ${parts.join(', ')}.`;
+      locationContext += `\nВраховуй цю геолокацію при рекомендаціях. Якщо користувач просить поради куди поїхати чи що відвідати поруч, пропонуй варіанти насамперед з його області/міста.`;
+    }
+
     const body = {
-      system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      system_instruction: { parts: [{ text: `${SYSTEM_PROMPT}${locationContext}` }] },
       contents,
       generationConfig: {
         temperature: 0.6,

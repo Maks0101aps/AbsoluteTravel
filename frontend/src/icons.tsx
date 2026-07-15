@@ -4,7 +4,7 @@ export type IconName =
   | 'compass' | 'mountain' | 'pine' | 'tent' | 'map' | 'signpost' | 'binoculars'
   | 'flame' | 'backpack' | 'feather' | 'shield' | 'moon' | 'sun' | 'crown'
   | 'leaf' | 'boot' | 'camera' | 'flag' | 'trophy'
-  | 'user' | 'image' | 'target' | 'star' | 'sparkle'
+  | 'user' | 'users' | 'shoppingBag' | 'image' | 'target' | 'star' | 'sparkle'
   | 'lock' | 'coin' | 'pencil' | 'close' | 'check' | 'plus' | 'arrowLeft' | 'arrowRight' | 'messageSquare' | 'mic' | 'smile' | 'hexagon' | 'gift';
 
 const PATHS: Record<IconName, React.ReactNode> = {
@@ -28,12 +28,14 @@ const PATHS: Record<IconName, React.ReactNode> = {
   flag: <><path d="M6 21V4" /><path d="M6 4h11l-2 3 2 3H6" /></>,
   trophy: <><path d="M8 4h8v4a4 4 0 0 1-8 0z" /><path d="M8 5H5v1a3 3 0 0 0 3 3M16 5h3v1a3 3 0 0 1-3 3" /><path d="M12 12v4M9 20h6M10 20l.5-4h3l.5 4" /></>,
   user: <><circle cx="12" cy="8" r="4" /><path d="M5 20c0-4 3-6 7-6s7 2 7 6" /></>,
+  users: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
+  shoppingBag: <><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" /></>,
   image: <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" /><path d="M21 16l-5-5-7 7" /></>,
   target: <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /></>,
   star: <><path d="M12 3l2.6 5.6L20 9.3l-4 4 1 6-5-3-5 3 1-6-4-4 5.4-.7z" /></>,
   sparkle: <><path d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L5 10l6.5-1.5z" /><path d="M18.5 13l.7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7z" /></>,
   lock: <><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>,
-  coin: <><circle cx="12" cy="12" r="9" /><path d="M12 7v10M9.5 9.5c0-1 1-1.5 2.5-1.5s2.5.5 2.5 1.5-1 1.5-2.5 1.5-2.5.5-2.5 1.5 1 1.5 2.5 1.5 2.5-.5 2.5-1.5" /></>,
+  coin: <><circle cx="12" cy="12" r="9" /><path d="M12 7.5v9M14.5 9H10.5a1.5 1.5 0 0 0 0 3h3a1.5 1.5 0 0 1 0 3H9.5" /></>,
   pencil: <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></>,
   close: <path d="M6 6l12 12M18 6L6 18" />,
   check: <path d="M4 12l5 5L20 6" />,

@@ -10,6 +10,7 @@ import { cellPolygon } from './exploration/h3';
 const HEX_FILL = '#3FA66B';
 const HEX_STROKE = 'rgba(155,216,180,0.55)';
 
+
 const ICON_PATHS: Record<string, string> = {
   compass: '<circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z" />',
   mountain: '<path d="M3 20l6-11 4 6 2-3 6 8z" /><path d="M9 9l2 3" />',
