@@ -2,6 +2,26 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { CATEGORY_META, DIFFICULTY_META, type Place } from './data/places';
+import { AVATARS } from './data/profileOptions';
+
+const ICON_PATHS: Record<string, string> = {
+  compass: '<circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z" />',
+  mountain: '<path d="M3 20l6-11 4 6 2-3 6 8z" /><path d="M9 9l2 3" />',
+  pine: '<path d="M12 4l5 7h-3l3 5H7l3-5H7z" /><path d="M12 16v4" />',
+  tent: '<path d="M12 5L3 20h18z" /><path d="M12 5v15" /><path d="M9 20l3-5 3 5" />',
+  map: '<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z" /><path d="M9 4v14M15 6v14" />',
+  signpost: '<path d="M12 3v18" /><path d="M5 6h11l2 2-2 2H5z" /><path d="M7 14h12" />',
+  binoculars: '<circle cx="7" cy="15" r="3" /><circle cx="17" cy="15" r="3" /><path d="M7 12l1-6h2l1 6M17 12l-1-6h-2l-1 6" %>',
+  flame: '<path d="M12 3c3 3 5 5.5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2.5-4.5C9 9 10 6 12 3z" %>',
+  backpack: '<path d="M7 8a5 5 0 0 1 10 0v10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z" /><path d="M10 8V6a2 2 0 0 1 4 0v2" /><path d="M9 13h6" %>',
+  feather: '<path d="M20 4C11 4 4 11 4 20" /><path d="M20 4c0 8-5 12-12 13" /><path d="M8 17l-4 3" %>',
+  shield: '<path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z" /><path d="M9 12l2 2 4-4" %>',
+  moon: '<path d="M20 14a8 8 0 1 1-9-11 6 6 0 0 0 9 11z" %>',
+  sun: '<circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19" %>',
+  crown: '<path d="M4 8l3 4 5-6 5 6 3-4v9H4z" /><path d="M4 20h16" %>',
+  trophy: '<path d="M8 4h8v4a4 4 0 0 1-8 0z" /><path d="M8 5H5v1a3 3 0 0 0 3 3M16 5h3v1a3 3 0 0 1-3 3" /><path d="M12 12v4M9 20h6M10 20l.5-4h3l.5 4" %>',
+  star: '<path d="M12 3l2.6 5.6L20 9.3l-4 4 1 6-5-3-5 3 1-6-4-4 5.4-.7z" />'
+};
 
 // Bounding box of Ukraine — the map won't let the user pan/zoom too far outside it.
 const UA_BOUNDS: L.LatLngBoundsExpression = [
@@ -53,7 +73,7 @@ function escapeHtml(s: string): string {
 }
 
 function safeAvatarUrl(url: string): string {
-  return /^(\/|https?:\/\/|data:image\/)/.test(url) ? url : '/assets/avatar_default.avif';
+  return /^(\/|https?:\/\/|data:image\/)/.test(url) ? url : '/assets/avatar_default.svg';
 }
 
 function liveIcon(m: LiveMarker) {
@@ -61,9 +81,26 @@ function liveIcon(m: LiveMarker) {
   const ring = m.pulse
     ? `<div style="position:absolute;inset:-7px;border-radius:50%;background:${m.color}55;animation:atLivePulse 2s ease-out infinite;"></div>`
     : '';
-  const inner = m.avatar
-    ? `<img src="${escapeHtml(safeAvatarUrl(m.avatar))}" onerror="this.src='/assets/avatar_default.avif';this.onerror=null;" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"/>`
-    : `<div style="width:100%;height:100%;border-radius:50%;background:${m.color};"></div>`;
+  
+  let inner = '';
+  const avatarOpt = m.avatar ? AVATARS.find((a) => a.id === m.avatar) : undefined;
+  
+  if (avatarOpt) {
+    const pathsHtml = ICON_PATHS[avatarOpt.icon] || '';
+    const stroke = "rgba(244,241,232,0.95)";
+    const strokeWidth = 1.7;
+    const svgSize = size * 0.46;
+    inner = `<div style="width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${avatarOpt.gradient};">
+      <svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+        ${pathsHtml}
+      </svg>
+    </div>`;
+  } else if (m.avatar) {
+    inner = `<img src="${escapeHtml(safeAvatarUrl(m.avatar))}" onerror="this.src='/assets/avatar_default.svg';this.onerror=null;" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"/>`;
+  } else {
+    inner = `<div style="width:100%;height:100%;border-radius:50%;background:${m.color};"></div>`;
+  }
+  
   const grey = m.dimmed ? 'filter:grayscale(1);opacity:0.55;' : '';
   return L.divIcon({
     className: '',
