@@ -5,12 +5,23 @@
 
 export const PRICES: Record<string, number> = {
   // avatars
+  a15: 300,
+  a16: 400,
+  a17: 450,
   a13: 500,
+  a18: 650,
+  a19: 800,
+  a20: 1000,
   a14: 1500,
   // accent colors
   gold: 500,
   // backgrounds
+  ocean: 350,
+  ember: 450,
+  midnight: 600,
   aurora: 800,
+  sakura: 1000,
+  cosmos: 1300,
   // frames
   gem: 1200,
   // badges
