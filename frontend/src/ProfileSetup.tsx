@@ -287,7 +287,7 @@ function ProfileSetup({ user, onComplete, onSkip, onUserUpdate }: ProfileSetupPr
           >
             <div style={{ position: 'absolute', inset: 0, background: background.css, transition: 'background 0.25s ease' }} />
             {effectId === 'glow' && (
-              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', ['--glow-color' as any]: `${color}80`, animation: 'softGlow 3.5s ease-in-out infinite' }} />
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', boxShadow: `inset 0 0 80px -10px ${color}bf`, animation: 'softGlowOpacity 3.5s ease-in-out infinite' }} />
             )}
 
             <div style={{ position: 'relative', padding: '24px 30px 30px', display: 'flex', flexDirection: 'column', gap: '18px' }}>

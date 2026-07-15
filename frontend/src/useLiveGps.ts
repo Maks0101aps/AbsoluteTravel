@@ -8,6 +8,13 @@ import { getSocket } from './socket';
 
 const PUBLISH_INTERVAL_MS = 15_000;
 const STALE_AFTER_MS = 5 * 60 * 1000;
+// Accept a recent cached fix instead of forcing a brand-new (slow) GPS lock.
+const GEO_MAX_AGE_MS = 60_000;
+
+// Last good fix, kept at module scope so it survives the hook unmounting when
+// the map tab is switched away. Lets the self dot reappear instantly on return
+// instead of waiting for a fresh geolocation fix.
+let lastKnownSelf: { lat: number; lng: number } | null = null;
 
 export interface FriendDot extends LiveLocation {
   friend: FriendEntry;
@@ -23,7 +30,8 @@ export interface LiveGpsState {
 }
 
 export function useLiveGps(userId: number | undefined, enabled = true): LiveGpsState {
-  const [selfPosition, setSelfPosition] = useState<{ lat: number; lng: number } | null>(null);
+  // Seed from the cached fix so the dot shows immediately after a tab switch.
+  const [selfPosition, setSelfPosition] = useState<{ lat: number; lng: number } | null>(lastKnownSelf);
   const [locations, setLocations] = useState<LiveLocation[]>([]);
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [sharing, setSharingState] = useState(true);
@@ -73,6 +81,7 @@ export function useLiveGps(userId: number | undefined, enabled = true): LiveGpsS
         if (stopped || !sharingRef.current) return;
         const lat = Number(pos.coords.latitude.toFixed(6));
         const lng = Number(pos.coords.longitude.toFixed(6));
+        lastKnownSelf = { lat, lng };
         setSelfPosition({ lat, lng });
         setGeoError(null);
 
@@ -86,7 +95,7 @@ export function useLiveGps(userId: number | undefined, enabled = true): LiveGpsS
       (err) => {
         if (!stopped) setGeoError(err.code === err.PERMISSION_DENIED ? 'Доступ до геолокації заборонено' : 'Не вдалося визначити позицію');
       },
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 },
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: GEO_MAX_AGE_MS },
     );
 
     // Keep staleness flags fresh even without new position events.
@@ -101,7 +110,29 @@ export function useLiveGps(userId: number | undefined, enabled = true): LiveGpsS
   const setSharing = (visible: boolean) => {
     setSharingState(visible);
     if (userId) setLocationVisibility(userId, visible).catch(() => {});
-    if (!visible) setSelfPosition(null);
+    if (!visible) {
+      setSelfPosition(null);
+    } else {
+      // Show the last known fix instantly, then refine with a fresh reading.
+      if (lastKnownSelf) setSelfPosition(lastKnownSelf);
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = Number(pos.coords.latitude.toFixed(6));
+            const lng = Number(pos.coords.longitude.toFixed(6));
+            lastKnownSelf = { lat, lng };
+            setSelfPosition({ lat, lng });
+            if (userId) {
+              getSocket(userId).then((socket) => {
+                if (socket.connected) socket.emit('location:update', { lat, lng });
+              });
+            }
+          },
+          () => {},
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: GEO_MAX_AGE_MS }
+        );
+      }
+    }
   };
 
   // `tick` increments every publish interval, forcing a re-render so the
