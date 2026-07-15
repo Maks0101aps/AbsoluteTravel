@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
-import type { AuthUser, ProfileCustomization } from './api';
+import { purchaseItem, type AuthUser, type ProfileCustomization } from './api';
 import ProfileAvatar from './ProfileAvatar';
+import ProfileShop, { type EquipKey } from './ProfileShop';
 import Popover, { type AnchorRect } from './Popover';
 import { Icon, type IconName } from './icons';
 import {
@@ -23,9 +24,8 @@ interface ProfileSetupProps {
   user: AuthUser;
   onComplete: (profile: ProfileCustomization) => void;
   onSkip: () => void;
+  onUserUpdate?: (patch: { coins: number; unlockedItems: string[] }) => void;
 }
-
-const isFree = (lock: Lock) => lock.type === 'free';
 
 // ---- shared bits ----------------------------------------------------------
 
@@ -127,7 +127,7 @@ function Editable({
 
 // ---- main -----------------------------------------------------------------
 
-function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
+function ProfileSetup({ user, onComplete, onSkip, onUserUpdate }: ProfileSetupProps) {
   const init = user.profile;
   const [avatarId, setAvatarId] = useState(init?.avatarId ?? AVATARS[0].id);
   const [customAvatar, setCustomAvatar] = useState<string | undefined>(init?.customAvatar);
@@ -139,8 +139,69 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
   const [badges, setBadges] = useState<string[]>(init?.badges ?? ['newcomer']);
   const [effectId, setEffectId] = useState(init?.effectId ?? 'none');
 
+  // --- economy / shop state ---
+  const [coins, setCoins] = useState(user.coins ?? 0);
+  const [owned, setOwned] = useState<string[]>(user.unlockedItems ?? []);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [buying, setBuying] = useState<string | null>(null);
+  const [shopError, setShopError] = useState<string | null>(null);
+
   const [active, setActive] = useState<EditorKey | null>(null);
   const [anchor, setAnchor] = useState<AnchorRect | null>(null);
+
+  // An item is usable if it's free, its level is reached, or it has been purchased.
+  const canUse = (lock: Lock, id: string): boolean => {
+    if (lock.type === 'free') return true;
+    if (lock.type === 'level') return user.level >= lock.level;
+    return owned.includes(id);
+  };
+
+  // Equip a just-bought (or already-owned) cosmetic from the shop.
+  const equip = (key: EquipKey, id: string) => {
+    switch (key) {
+      case 'avatar': setAvatarId(id); setCustomAvatar(undefined); break;
+      case 'background': setBackgroundId(id); break;
+      case 'frame': setFrameId(id); break;
+      case 'color': setColor(id); break;
+      case 'effect': setEffectId(id); break;
+      case 'badges':
+        setBadges((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+        break;
+    }
+  };
+
+  // Which equip slot an item id belongs to (used to auto-equip after purchase).
+  const equipKeyOf = (itemId: string): EquipKey | null => {
+    if (AVATARS.some((a) => a.id === itemId)) return 'avatar';
+    if (BACKGROUNDS.some((b) => b.id === itemId)) return 'background';
+    if (FRAMES.some((f) => f.id === itemId)) return 'frame';
+    if (BADGES.some((b) => b.id === itemId)) return 'badges';
+    if (EFFECTS.some((e) => e.id === itemId)) return 'effect';
+    const c = COLORS.find((c) => c.id === itemId);
+    if (c) return 'color';
+    return null;
+  };
+
+  const handleBuy = async (itemId: string) => {
+    setBuying(itemId);
+    setShopError(null);
+    try {
+      const res = await purchaseItem(user.id, itemId);
+      setCoins(res.coins);
+      setOwned(res.unlockedItems);
+      onUserUpdate?.({ coins: res.coins, unlockedItems: res.unlockedItems });
+      // auto-equip the freshly purchased item so buying feels immediate
+      const key = equipKeyOf(itemId);
+      if (key) {
+        const colorOpt = COLORS.find((c) => c.id === itemId);
+        equip(key, colorOpt ? colorOpt.value : itemId);
+      }
+    } catch (e: any) {
+      setShopError(e?.message ?? 'Не вдалося придбати товар');
+    } finally {
+      setBuying(null);
+    }
+  };
 
   const fileRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -274,7 +335,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                   </Editable>
                   <span title="Монети" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 700, color: '#F0C64B', background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.3)', padding: '4px 10px', borderRadius: '999px' }}>
                     <Icon name="coin" size={14} strokeWidth={1.9} />
-                    {user.coins ?? 0}
+                    {coins}
                   </span>
                   <Editable accent={color} active={active === 'badges'} radius={999} onOpen={(el) => openAt('badges', el)}>
                     <div ref={badgesRef} style={{ display: 'flex', alignItems: 'center', gap: '7px', minHeight: '26px', padding: '2px 6px' }}>
@@ -364,6 +425,38 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                 </button>
               );
             })}
+
+            {/* ---- shop entry ---- */}
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '4px 4px' }} />
+            <button
+              data-editable
+              onClick={(e) => { e.stopPropagation(); setShopError(null); setShopOpen(true); }}
+              title="Магазин"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                width: '128px',
+                padding: '11px 12px',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                border: '1px solid rgba(240,198,75,0.45)',
+                background: 'rgba(240,198,75,0.12)',
+                color: '#F0C64B',
+                fontFamily: "'Manrope', sans-serif",
+                fontSize: '13px',
+                fontWeight: 700,
+                transition: 'all 0.18s ease',
+              }}
+            >
+              <Icon name="coin" size={17} strokeWidth={1.9} stroke="#F0C64B" />
+              Магазин
+            </button>
+            {/* live coin balance under the shop button */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 700, color: 'rgba(240,198,75,0.85)', paddingTop: '2px' }}>
+              <Icon name="coin" size={13} strokeWidth={1.9} stroke="rgba(240,198,75,0.85)" />
+              {coins} монет
+            </div>
           </div>
         </div>
 
@@ -380,6 +473,21 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
 
       {/* hidden upload input */}
       <input ref={fileRef} type="file" accept="image/*" onChange={handleUpload} style={{ display: 'none' }} />
+
+      {/* ============ SHOP ============ */}
+      {shopOpen && (
+        <ProfileShop
+          coins={coins}
+          level={user.level}
+          owned={owned}
+          buying={buying}
+          error={shopError}
+          selections={{ avatarId, customAvatar, backgroundId, frameId, color, badges, effectId }}
+          onBuy={handleBuy}
+          onEquip={equip}
+          onClose={() => setShopOpen(false)}
+        />
+      )}
 
       {/* ============ POPOVERS ============ */}
       {active && anchor && (
@@ -418,7 +526,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                 )}
               </div>
               {AVATARS.map((a) => {
-                const locked = !isFree(a.lock);
+                const locked = !canUse(a.lock, a.id);
                 const sel = !customAvatar && avatarId === a.id;
                 return (
                   <div
@@ -430,7 +538,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                     <div style={{ width: '100%', height: '100%', borderRadius: '9px', background: a.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Icon name={a.icon} size={22} stroke="rgba(244,241,232,0.95)" strokeWidth={1.7} />
                     </div>
-                    <LockOverlay lock={a.lock} radius={9} />
+                    {locked && <LockOverlay lock={a.lock} radius={9} />}
                   </div>
                 );
               })}
@@ -440,7 +548,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
           {active === 'frame' && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
               {FRAMES.map((f) => {
-                const locked = !isFree(f.lock);
+                const locked = !canUse(f.lock, f.id);
                 const sel = frameId === f.id;
                 return (
                   <div
@@ -451,7 +559,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                   >
                     <ProfileAvatar avatarId={avatarId} customAvatar={customAvatar} frameId={f.id} color={color} size={46} />
                     <span style={{ fontSize: '10.5px', fontWeight: 600, color: 'rgba(244,241,232,0.75)' }}>{f.label}</span>
-                    <LockOverlay lock={f.lock} />
+                    {locked && <LockOverlay lock={f.lock} />}
                   </div>
                 );
               })}
@@ -461,7 +569,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
           {active === 'background' && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '9px' }}>
               {BACKGROUNDS.map((b) => {
-                const locked = !isFree(b.lock);
+                const locked = !canUse(b.lock, b.id);
                 const sel = backgroundId === b.id;
                 return (
                   <div
@@ -472,7 +580,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                   >
                     <div style={{ position: 'absolute', inset: 0, background: b.css }} />
                     <div style={{ position: 'absolute', left: '8px', bottom: '6px', fontSize: '11px', fontWeight: 700, textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>{b.label}</div>
-                    <LockOverlay lock={b.lock} />
+                    {locked && <LockOverlay lock={b.lock} />}
                   </div>
                 );
               })}
@@ -482,7 +590,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
           {active === 'color' && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               {COLORS.map((c) => {
-                const locked = !isFree(c.lock);
+                const locked = !canUse(c.lock, c.id);
                 const sel = color === c.value;
                 return (
                   <div
@@ -548,7 +656,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
               <p style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.5)', margin: '0 0 10px' }}>Обери значки, які показувати на картці.</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '9px' }}>
                 {BADGES.map((b) => {
-                  const locked = !isFree(b.lock);
+                  const locked = !canUse(b.lock, b.id);
                   const sel = badges.includes(b.id);
                   return (
                     <div
@@ -562,7 +670,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                     >
                       <Icon name={b.icon} size={22} strokeWidth={1.7} stroke={sel ? color : 'rgba(244,241,232,0.85)'} />
                       <span style={{ fontSize: '9.5px', fontWeight: 600, color: 'rgba(244,241,232,0.7)', textAlign: 'center' }}>{b.label}</span>
-                      <LockOverlay lock={b.lock} />
+                      {locked && <LockOverlay lock={b.lock} />}
                     </div>
                   );
                 })}
@@ -573,7 +681,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
           {active === 'effects' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {EFFECTS.map((ef) => {
-                const locked = !isFree(ef.lock);
+                const locked = !canUse(ef.lock, ef.id);
                 const sel = effectId === ef.id;
                 const label = lockLabel(ef.lock);
                 return (

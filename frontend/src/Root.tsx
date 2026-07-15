@@ -123,6 +123,16 @@ function Root() {
     }
   };
 
+  // Persist coin/unlocked changes coming from the in-app shop.
+  const handleUserUpdate = (patch: { coins: number; unlockedItems: string[] }) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+      persist(next);
+      return next;
+    });
+  };
+
   const handleLogout = () => {
     setUser(null);
     persist(null);
@@ -141,7 +151,7 @@ function Root() {
   }
 
   if (view === 'setup' && user) {
-    return <ProfileSetup user={user} onComplete={handleProfileComplete} onSkip={() => setView('home')} />;
+    return <ProfileSetup user={user} onComplete={handleProfileComplete} onSkip={() => setView('home')} onUserUpdate={handleUserUpdate} />;
   }
 
   if (view === 'home' && user) {
