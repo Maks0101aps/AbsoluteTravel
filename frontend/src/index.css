@@ -238,3 +238,32 @@ a:hover {
   40% { transform: scale(1.18); color: #9BD8B4; }
   100% { transform: scale(1); }
 }
+
+/* ---- loot-case reveal ---- */
+.at-case-reveal {
+  animation: atCaseReveal 0.5s cubic-bezier(0.16, 1.3, 0.4, 1);
+}
+@keyframes atCaseReveal {
+  0% { opacity: 0; transform: scale(0.82); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
+}
+.at-case-rays {
+  animation: atCaseSpin 9s linear infinite;
+}
+@keyframes atCaseSpin {
+  to { transform: rotate(360deg); }
+}
+/* shimmering entrance for the cases banner in the shop */
+.at-case-banner-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.16) 48%, transparent 62%);
+  transform: translateX(-100%);
+  animation: atBannerShine 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes atBannerShine {
+  0%, 55% { transform: translateX(-100%); }
+  75%, 100% { transform: translateX(100%); }
+}

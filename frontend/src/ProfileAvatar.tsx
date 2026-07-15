@@ -20,6 +20,12 @@ function frameStyle(frameId: string | undefined, color: string): React.CSSProper
       return { border: '3px solid #E7C34B', boxShadow: '0 0 0 3px rgba(231,195,75,0.35), 0 0 18px rgba(231,195,75,0.5)' };
     case 'gem':
       return { border: '3px solid #8A7CDF', boxShadow: '0 0 0 3px rgba(138,124,223,0.4), 0 0 22px rgba(138,124,223,0.6)' };
+    case 'frost':
+      return { border: '3px solid #8FD4E8', boxShadow: '0 0 0 3px rgba(143,212,232,0.35), 0 0 20px rgba(143,212,232,0.55)' };
+    case 'magma':
+      return { border: '3px solid #F0713F', boxShadow: '0 0 0 3px rgba(240,113,63,0.4), 0 0 22px rgba(240,113,63,0.6)' };
+    case 'prism':
+      return { border: '3px solid #D32CE6', boxShadow: '0 0 0 3px rgba(211,44,230,0.35), 0 0 12px rgba(91,184,245,0.6), 0 0 24px rgba(240,198,75,0.4)' };
     default:
       return { border: '2px solid rgba(255,255,255,0.12)' };
   }

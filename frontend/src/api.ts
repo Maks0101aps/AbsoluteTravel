@@ -152,6 +152,28 @@ export function getLeaderboard() {
   return call<LeaderboardEntry[]>('GET', '/api/economy/leaderboard');
 }
 
+// --- Loot cases ------------------------------------------------------------
+
+export interface OpenCaseResult {
+  caseId: string;
+  itemId: string;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  duplicate: boolean;
+  compensation: number;
+  coins: number;
+  unlockedItems: string[];
+}
+
+/** One-time cases (e.g. the free starter) the user has already opened. */
+export function getCasesState(userId: number) {
+  return call<{ openedCaseIds: string[] }>('GET', `/api/economy/cases?userId=${userId}`);
+}
+
+/** Open a loot case; the server picks the reward and updates the wallet. */
+export function openCase(userId: number, caseId: string) {
+  return call<OpenCaseResult>('POST', '/api/economy/case/open', { userId, caseId });
+}
+
 // --- AI travel advisor -----------------------------------------------------
 
 export interface AdvisorTurn {
