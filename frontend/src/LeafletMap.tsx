@@ -53,7 +53,7 @@ function escapeHtml(s: string): string {
 }
 
 function safeAvatarUrl(url: string): string {
-  return /^(\/|https?:\/\/|data:image\/)/.test(url) ? url : '/assets/avatar_default.avif';
+  return /^(\/|https?:\/\/|data:image\/)/.test(url) ? url : '/assets/avatar_default.svg';
 }
 
 function liveIcon(m: LiveMarker) {
@@ -62,7 +62,7 @@ function liveIcon(m: LiveMarker) {
     ? `<div style="position:absolute;inset:-7px;border-radius:50%;background:${m.color}55;animation:atLivePulse 2s ease-out infinite;"></div>`
     : '';
   const inner = m.avatar
-    ? `<img src="${escapeHtml(safeAvatarUrl(m.avatar))}" onerror="this.src='/assets/avatar_default.avif';this.onerror=null;" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"/>`
+    ? `<img src="${escapeHtml(safeAvatarUrl(m.avatar))}" onerror="this.src='/assets/avatar_default.svg';this.onerror=null;" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"/>`
     : `<div style="width:100%;height:100%;border-radius:50%;background:${m.color};"></div>`;
   const grey = m.dimmed ? 'filter:grayscale(1);opacity:0.55;' : '';
   return L.divIcon({

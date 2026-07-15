@@ -40,7 +40,7 @@ export function UserAvatar({ user, size = 44 }: { user: Pick<FriendUser, 'avatar
         alt={user.name}
         style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', background: '#081E15', border: '1px solid rgba(255,255,255,0.15)' }}
         onError={(e) => {
-          e.currentTarget.src = '/assets/avatar_default.avif';
+          e.currentTarget.src = '/assets/avatar_default.svg';
           e.currentTarget.onerror = null;
         }}
       />

@@ -21,7 +21,7 @@ const TABS: { id: Tab; label: string; icon: IconName }[] = [
   { id: 'map', label: 'Мапа мандрівок', icon: 'map' },
   { id: 'friends', label: 'Друзі', icon: 'backpack' },
   { id: 'leaderboard', label: 'Рейтинг', icon: 'trophy' },
-  { id: 'chat', label: 'Чат', icon: 'feather' },
+  { id: 'chat', label: 'Чат', icon: 'messageSquare' },
   { id: 'advisor', label: 'ШІ-порадник', icon: 'compass' },
   { id: 'profile', label: 'Профіль', icon: 'user' },
 ];

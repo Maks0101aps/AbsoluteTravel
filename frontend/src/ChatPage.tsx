@@ -10,6 +10,7 @@ import {
 } from './api';
 import { currentSocket, getSocket } from './socket';
 import { UserAvatar } from './UserCard';
+import { Icon } from './icons';
 
 const CREAM = '#F4F1E8';
 const PANEL = '#0B2B20';
@@ -52,6 +53,114 @@ function formatTime(iso: string) {
   }
 }
 
+function VoiceMessagePlayer({ text, mine }: { text: string; mine: boolean }) {
+  const match = text.match(/^\[voice:(data:audio\/[^\]]+)\]$/);
+  const audioUrl = match ? match[1] : '';
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (!audioUrl) return;
+    const audio = new Audio(audioUrl);
+    audioRef.current = audio;
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const onLoadedMetadata = () => setDuration(audio.duration || 0);
+    const onEnded = () => setPlaying(false);
+
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('ended', onEnded);
+
+    return () => {
+      audio.pause();
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+      audio.removeEventListener('ended', onEnded);
+    };
+  }, [audioUrl]);
+
+  const toggle = () => {
+    if (!audioRef.current) return;
+    if (playing) {
+      audioRef.current.pause();
+      setPlaying(false);
+    } else {
+      audioRef.current.play().catch(() => {});
+      setPlaying(true);
+    }
+  };
+
+  const handleSeek = (val: number) => {
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = val;
+    setCurrentTime(val);
+  };
+
+  const formatSec = (sec: number) => {
+    if (isNaN(sec) || !isFinite(sec)) return '0:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  const color = mine ? '#071F16' : '#F4F1E8';
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '220px', padding: '4px 0' }}>
+      <button
+        onClick={toggle}
+        style={{
+          background: mine ? 'rgba(7,31,22,0.12)' : 'rgba(255,255,255,0.12)',
+          border: 'none',
+          borderRadius: '50%',
+          width: '32px',
+          height: '32px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          color: color,
+          flex: '0 0 auto',
+        }}
+      >
+        {playing ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="4" y="4" width="4" height="16" rx="1" />
+            <rect x="16" y="4" width="4" height="16" rx="1" />
+          </svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21" />
+          </svg>
+        )}
+      </button>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <input
+          type="range"
+          min={0}
+          max={duration || 100}
+          value={currentTime}
+          onChange={(e) => handleSeek(Number(e.target.value))}
+          style={{
+            width: '100%',
+            accentColor: color,
+            height: '4px',
+            cursor: 'pointer',
+            background: mine ? 'rgba(7,31,22,0.2)' : 'rgba(255,255,255,0.2)',
+            borderRadius: '2px',
+          }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9.5px', color: color, opacity: 0.8 }}>
+          <span>{formatSec(currentTime)}</span>
+          <span>{formatSec(duration)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPageProps) {
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [unread, setUnread] = useState<Record<string, number>>({});
@@ -62,6 +171,12 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
   const [wsConnected, setWsConnected] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeIdRef = useRef<number | null>(activeId);
   activeIdRef.current = activeId;
@@ -182,6 +297,93 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
       .catch(() => {});
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        stream.getTracks().forEach((track) => track.stop());
+
+        if (audioChunksRef.current.length > 0) {
+          const reader = new FileReader();
+          reader.readAsDataURL(audioBlob);
+          reader.onloadend = () => {
+            const base64data = reader.result as string;
+            void sendVoiceMessage(base64data);
+          };
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      timerRef.current = setInterval(() => {
+        setRecordingTime((prev) => {
+          if (prev >= 10) {
+            setTimeout(() => stopRecording(true), 0);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 1000);
+    } catch (err) {
+      console.error('Failed to start recording:', err);
+      setError('Не вдалося отримати доступ до мікрофона');
+    }
+  };
+
+  const stopRecording = (shouldSend: boolean) => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      if (!shouldSend) {
+        audioChunksRef.current = [];
+      }
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+  };
+
+  const sendVoiceMessage = async (base64data: string) => {
+    if (!activeId) return;
+    setSending(true);
+    setError(null);
+    const text = `[voice:${base64data}]`;
+    try {
+      const socket = currentSocket();
+      if (socket?.connected) {
+        const ack = await socket.timeout(5000).emitWithAck('chat:send', { toUserId: activeId, text });
+        if (!ack?.ok) throw new Error(ack?.error ?? 'Не вдалося надіслати');
+        setMessages((prev) =>
+          mergeMessages(prev, [
+            { id: ack.id, senderId: userId, receiverId: activeId, text, createdAt: ack.createdAt, readAt: null },
+          ]),
+        );
+      } else {
+        const msg = await sendChatMessage(userId, activeId, text);
+        setMessages((prev) => mergeMessages(prev, [msg]));
+      }
+    } catch (e: any) {
+      setError(e.message ?? 'Не вдалося надіслати голосове повідомлення');
+    } finally {
+      setSending(false);
+    }
+  };
+
   const send = async () => {
     const text = input.trim();
     if (!text || !activeId || sending) return;
@@ -214,9 +416,6 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
 
   return (
     <div style={{ fontFamily: "'Manrope', sans-serif", color: CREAM }}>
-      <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '10px' }}>
-        ЧАТ
-      </div>
       <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 3vw, 34px)', margin: '0 0 18px' }}>
         Розмови з друзями
         {!wsConnected && (
@@ -322,7 +521,11 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
                           wordBreak: 'break-word',
                         }}
                       >
-                        {m.text}
+                        {m.text.startsWith('[voice:data:audio/') ? (
+                          <VoiceMessagePlayer text={m.text} mine={mine} />
+                        ) : (
+                          m.text
+                        )}
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '10.5px', opacity: 0.75, marginLeft: '8px', whiteSpace: 'nowrap' }}>
                           {formatTime(m.createdAt)}
                           {mine && (
@@ -345,48 +548,198 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
               )}
 
               {/* input */}
-              <div style={{ display: 'flex', gap: '10px', padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      void send();
-                    }
-                  }}
-                  placeholder={`Повідомлення для ${activeFriend.name}…`}
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    background: PANEL,
-                    border: '1px solid rgba(255,255,255,0.14)',
+              <div style={{ display: 'flex', gap: '10px', padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.08)', alignItems: 'center', position: 'relative' }}>
+                
+                {/* Emoji Picker Popover */}
+                {showEmojiPicker && (
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '68px',
+                    left: '14px',
+                    background: '#0B2B20',
+                    border: '1px solid rgba(255,255,255,0.15)',
                     borderRadius: '12px',
-                    padding: '12px 15px',
-                    color: CREAM,
-                    fontSize: '14px',
-                    fontFamily: "'Manrope', sans-serif",
-                    outline: 'none',
-                  }}
-                />
-                <button
-                  onClick={() => void send()}
-                  disabled={sending || !input.trim()}
-                  style={{
-                    background: accent,
-                    color: '#071F16',
-                    border: 'none',
-                    borderRadius: '12px',
-                    padding: '0 22px',
-                    fontSize: '14px',
-                    fontWeight: 800,
-                    cursor: sending || !input.trim() ? 'default' : 'pointer',
-                    opacity: sending || !input.trim() ? 0.55 : 1,
-                    fontFamily: "'Manrope', sans-serif",
-                  }}
-                >
-                  {sending ? '…' : 'Надіслати'}
-                </button>
+                    padding: '10px',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(6, 1fr)',
+                    gap: '8px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                    zIndex: 10,
+                  }}>
+                    {['⛰️', '🌲', '🎒', '🏕️', '🧭', '🗺️', '🚗', '✈️', '💬', '👍', '❤️', '😂', '🎉', '🤩', '👋', '🔥', '✨', '🇺🇦'].map((emoji) => (
+                      <button
+                        key={emoji}
+                        onClick={() => {
+                          setInput((prev) => prev + emoji);
+                          setShowEmojiPicker(false);
+                        }}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          fontSize: '20px',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          borderRadius: '6px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Emoji button */}
+                {!isRecording && (
+                  <button
+                    onClick={() => setShowEmojiPicker((prev) => !prev)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: showEmojiPicker ? accent : 'rgba(244,241,232,0.6)',
+                      cursor: 'pointer',
+                      padding: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '50%',
+                      transition: 'color 0.2s, background 0.2s',
+                    }}
+                  >
+                    <Icon name="smile" size={22} />
+                  </button>
+                )}
+
+                {isRecording ? (
+                  <>
+                    <style>{`
+                      @keyframes recPulse {
+                        0% { opacity: 0.3; }
+                        50% { opacity: 1; }
+                        100% { opacity: 0.3; }
+                      }
+                    `}</style>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      flex: 1,
+                      padding: '12px 15px',
+                      background: PANEL,
+                      border: '1px solid rgba(255,255,255,0.14)',
+                      borderRadius: '12px',
+                    }}>
+                      <span style={{
+                        width: '8px',
+                        height: '8px',
+                        background: '#d9534f',
+                        borderRadius: '50%',
+                        animation: 'recPulse 1.5s infinite',
+                      }} />
+                      <span style={{ color: CREAM, fontSize: '13.5px', fontFamily: "'Manrope', sans-serif" }}>
+                        Запис голосу… {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => stopRecording(false)}
+                      style={{
+                        background: 'rgba(217,83,79,0.15)',
+                        border: '1px solid rgba(217,83,79,0.4)',
+                        borderRadius: '12px',
+                        padding: '12px 18px',
+                        color: '#E58784',
+                        cursor: 'pointer',
+                        fontSize: '13.5px',
+                        fontWeight: 700,
+                        fontFamily: "'Manrope', sans-serif",
+                      }}
+                    >
+                      Скасувати
+                    </button>
+                    <button
+                      onClick={() => stopRecording(true)}
+                      style={{
+                        background: accent,
+                        color: '#071F16',
+                        border: 'none',
+                        borderRadius: '12px',
+                        padding: '12px 18px',
+                        cursor: 'pointer',
+                        fontSize: '13.5px',
+                        fontWeight: 800,
+                        fontFamily: "'Manrope', sans-serif",
+                      }}
+                    >
+                      Надіслати
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          void send();
+                        }
+                      }}
+                      placeholder={`Повідомлення для ${activeFriend.name}…`}
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                        background: PANEL,
+                        border: '1px solid rgba(255,255,255,0.14)',
+                        borderRadius: '12px',
+                        padding: '12px 15px',
+                        color: CREAM,
+                        fontSize: '14px',
+                        fontFamily: "'Manrope', sans-serif",
+                        outline: 'none',
+                      }}
+                    />
+
+                    {/* Mic button */}
+                    <button
+                      onClick={startRecording}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'rgba(244,241,232,0.6)',
+                        cursor: 'pointer',
+                        padding: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                      }}
+                    >
+                      <Icon name="mic" size={22} />
+                    </button>
+
+                    <button
+                      onClick={() => void send()}
+                      disabled={sending || !input.trim()}
+                      style={{
+                        background: accent,
+                        color: '#071F16',
+                        border: 'none',
+                        borderRadius: '12px',
+                        padding: '12px 22px',
+                        fontSize: '14px',
+                        fontWeight: 800,
+                        cursor: sending || !input.trim() ? 'default' : 'pointer',
+                        opacity: sending || !input.trim() ? 0.55 : 1,
+                        fontFamily: "'Manrope', sans-serif",
+                      }}
+                    >
+                      {sending ? '…' : 'Надіслати'}
+                    </button>
+                  </>
+                )}
               </div>
             </>
           )}
