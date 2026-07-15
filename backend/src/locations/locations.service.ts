@@ -120,6 +120,14 @@ export class LocationsService {
   async setVisibility(rawUserId: unknown, visible: unknown) {
     const userId = this.parseId(rawUserId, 'userId');
     const value = visible === true || visible === 'true';
+    // A stale client session can carry a user id that no longer exists in the
+    // DB. Guard first so that turns into a clean 404 rather than a raw Prisma
+    // P2025 500 (matches the not-found handling elsewhere in this service).
+    const exists = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (!exists) throw new NotFoundException('Користувача не знайдено');
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: { locationVisible: value },

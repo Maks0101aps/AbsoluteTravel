@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { getUnreadCounts, getUserCheckmarks, type AuthUser, type VerifyCheckmarkResult } from './api';
+import { getUnreadCounts, getUserCheckmarks, type AuthUser, type VerifyCheckmarkResult, type VisitCellResult } from './api';
 import ProfileAvatar from './ProfileAvatar';
 import XpBar from './XpBar';
 import ExploreMap from './ExploreMap';
+import AiAdvisor from './AiAdvisor';
 import FriendsPage from './FriendsPage';
 import LeaderboardPage from './LeaderboardPage';
 import ChatPage from './ChatPage';
@@ -14,13 +15,14 @@ const CREAM = '#F4F1E8';
 const BG = '#071F16';
 const DEFAULT_ACCENT = '#3FA66B';
 
-type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'profile';
+type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'advisor' | 'profile';
 
 const TABS: { id: Tab; label: string; icon: IconName }[] = [
   { id: 'map', label: 'Мапа мандрівок', icon: 'map' },
   { id: 'friends', label: 'Друзі', icon: 'users' },
   { id: 'leaderboard', label: 'Рейтинг', icon: 'trophy' },
   { id: 'chat', label: 'Чат', icon: 'messageSquare' },
+  { id: 'advisor', label: 'ШІ-порадник', icon: 'compass' },
   { id: 'profile', label: 'Профіль', icon: 'user' },
 ];
 
@@ -100,6 +102,13 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
       coins: (user.coins ?? 0) + result.coinsAwarded,
       level: result.newLevel,
     });
+  };
+
+  // A new territory cell was unlocked. The server returns the authoritative new
+  // totals, so apply them directly rather than incrementing (avoids drift when
+  // several cells unlock in quick succession).
+  const handleExplored = (result: VisitCellResult) => {
+    onUserUpdate?.({ xp: result.newXp, level: result.newLevel });
   };
 
   const maxWidth = tab === 'profile' ? '860px' : '1140px';
@@ -218,12 +227,14 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
             userId={user.id}
             openedPlaceIds={openedPlaceIds}
             onVerified={handleVerified}
+            onExplored={handleExplored}
             onMessageFriend={openChatWith}
           />
         )}
         {tab === 'friends' && <FriendsPage userId={user.id} accent={accent} onMessage={openChatWith} />}
         {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} />}
         {tab === 'chat' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId={chatFriendId} />}
+        {tab === 'advisor' && <AiAdvisor accent={accent} userName={p?.displayName ?? user.name} />}
       </main>
     </div>
   );
