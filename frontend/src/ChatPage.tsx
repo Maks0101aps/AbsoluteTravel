@@ -5,12 +5,16 @@ import {
   getUnreadCounts,
   markChatRead,
   sendChatMessage,
+  askAdvisor,
+  getAdvisorStatus,
   type ChatMessage,
   type FriendEntry,
+  type AdvisorTurn,
+  type AuthUser,
 } from './api';
 import { currentSocket, getSocket } from './socket';
 import { UserAvatar } from './UserCard';
-import { Icon } from './icons';
+import { Icon, type IconName } from './icons';
 
 const CREAM = '#F4F1E8';
 const PANEL = '#0B2B20';
@@ -18,9 +22,54 @@ const READ_BLUE = '#5BB8F5';
 
 interface ChatPageProps {
   userId: number;
+  user?: AuthUser;
   accent?: string;
   // Open this friend's thread immediately (e.g. from "Написати" buttons).
-  initialFriendId?: number | null;
+  initialFriendId?: number | 'advisor' | null;
+  hideSidebar?: boolean;
+}
+
+interface QuickTopic {
+  key: string;
+  label: string;
+  icon: IconName;
+  prompt: string;
+}
+
+const QUICK_TOPICS: QuickTopic[] = [
+  { key: 'packing', label: 'Що взяти з собою', icon: 'backpack', prompt: 'Допоможи скласти список речей у подорож.' },
+  { key: 'where', label: 'Куди поїхати', icon: 'compass', prompt: 'Порадь цікаві напрямки для подорожі Україною.' },
+  { key: 'route', label: 'Скласти маршрут', icon: 'map', prompt: 'Допоможи спланувати маршрут на кілька днів.' },
+  { key: 'food', label: 'Що скуштувати', icon: 'flame', prompt: 'Які локальні страви варто скуштувати і де?' },
+  { key: 'budget', label: 'Бюджет поїздки', icon: 'coin', prompt: 'Як розрахувати бюджет на подорож і заощадити?' },
+  { key: 'season', label: 'Коли їхати', icon: 'sun', prompt: 'Підкажи найкращий час для поїздки.' },
+  { key: 'safety', label: 'Безпека', icon: 'shield', prompt: 'Дай поради щодо безпечної подорожі.' },
+];
+
+function FormattedText({ text }: { text: string }) {
+  const lines = text.split('\n');
+  return (
+    <>
+      {lines.map((line, i) => {
+        const trimmed = line.trim();
+        const bullet = /^[-*•]\s+/.test(trimmed);
+        if (!trimmed) return <div key={i} style={{ height: '6px' }} />;
+        if (bullet) {
+          return (
+            <div key={i} style={{ display: 'flex', gap: '8px', margin: '2px 0' }}>
+              <span style={{ opacity: 0.6 }}>•</span>
+              <span>{trimmed.replace(/^[-*•]\s+/, '')}</span>
+            </div>
+          );
+        }
+        return (
+          <div key={i} style={{ margin: '3px 0' }}>
+            {trimmed}
+          </div>
+        );
+      })}
+    </>
+  );
 }
 
 // Payload shape of the gateway's chat:message / chat:sent events.
@@ -180,10 +229,10 @@ function VoiceMessagePlayer({ text, mine }: { text: string; mine: boolean }) {
   );
 }
 
-function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPageProps) {
+function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hideSidebar = false }: ChatPageProps) {
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [unread, setUnread] = useState<Record<string, number>>({});
-  const [activeId, setActiveId] = useState<number | null>(initialFriendId);
+  const [activeId, setActiveId] = useState<number | 'advisor' | null>(initialFriendId);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [input, setInput] = useState('');
@@ -197,8 +246,42 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const activeIdRef = useRef<number | null>(activeId);
+  const activeIdRef = useRef<number | 'advisor' | null>(activeId);
   activeIdRef.current = activeId;
+
+  // AI Advisor state
+  const [advisorAvailable, setAdvisorAvailable] = useState<boolean | null>(null);
+  const [advisorMessages, setAdvisorMessages] = useState<AdvisorTurn[]>(() => {
+    try {
+      const stored = localStorage.getItem(`absolute_travel_advisor_history_${userId}`);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [advisorLoading, setAdvisorLoading] = useState(false);
+  const [gpsPosition, setGpsPosition] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Track current GPS coordinates in real-time
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          setGpsPosition({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        (err) => {
+          console.warn('Geolocation watch failed or denied', err);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+      return () => {
+        navigator.geolocation.clearWatch(watchId);
+      };
+    }
+  }, []);
 
   const [isHolding, setIsHolding] = useState(false);
   const pressStartTimeRef = useRef<number>(0);
@@ -206,7 +289,10 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
   const buttonRectRef = useRef<DOMRect | null>(null);
   const shouldSendRef = useRef<boolean>(true);
 
-  const activeFriend = useMemo(() => friends.find((f) => f.id === activeId) ?? null, [friends, activeId]);
+  const activeFriend = useMemo(() => {
+    if (activeId === 'advisor') return null;
+    return friends.find((f) => f.id === activeId) ?? null;
+  }, [friends, activeId]);
 
   const loadFriends = useCallback(() => {
     getFriends(userId).then(setFriends).catch(() => {});
@@ -221,9 +307,29 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
     if (initialFriendId) setActiveId(initialFriendId);
   }, [initialFriendId]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(`absolute_travel_advisor_history_${userId}`, JSON.stringify(advisorMessages));
+    } catch (e) {
+      console.error('Failed to save advisor history', e);
+    }
+  }, [advisorMessages, userId]);
+
+  useEffect(() => {
+    getAdvisorStatus()
+      .then((s) => setAdvisorAvailable(s.available))
+      .catch(() => setAdvisorAvailable(null));
+  }, []);
+
+  // Keep the thread scrolled to the newest message for AI too.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [advisorMessages.length, advisorLoading]);
+
   // Load the thread when the active friend changes; mark it read.
   useEffect(() => {
-    if (!activeId) return;
+    if (!activeId || activeId === 'advisor') return;
     setMessages([]);
     setError(null);
     getChatHistory(userId, activeId)
@@ -479,6 +585,35 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
     }
   };
 
+  const sendAdvisor = async (text: string, topic?: string) => {
+    const message = text.trim();
+    if (!message || advisorLoading || advisorAvailable === false) return;
+
+    const history = advisorMessages.slice(-12);
+    const nextMessages: AdvisorTurn[] = [...advisorMessages, { role: 'user', text: message }];
+    setAdvisorMessages(nextMessages);
+    setInput('');
+    setError(null);
+    setAdvisorLoading(true);
+
+    try {
+      const { reply } = await askAdvisor({
+        message,
+        topic,
+        history,
+        lat: gpsPosition?.lat ?? undefined,
+        lng: gpsPosition?.lng ?? undefined,
+        city: user?.city ?? undefined,
+        region: user?.region ?? undefined,
+      });
+      setAdvisorMessages((cur) => [...cur, { role: 'model', text: reply }]);
+    } catch (e: any) {
+      setError(e?.message ?? 'Не вдалося отримати відповідь від ШІ-порадника');
+    } finally {
+      setAdvisorLoading(false);
+    }
+  };
+
   const send = async () => {
     const text = input.trim();
     if (!text || !activeId || sending) return;
@@ -513,129 +648,313 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
     <div style={{ fontFamily: "'Manrope', sans-serif", color: CREAM, height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', flex: 1 }}>
       <div style={{ display: 'flex', gap: '0', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
         {/* sidebar: friends with unread badges */}
-        <div style={{ flex: '0 0 280px', minWidth: '220px', minHeight: 0, background: PANEL, borderRight: '1px solid rgba(255,255,255,0.09)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(244,241,232,0.45)' }}>
-              ДРУЗІ {totalUnread > 0 && <span style={{ color: accent }}>· {totalUnread} нових</span>}
-            </span>
-            {!wsConnected && (
-              <span title="офлайн-режим · оновлення кожні 5 с" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#E0A54E', background: 'rgba(224,165,78,0.15)', border: '1px solid rgba(224,165,78,0.4)', borderRadius: '999px', padding: '2px 8px' }}>
-                офлайн
+        {!hideSidebar && (
+          <div style={{ flex: '0 0 280px', minWidth: '220px', minHeight: 0, background: PANEL, borderRight: '1px solid rgba(255,255,255,0.09)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            
+            {/* Section: ШІ-Порадник */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(244,241,232,0.45)' }}>
+                ШІ-ПОРАДНИК
               </span>
-            )}
-          </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
-            {friends.length === 0 && (
-              <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.5)', padding: '8px' }}>
-                Немає друзів для листування. Додай їх у вкладці «Друзі».
-              </div>
-            )}
-            {friends.map((f) => {
-              const n = unread[f.id] ?? 0;
-              const isActive = f.id === activeId;
-              return (
-                <button
-                  key={f.id}
-                  onClick={() => setActiveId(f.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    width: '100%',
-                    textAlign: 'left',
-                    background: isActive ? `${accent}22` : 'transparent',
-                    border: `1px solid ${isActive ? `${accent}66` : 'transparent'}`,
-                    borderRadius: '12px',
-                    padding: '9px 10px',
-                    cursor: 'pointer',
-                    color: CREAM,
-                    fontFamily: "'Manrope', sans-serif",
-                    marginBottom: '4px',
-                  }}
-                >
-                  <UserAvatar user={f} size={36} />
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: '13.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
-                    <span style={{ display: 'block', fontSize: '11px', color: f.online ? accent : 'rgba(244,241,232,0.4)' }}>
-                      {f.online ? 'онлайн' : 'офлайн'}
-                    </span>
+            </div>
+            <div style={{ padding: '10px 10px 4px', flexShrink: 0 }}>
+              <button
+                onClick={() => setActiveId('advisor')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  width: '100%',
+                  textAlign: 'left',
+                  background: activeId === 'advisor' ? `${accent}22` : 'transparent',
+                  border: `1px solid ${activeId === 'advisor' ? `${accent}66` : 'transparent'}`,
+                  borderRadius: '12px',
+                  padding: '9px 10px',
+                  cursor: 'pointer',
+                  color: CREAM,
+                  fontFamily: "'Manrope', sans-serif",
+                  marginBottom: '4px',
+                }}
+              >
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: `${accent}1F`,
+                  border: `1px solid ${accent}55`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Icon name="compass" size={20} stroke={accent} strokeWidth={1.8} />
+                </div>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontSize: '13.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Порадник Absolute Travel</span>
+                  <span style={{ display: 'block', fontSize: '11px', color: advisorAvailable ? accent : 'rgba(244,241,232,0.4)' }}>
+                    {advisorAvailable ? 'активний' : 'недоступний'}
                   </span>
-                  {n > 0 && (
-                    <span style={{ background: accent, color: '#071F16', fontSize: '11px', fontWeight: 800, borderRadius: '999px', padding: '2px 8px', flex: '0 0 auto' }}>
-                      {n}
+                </span>
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
+              <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(244,241,232,0.45)' }}>
+                ДРУЗІ {totalUnread > 0 && <span style={{ color: accent }}>· {totalUnread} нових</span>}
+              </span>
+              {!wsConnected && (
+                <span title="офлайн-режим · оновлення кожні 5 с" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#E0A54E', background: 'rgba(224,165,78,0.15)', border: '1px solid rgba(224,165,78,0.4)', borderRadius: '999px', padding: '2px 8px' }}>
+                  офлайн
+                </span>
+              )}
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
+              {friends.length === 0 && (
+                <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.5)', padding: '8px' }}>
+                  Немає друзів для листування. Додай їх у вкладці «Друзі».
+                </div>
+              )}
+              {friends.map((f) => {
+                const n = unread[f.id] ?? 0;
+                const isActive = f.id === activeId;
+                return (
+                  <button
+                    key={f.id}
+                    onClick={() => setActiveId(f.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      width: '100%',
+                      textAlign: 'left',
+                      background: isActive ? `${accent}22` : 'transparent',
+                      border: `1px solid ${isActive ? `${accent}66` : 'transparent'}`,
+                      borderRadius: '12px',
+                      padding: '9px 10px',
+                      cursor: 'pointer',
+                      color: CREAM,
+                      fontFamily: "'Manrope', sans-serif",
+                      marginBottom: '4px',
+                    }}
+                  >
+                    <UserAvatar user={f} size={36} />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: '13.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
+                      <span style={{ display: 'block', fontSize: '11px', color: f.online ? accent : 'rgba(244,241,232,0.4)' }}>
+                        {f.online ? 'онлайн' : 'офлайн'}
+                      </span>
                     </span>
-                  )}
-                </button>
-              );
-            })}
+                    {n > 0 && (
+                      <span style={{ background: accent, color: '#071F16', fontSize: '11px', fontWeight: 800, borderRadius: '999px', padding: '2px 8px', flex: '0 0 auto' }}>
+                        {n}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* thread */}
         <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', background: '#081E15' }}>
-          {!activeFriend ? (
+          {activeId === null ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(244,241,232,0.45)', fontSize: '14px', padding: '20px', textAlign: 'center' }}>
-              Обери друга ліворуч, щоб почати розмову 💬
+              Обери друга ліворуч або ШІ-порадника, щоб почати розмову 💬
             </div>
           ) : (
             <>
               {/* thread header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                <UserAvatar user={activeFriend} size={38} />
-                <div>
-                  <div style={{ fontSize: '14.5px', fontWeight: 700 }}>{activeFriend.name}</div>
-                  <div style={{ fontSize: '11.5px', color: activeFriend.online ? accent : 'rgba(244,241,232,0.45)' }}>
-                    {activeFriend.online ? 'онлайн' : 'був(ла) нещодавно'} · Рівень {activeFriend.level}
+              {activeId === 'advisor' ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '50%',
+                    background: `${accent}1F`,
+                    border: `1.5px solid ${accent}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <Icon name="compass" size={20} stroke={accent} strokeWidth={1.8} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '14.5px', fontWeight: 700 }}>Порадник Absolute Travel</div>
+                    <div style={{ fontSize: '11.5px', color: advisorAvailable ? accent : 'rgba(244,241,232,0.45)' }}>
+                      {advisorAvailable ? 'активний' : 'недоступний'} · ШІ-порадник
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  {activeFriend && <UserAvatar user={activeFriend} size={38} />}
+                  {activeFriend && (
+                    <div>
+                      <div style={{ fontSize: '14.5px', fontWeight: 700 }}>{activeFriend.name}</div>
+                      <div style={{ fontSize: '11.5px', color: activeFriend.online ? accent : 'rgba(244,241,232,0.45)' }}>
+                        {activeFriend.online ? 'онлайн' : 'був(ла) нещодавно'} · Рівень {activeFriend.level}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* messages */}
               <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {hasMore && (
-                  <button
-                    onClick={loadOlder}
-                    style={{ alignSelf: 'center', background: 'rgba(255,255,255,0.07)', color: 'rgba(244,241,232,0.7)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '999px', padding: '6px 16px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', marginBottom: '6px' }}
-                  >
-                    Показати старіші
-                  </button>
-                )}
-                {messages.map((m) => {
-                  const mine = m.senderId === userId;
-                  return (
-                    <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start' }}>
-                      <div
-                        style={{
-                          maxWidth: '72%',
-                          background: mine ? accent : PANEL,
-                          color: mine ? '#071F16' : CREAM,
-                          border: mine ? 'none' : '1px solid rgba(255,255,255,0.09)',
-                          borderRadius: mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                          padding: '9px 13px',
-                          fontSize: '13.5px',
-                          lineHeight: 1.5,
-                          wordBreak: 'break-word',
-                        }}
-                      >
-                        {m.text.startsWith('[voice:data:audio/') ? (
-                          <VoiceMessagePlayer text={m.text} mine={mine} />
-                        ) : (
-                          m.text
-                        )}
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '10.5px', opacity: 0.75, marginLeft: '8px', whiteSpace: 'nowrap' }}>
-                          {formatTime(m.createdAt)}
-                          {mine && (
-                            // Read receipt: grey ✓ = delivered, blue ✓✓ = read.
-                            <span title={m.readAt ? 'Прочитано' : 'Надіслано'} style={{ color: m.readAt ? READ_BLUE : 'rgba(7,31,22,0.55)', fontWeight: 800, letterSpacing: '-2px' }}>
-                              {m.readAt ? '✓✓' : '✓'}
-                            </span>
-                          )}
-                        </span>
+                {activeId === 'advisor' ? (
+                  advisorMessages.length === 0 && !advisorLoading ? (
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', color: 'rgba(244,241,232,0.5)', gap: '12px', padding: '20px' }}>
+                      <div style={{
+                        width: '52px',
+                        height: '52px',
+                        borderRadius: '14px',
+                        background: `${accent}1F`,
+                        border: `1px solid ${accent}55`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        <Icon name="compass" size={26} stroke={accent} strokeWidth={1.7} />
+                      </div>
+                      <div style={{ fontSize: '14px', maxWidth: '320px', lineHeight: 1.6 }}>
+                        Привіт! Я — твій ШІ-порадник з подорожей Україною. Обери тему нижче або напиши своє запитання.
                       </div>
                     </div>
-                  );
-                })}
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      {advisorMessages.map((m, i) => {
+                        const isUser = m.role === 'user';
+                        return (
+                          <div key={i} style={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start' }}>
+                            <div
+                              style={{
+                                maxWidth: '82%',
+                                background: isUser ? accent : PANEL,
+                                color: isUser ? '#071F16' : CREAM,
+                                border: isUser ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                                borderRadius: isUser ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                                padding: '11px 15px',
+                                fontSize: '13.5px',
+                                lineHeight: 1.6,
+                                fontWeight: isUser ? 600 : 400,
+                              }}
+                            >
+                              {isUser ? m.text : <FormattedText text={m.text} />}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {advisorLoading && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                          <div style={{
+                            background: PANEL,
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '16px 16px 16px 4px',
+                            padding: '13px 16px',
+                            color: 'rgba(244,241,232,0.6)',
+                            fontSize: '13px',
+                          }}>
+                            <span className="at-typing">Порадник друкує…</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                ) : (
+                  <>
+                    {hasMore && (
+                      <button
+                        onClick={loadOlder}
+                        style={{ alignSelf: 'center', background: 'rgba(255,255,255,0.07)', color: 'rgba(244,241,232,0.7)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '999px', padding: '6px 16px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', marginBottom: '6px' }}
+                      >
+                        Показати старіші
+                      </button>
+                    )}
+                    {messages.map((m) => {
+                      const mine = m.senderId === userId;
+                      return (
+                        <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start' }}>
+                          <div
+                            style={{
+                              maxWidth: '72%',
+                              background: mine ? accent : PANEL,
+                              color: mine ? '#071F16' : CREAM,
+                              border: mine ? 'none' : '1px solid rgba(255,255,255,0.09)',
+                              borderRadius: mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                              padding: '9px 13px',
+                              fontSize: '13.5px',
+                              lineHeight: 1.5,
+                              wordBreak: 'break-word',
+                            }}
+                          >
+                            {m.text.startsWith('[voice:data:audio/') ? (
+                              <VoiceMessagePlayer text={m.text} mine={mine} />
+                            ) : (
+                              m.text
+                            )}
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '10.5px', opacity: 0.75, marginLeft: '8px', whiteSpace: 'nowrap' }}>
+                              {formatTime(m.createdAt)}
+                              {mine && (
+                                // Read receipt: grey ✓ = delivered, blue ✓✓ = read.
+                                <span title={m.readAt ? 'Прочитано' : 'Надіслано'} style={{ color: m.readAt ? READ_BLUE : 'rgba(7,31,22,0.55)', fontWeight: 800, letterSpacing: '-2px' }}>
+                                  {m.readAt ? '✓✓' : '✓'}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
               </div>
+
+              {/* Suggestions Quick Chips */}
+              {activeId === 'advisor' && (
+                <div style={{
+                  display: 'flex',
+                  overflowX: 'auto',
+                  gap: '8px',
+                  padding: '8px 14px',
+                  borderTop: '1px solid rgba(255,255,255,0.05)',
+                  background: 'rgba(7,31,22,0.2)',
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                }}>
+                  <style>{`
+                    div::-webkit-scrollbar { display: none; }
+                  `}</style>
+                  {QUICK_TOPICS.map((t) => (
+                    <button
+                      key={t.key}
+                      onClick={() => sendAdvisor(t.prompt, t.key)}
+                      disabled={advisorLoading || advisorAvailable === false}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '7px',
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        color: 'rgba(244,241,232,0.85)',
+                        borderRadius: '999px',
+                        padding: '8px 14px',
+                        fontSize: '12.5px',
+                        fontWeight: 600,
+                        cursor: (advisorLoading || advisorAvailable === false) ? 'default' : 'pointer',
+                        opacity: (advisorLoading || advisorAvailable === false) ? 0.6 : 1,
+                        fontFamily: "'Manrope', sans-serif",
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Icon name={t.icon} size={14} stroke={accent} strokeWidth={1.9} />
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {error && (
                 <div style={{ margin: '0 18px 8px', padding: '8px 12px', borderRadius: '9px', fontSize: '12.5px', background: 'rgba(217,83,79,0.15)', border: '1px solid rgba(217,83,79,0.5)', color: '#E58784' }}>
@@ -785,10 +1104,15 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
-                          void send();
+                          if (activeId === 'advisor') {
+                            void sendAdvisor(input);
+                          } else {
+                            void send();
+                          }
                         }
                       }}
-                      placeholder={`Повідомлення для ${activeFriend.name}…`}
+                      placeholder={activeId === 'advisor' ? 'Запитайте ШІ-порадника…' : activeFriend ? `Повідомлення для ${activeFriend.name}…` : 'Повідомлення…'}
+                      disabled={activeId === 'advisor' ? (advisorAvailable === false || advisorLoading) : false}
                       style={{
                         flex: 1,
                         minWidth: 0,
@@ -803,29 +1127,37 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
                       }}
                     />
 
-                    {/* Mic button */}
-                    <button
-                      onMouseDown={handleMicPressStart}
-                      onTouchStart={handleMicPressStart}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'rgba(244,241,232,0.6)',
-                        cursor: 'pointer',
-                        padding: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '50%',
-                        touchAction: 'none',
-                      }}
-                    >
-                      <Icon name="mic" size={22} />
-                    </button>
+                    {/* Mic button (hide for AI Advisor) */}
+                    {activeId !== 'advisor' && (
+                      <button
+                        onMouseDown={handleMicPressStart}
+                        onTouchStart={handleMicPressStart}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'rgba(244,241,232,0.6)',
+                          cursor: 'pointer',
+                          padding: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '50%',
+                          touchAction: 'none',
+                        }}
+                      >
+                        <Icon name="mic" size={22} />
+                      </button>
+                    )}
 
                     <button
-                      onClick={() => void send()}
-                      disabled={sending || !input.trim()}
+                      onClick={() => {
+                        if (activeId === 'advisor') {
+                          void sendAdvisor(input);
+                        } else {
+                          void send();
+                        }
+                      }}
+                      disabled={activeId === 'advisor' ? (advisorLoading || !input.trim() || advisorAvailable === false) : (sending || !input.trim())}
                       style={{
                         background: accent,
                         color: '#071F16',
@@ -834,12 +1166,12 @@ function ChatPage({ userId, accent = '#3FA66B', initialFriendId = null }: ChatPa
                         padding: '12px 22px',
                         fontSize: '14px',
                         fontWeight: 800,
-                        cursor: sending || !input.trim() ? 'default' : 'pointer',
-                        opacity: sending || !input.trim() ? 0.55 : 1,
+                        cursor: (activeId === 'advisor' ? (advisorLoading || !input.trim() || advisorAvailable === false) : (sending || !input.trim())) ? 'default' : 'pointer',
+                        opacity: (activeId === 'advisor' ? (advisorLoading || !input.trim() || advisorAvailable === false) : (sending || !input.trim())) ? 0.55 : 1,
                         fontFamily: "'Manrope', sans-serif",
                       }}
                     >
-                      {sending ? '…' : 'Надіслати'}
+                      {activeId === 'advisor' ? (advisorLoading ? '…' : 'Надіслати') : (sending ? '…' : 'Надіслати')}
                     </button>
                   </>
                 )}

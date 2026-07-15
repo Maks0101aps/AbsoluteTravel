@@ -3,7 +3,6 @@ import { getUnreadCounts, getUserCheckmarks, type AuthUser, type VerifyCheckmark
 import ProfileAvatar from './ProfileAvatar';
 import XpBar from './XpBar';
 import ExploreMap from './ExploreMap';
-import AiAdvisor from './AiAdvisor';
 import FriendsPage from './FriendsPage';
 import LeaderboardPage from './LeaderboardPage';
 import ChatPage from './ChatPage';
@@ -110,11 +109,11 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
       fontFamily: "'Manrope', sans-serif", 
       background: BG, 
       color: CREAM, 
-      height: tab === 'chat' ? '100dvh' : 'auto',
+      height: (tab === 'chat' || tab === 'advisor') ? '100dvh' : 'auto',
       minHeight: '100dvh', 
       display: 'flex', 
       flexDirection: 'column',
-      overflow: tab === 'chat' ? 'hidden' : 'visible'
+      overflow: (tab === 'chat' || tab === 'advisor') ? 'hidden' : 'visible'
     }}>
       {/* navbar */}
       <nav className="at-home-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 40px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap' }}>
@@ -176,7 +175,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
         </div>
       </nav>
 
-      <main className={`at-home-main ${tab === 'chat' ? 'at-chat-main-tab' : ''}`} style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
+      <main className={`at-home-main ${(tab === 'chat' || tab === 'advisor') ? 'at-chat-main-tab' : ''}`} style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
         {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} background={background} />}
         {tab === 'map' && (
           <ExploreMap
@@ -190,8 +189,8 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
         )}
         {tab === 'friends' && <FriendsPage userId={user.id} accent={accent} onMessage={openChatWith} />}
         {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} />}
-        {tab === 'chat' && <ChatPage userId={user.id} accent={accent} initialFriendId={chatFriendId} />}
-        {tab === 'advisor' && <AiAdvisor accent={accent} userName={p?.displayName ?? user.name} />}
+        {tab === 'chat' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId={chatFriendId} />}
+        {tab === 'advisor' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId="advisor" hideSidebar={true} />}
       </main>
     </div>
   );
