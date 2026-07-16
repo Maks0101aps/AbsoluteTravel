@@ -28,7 +28,6 @@
     "@prisma/client": "^6.8.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
-    "h3-js": "^4.5.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.3"

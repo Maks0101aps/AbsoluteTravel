@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import ProfileAvatar from './ProfileAvatar';
+import CaseOpener from './CaseOpener';
 import { Icon, type IconName } from './icons';
+import type { OpenCaseResult } from './api';
 import {
   AVATARS,
   BACKGROUNDS,
@@ -14,6 +16,7 @@ import {
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
 const GOLD = '#F0C64B';
+import { ProfileCardEffect } from './itemVisuals';
 
 export type EquipKey = 'avatar' | 'background' | 'frame' | 'color' | 'badges' | 'effect';
 
@@ -34,8 +37,10 @@ interface ProfileShopProps {
   buying: string | null;
   error: string | null;
   selections: ShopSelections;
+  openedCaseIds: string[];
   onBuy: (itemId: string) => void;
   onEquip: (key: EquipKey, id: string) => void;
+  onOpenCase: (caseId: string) => Promise<OpenCaseResult>;
   onClose: () => void;
 }
 
@@ -66,8 +71,9 @@ interface ShopItem {
   equipped: boolean;
 }
 
-function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, onEquip, onClose }: ProfileShopProps) {
+function ProfileShop({ coins, level, owned, buying, error, selections, openedCaseIds, onBuy, onEquip, onOpenCase, onClose }: ProfileShopProps) {
   const [tab, setTab] = useState<CategoryKey>('avatars');
+  const [view, setView] = useState<'shop' | 'cases'>('shop');
 
   // lock the page scroll while the shop is open
   useEffect(() => {
@@ -160,8 +166,8 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
           equipped: selections.effectId === ef.id,
           preview: (
             <div style={{ position: 'relative', height: '100%', overflow: 'hidden', background: 'linear-gradient(135deg,#0B3B29,#071F16)' }}>
-              <div style={{ position: 'absolute', inset: 0, ['--glow-color' as any]: `${selections.color}88`, animation: ef.id === 'none' ? undefined : 'softGlow 3.5s ease-in-out infinite' }} />
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selections.color }}>
+              <ProfileCardEffect effectId={ef.id} color={selections.color} />
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selections.color, zIndex: 2 }}>
                 <Icon name="sparkle" size={30} stroke={selections.color} strokeWidth={1.6} />
               </div>
             </div>
@@ -195,6 +201,17 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
           fontFamily: "'Manrope', sans-serif", color: CREAM,
         }}
       >
+        {view === 'cases' ? (
+          <CaseOpener
+            coins={coins}
+            owned={owned}
+            openedCaseIds={openedCaseIds}
+            onOpen={onOpenCase}
+            onEquip={onEquip}
+            onBack={() => setView('shop')}
+          />
+        ) : (
+        <>
         {/* ---- header ---- */}
         <div style={{ position: 'relative', padding: '24px 26px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', flex: '0 0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
@@ -254,6 +271,35 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
 
         {/* ---- items grid ---- */}
         <div style={{ padding: '20px 26px 26px', overflowY: 'auto' }}>
+          {/* prominent cases entry — bigger and flashier than the item cards */}
+          <button
+            onClick={() => setView('cases')}
+            className="at-cases-banner"
+            style={{
+              position: 'relative', overflow: 'hidden', width: '100%',
+              display: 'flex', alignItems: 'center', gap: '16px', textAlign: 'left',
+              padding: '18px 22px', marginBottom: '20px', borderRadius: '18px', cursor: 'pointer',
+              border: '1.5px solid rgba(240,198,75,0.5)',
+              background: 'linear-gradient(120deg, rgba(240,198,75,0.18), rgba(211,44,230,0.14) 55%, rgba(75,132,224,0.14))',
+              color: CREAM, fontFamily: "'Manrope', sans-serif",
+              boxShadow: '0 16px 40px -18px rgba(240,198,75,0.5)',
+            }}
+          >
+            <span className="at-case-banner-shine" />
+            <span style={{ flex: '0 0 auto', width: '54px', height: '54px', borderRadius: '14px', background: 'linear-gradient(135deg,#F0C64B,#B07A16)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 20px -6px rgba(240,198,75,0.7)' }}>
+              <Icon name="gift" size={28} strokeWidth={1.7} stroke={BG} />
+            </span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: 'block', fontFamily: "'Lora', serif", fontSize: '19px', fontWeight: 600 }}>Кейси мандрівника</span>
+              <span style={{ display: 'block', fontSize: '12.5px', color: 'rgba(244,241,232,0.72)', marginTop: '2px' }}>
+                Випробуй удачу · рідкісні фони, аватари, рамки та значки
+              </span>
+            </span>
+            <span style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '7px', background: '#F0C64B', color: BG, borderRadius: '11px', padding: '10px 16px', fontSize: '13px', fontWeight: 800 }}>
+              Відкрити <Icon name="arrowRight" size={15} strokeWidth={2.2} stroke={BG} />
+            </span>
+          </button>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(158px,1fr))', gap: '16px' }}>
             {items.map((item) => (
               <ShopCard
@@ -268,6 +314,8 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
             ))}
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
@@ -342,6 +390,10 @@ function ShopCard({
           ) : lock.type === 'level' ? (
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 700, color: '#9BD8B4' }}>
               <Icon name="lock" size={13} strokeWidth={1.9} stroke="#9BD8B4" /> Рівень {lock.level}
+            </div>
+          ) : lock.type === 'case' ? (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 700, color: '#D9A6E8' }}>
+              <Icon name="gift" size={13} strokeWidth={1.9} stroke="#D9A6E8" /> З кейсу
             </div>
           ) : (
             <button

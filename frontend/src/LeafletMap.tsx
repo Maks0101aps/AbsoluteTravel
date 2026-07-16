@@ -71,7 +71,6 @@ const MASK_PANE_Z = 360;
 const OUTSIDE_FILL = '#040B08';
 const BORDER_STROKE = 'rgba(155,216,180,0.38)';
 
-
 const ICON_PATHS: Record<string, string> = {
   compass: '<circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z" />',
   mountain: '<path d="M3 20l6-11 4 6 2-3 6 8z" /><path d="M9 9l2 3" />',
@@ -228,7 +227,6 @@ interface LeafletMapProps {
   // from `exploredCells` outwards. Off for guests, who have nothing to reveal
   // and would just see a black rectangle.
   fog?: boolean;
-
   height?: string;
 }
 
@@ -734,7 +732,6 @@ function LeafletMap({
     haze.addTo(map);
     fogLayersRef.current.push(haze);
   }, [fog, exploredCells, zoom, viewKey]);
-
   // --- sync live GPS markers (self + friends) ----------------------------------
   useEffect(() => {
     const map = mapRef.current;

@@ -1,5 +1,6 @@
 import { AVATARS, FRAMES } from './data/profileOptions';
 import { Icon } from './icons';
+import BlackHoleFrame from './BlackHoleFrame';
 
 interface ProfileAvatarProps {
   avatarId: string;
@@ -20,6 +21,15 @@ function frameStyle(frameId: string | undefined, color: string): React.CSSProper
       return { border: '3px solid #E7C34B', boxShadow: '0 0 0 3px rgba(231,195,75,0.35), 0 0 18px rgba(231,195,75,0.5)' };
     case 'gem':
       return { border: '3px solid #8A7CDF', boxShadow: '0 0 0 3px rgba(138,124,223,0.4), 0 0 22px rgba(138,124,223,0.6)' };
+    case 'frost':
+      return { border: '3px solid #8FD4E8', boxShadow: '0 0 0 3px rgba(143,212,232,0.35), 0 0 20px rgba(143,212,232,0.55)' };
+    case 'magma':
+      return { border: '3px solid #F0713F', boxShadow: '0 0 0 3px rgba(240,113,63,0.4), 0 0 22px rgba(240,113,63,0.6)' };
+    case 'prism':
+      return { border: '3px solid #D32CE6', boxShadow: '0 0 0 3px rgba(211,44,230,0.35), 0 0 12px rgba(91,184,245,0.6), 0 0 24px rgba(240,198,75,0.4)' };
+    case 'blackhole':
+      // Drawn by <BlackHoleFrame> as an animated overlay instead — no border here.
+      return { border: 'none' };
     default:
       return { border: '2px solid rgba(255,255,255,0.12)' };
   }
@@ -28,11 +38,13 @@ function frameStyle(frameId: string | undefined, color: string): React.CSSProper
 // Renders the chosen avatar (uploaded image or emoji-on-gradient) with the selected frame.
 function ProfileAvatar({ avatarId, customAvatar, frameId, color, size = 96 }: ProfileAvatarProps) {
   const avatar = AVATARS.find((a) => a.id === avatarId) ?? AVATARS[0];
+  const isBlackHole = FRAMES.find((f) => f.id === frameId)?.ring === 'blackhole';
+
   const common: React.CSSProperties = {
     width: size,
     height: size,
     borderRadius: '50%',
-    flex: '0 0 auto',
+    flex: isBlackHole ? undefined : '0 0 auto',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -40,13 +52,25 @@ function ProfileAvatar({ avatarId, customAvatar, frameId, color, size = 96 }: Pr
     ...frameStyle(frameId, color),
   };
 
-  if (customAvatar) {
-    return <img src={customAvatar} alt="avatar" style={{ ...common, objectFit: 'cover' }} />;
-  }
-
-  return (
+  const avatarEl = customAvatar ? (
+    <img src={customAvatar} alt="avatar" style={{ ...common, objectFit: 'cover' }} />
+  ) : avatar.imageUrl ? (
+    <img src={avatar.imageUrl} alt={avatar.id} style={{ ...common, objectFit: 'cover' }} />
+  ) : (
     <div style={{ ...common, background: avatar.gradient }}>
       <Icon name={avatar.icon} size={size * 0.46} stroke="rgba(244,241,232,0.95)" strokeWidth={1.7} />
+    </div>
+  );
+
+  // The black-hole frame's glow bleeds past the avatar's own box, so it can't
+  // live inside the same overflow:hidden element — it's a sibling overlay in
+  // a plain (non-clipping) wrapper instead.
+  if (!isBlackHole) return avatarEl;
+
+  return (
+    <div style={{ position: 'relative', width: size, height: size, flex: '0 0 auto' }}>
+      {avatarEl}
+      <BlackHoleFrame size={size} />
     </div>
   );
 }
