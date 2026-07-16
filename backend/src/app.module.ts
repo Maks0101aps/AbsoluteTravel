@@ -20,8 +20,6 @@ import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
 import { CheckmarksController } from './checkmarks/checkmarks.controller';
 import { CheckmarksService } from './checkmarks/checkmarks.service';
-import { ExplorationController } from './exploration/exploration.controller';
-import { ExplorationService } from './exploration/exploration.service';
 
 @Module({
   imports: [
@@ -40,7 +38,6 @@ import { ExplorationService } from './exploration/exploration.service';
     PlacesController,
     AdminController,
     CheckmarksController,
-    ExplorationController,
   ],
   providers: [
     AppService,
@@ -50,7 +47,6 @@ import { ExplorationService } from './exploration/exploration.service';
     PlacesService,
     AdminService,
     CheckmarksService,
-    ExplorationService,
   ],
 })
 export class AppModule {}
