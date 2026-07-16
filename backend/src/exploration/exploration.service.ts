@@ -18,6 +18,11 @@ const REGION_RESOLUTION = 3;
 const NEW_CELL_XP = 10;
 const NEW_REGION_XP = 100;
 
+/** Prisma's "unique constraint failed" — here, the VisitedCell(userId, cellId) pair. */
+function isUniqueViolation(e: unknown): boolean {
+  return typeof e === 'object' && e !== null && (e as { code?: unknown }).code === 'P2002';
+}
+
 export interface VisitCellDto {
   userId?: number;
   lat?: number;
@@ -88,18 +93,53 @@ export class ExplorationService {
     const newRegion = !(await this.hasCellInRegion(userId, region));
 
     const xpAwarded = NEW_CELL_XP + (newRegion ? NEW_REGION_XP : 0);
-    const newXp = user.xp + xpAwarded;
-    const newLevel = levelFromXp(newXp);
-    const leveledUp = newLevel > user.level;
 
-    await this.prisma.$transaction([
-      this.prisma.visitedCell.create({ data: { userId, cellId } }),
-      this.prisma.user.update({
-        where: { id: userId },
-        data: { xp: newXp, level: newLevel },
-      }),
-    ]);
+    // Increment atomically rather than writing back `user.xp + xpAwarded`: a
+    // checkmark verification for the place the user is standing at can be
+    // in-flight (its AI call takes seconds), and whichever award landed second
+    // would otherwise overwrite the first. The level is derived from the
+    // post-increment value, hence the interactive transaction.
+    let awarded: { newXp: number; newLevel: number; leveledUp: boolean };
+    try {
+      awarded = await this.prisma.$transaction(async (tx) => {
+        await tx.visitedCell.create({ data: { userId, cellId } });
 
+        const updated = await tx.user.update({
+          where: { id: userId },
+          data: { xp: { increment: xpAwarded } },
+        });
+
+        // `updated.level` is still the pre-award level: we only touched xp above.
+        const level = levelFromXp(updated.xp);
+        if (level !== updated.level) {
+          await tx.user.update({ where: { id: userId }, data: { level } });
+        }
+
+        return { newXp: updated.xp, newLevel: level, leveledUp: level > updated.level };
+      });
+    } catch (e) {
+      if (!isUniqueViolation(e)) throw e;
+      // Two requests for the same cell were in flight (a reconnect, a second
+      // tab, or a burst of GPS fixes) and both got past the `existing` check
+      // above. The unique constraint rolls this one back — XP included — so the
+      // award still lands exactly once. Report it as a re-entry instead of
+      // failing a request the user did nothing wrong to trigger.
+      const fresh = await this.prisma.user.findUnique({ where: { id: userId } });
+      const [cells, regions] = await this.countProgress(userId);
+      return {
+        isNew: false,
+        cellId,
+        newRegion: false,
+        xpAwarded: 0,
+        totalCells: cells,
+        totalRegions: regions,
+        newXp: fresh?.xp ?? user.xp,
+        newLevel: fresh?.level ?? user.level,
+        leveledUp: false,
+      };
+    }
+
+    const { newXp, newLevel, leveledUp } = awarded;
     const [totalCells, totalRegions] = await this.countProgress(userId);
 
     return {

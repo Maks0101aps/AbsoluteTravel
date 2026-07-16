@@ -189,6 +189,14 @@ a:hover {
   min-height: 0 !important;
 }
 
+/* Fog of war. The fill opacity is set per-layer by LeafletMap (deep vs haze);
+   the transition here is what makes a newly-unlocked patch melt away instead of
+   snapping. The pane itself is pointer-events:none, so the fog never eats a
+   click meant for a place marker showing through it. */
+.at-fog {
+  transition: fill-opacity 0.6s ease;
+}
+
 /* Territory-exploration hexes (H3 cells the user has walked). The base look is
    set inline by Leaflet; the reveal class plays a one-shot glow when a brand-new
    cell is unlocked, then hands the styling back to the inline resting values. */

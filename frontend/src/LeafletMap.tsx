@@ -3,12 +3,73 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { CATEGORY_META, DIFFICULTY_META, type Place } from './data/places';
 import { AVATARS } from './data/profileOptions';
-import { cellPolygon } from './exploration/h3';
+import { cellPolygon, cellCenter, regionOf } from './exploration/h3';
+import { UA_BORDER } from './data/ukraineBorder';
 
 // Explored-territory hexes. Soft green, translucent — they tint the map you've
 // walked without hiding it.
 const HEX_FILL = '#3FA66B';
 const HEX_STROKE = 'rgba(155,216,180,0.55)';
+
+// --- fog of war -------------------------------------------------------------
+// The fog lives in its own pane sitting above the tiles (200) but below the
+// overlay pane (400) and the marker pane (600). That ordering is what keeps the
+// place markers readable *through* the fog: unexplored POIs stay visible to
+// lure the user towards them, they just have no map detail around them.
+const FOG_PANE = 'at-fog';
+const FOG_PANE_Z = 350;
+
+// Tuned against a real render, not by eye in the abstract: at 0.88 the tiles
+// still read straight through the fog — every city name and road legible — which
+// defeats the point. At 0.95 unexplored land is reduced to ghosts while the POI
+// markers above still pull you towards it.
+const FOG_COLOR = '#0A1F16';
+// Never been anywhere near: full darkness.
+const FOG_DEEP_OPACITY = 0.95;
+// Been in the region, but not on this exact spot: a haze — you know roughly
+// what's here, the detail still has to be walked.
+const FOG_HAZE_OPACITY = 0.5;
+const FOG_REGION_STROKE = 'rgba(155,216,180,0.22)';
+
+// The outer ring of the fog. Deliberately the whole Mercator world rather than
+// Ukraine's bbox: the map bounces a little past maxBounds when panned hard, and
+// a world-sized ring means no un-fogged sliver can ever appear at the edge.
+// (±85 is the Mercator projection limit — ±90 projects to infinity.)
+const WORLD_RING: [number, number][] = [
+  [-85, -180],
+  [-85, 180],
+  [85, 180],
+  [85, -180],
+];
+
+// Below this zoom a res-9 hex is smaller than a pixel, so punching the fine
+// holes would cost thousands of rings to render something invisible. Zoomed
+// out, a visited region reads as one haze patch; zoom in and the walked cells
+// clear inside it.
+const FOG_FINE_ZOOM = 10;
+
+// How much slack the fog/mask renderers draw beyond the viewport, as a fraction
+// of its size (Leaflet's own default is 0.1, which is not enough — see where the
+// renderers are created). The fine-cell culling below reuses this, so the holes
+// always cover everything the renderer has actually drawn.
+const FOG_RENDER_PADDING = 1;
+
+// --- border mask ------------------------------------------------------------
+// Everything outside Ukraine is painted out completely: the same world-ring
+// trick as the fog, but with the national border as the hole and a fully opaque
+// fill, so no neighbouring country shows through. maxBounds alone can't do this
+// — it's a rectangle, and Ukraine is not.
+//
+// Sits above the fog but below the overlay/marker panes, so markers still draw
+// over it (a friend abroad stays visible even though the land around them is
+// masked off).
+const MASK_PANE = 'at-mask';
+const MASK_PANE_Z = 360;
+// Must stay clearly darker than the deep fog above: at 0.95 the fog resolves to
+// roughly #16291F, and an "outside" anywhere near that makes the country's own
+// silhouette vanish into the void around it.
+const OUTSIDE_FILL = '#040B08';
+const BORDER_STROKE = 'rgba(155,216,180,0.38)';
 
 
 const ICON_PATHS: Record<string, string> = {
@@ -18,22 +79,26 @@ const ICON_PATHS: Record<string, string> = {
   tent: '<path d="M12 5L3 20h18z" /><path d="M12 5v15" /><path d="M9 20l3-5 3 5" />',
   map: '<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z" /><path d="M9 4v14M15 6v14" />',
   signpost: '<path d="M12 3v18" /><path d="M5 6h11l2 2-2 2H5z" /><path d="M7 14h12" />',
-  binoculars: '<circle cx="7" cy="15" r="3" /><circle cx="17" cy="15" r="3" /><path d="M7 12l1-6h2l1 6M17 12l-1-6h-2l-1 6" %>',
-  flame: '<path d="M12 3c3 3 5 5.5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2.5-4.5C9 9 10 6 12 3z" %>',
-  backpack: '<path d="M7 8a5 5 0 0 1 10 0v10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z" /><path d="M10 8V6a2 2 0 0 1 4 0v2" /><path d="M9 13h6" %>',
-  feather: '<path d="M20 4C11 4 4 11 4 20" /><path d="M20 4c0 8-5 12-12 13" /><path d="M8 17l-4 3" %>',
-  shield: '<path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z" /><path d="M9 12l2 2 4-4" %>',
-  moon: '<path d="M20 14a8 8 0 1 1-9-11 6 6 0 0 0 9 11z" %>',
-  sun: '<circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19" %>',
-  crown: '<path d="M4 8l3 4 5-6 5 6 3-4v9H4z" /><path d="M4 20h16" %>',
-  trophy: '<path d="M8 4h8v4a4 4 0 0 1-8 0z" /><path d="M8 5H5v1a3 3 0 0 0 3 3M16 5h3v1a3 3 0 0 1-3 3" /><path d="M12 12v4M9 20h6M10 20l.5-4h3l.5 4" %>',
+  binoculars: '<circle cx="7" cy="15" r="3" /><circle cx="17" cy="15" r="3" /><path d="M7 12l1-6h2l1 6M17 12l-1-6h-2l-1 6" />',
+  flame: '<path d="M12 3c3 3 5 5.5 5 9a5 5 0 0 1-10 0c0-2 1-3.5 2.5-4.5C9 9 10 6 12 3z" />',
+  backpack: '<path d="M7 8a5 5 0 0 1 10 0v10a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z" /><path d="M10 8V6a2 2 0 0 1 4 0v2" /><path d="M9 13h6" />',
+  feather: '<path d="M20 4C11 4 4 11 4 20" /><path d="M20 4c0 8-5 12-12 13" /><path d="M8 17l-4 3" />',
+  shield: '<path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z" /><path d="M9 12l2 2 4-4" />',
+  moon: '<path d="M20 14a8 8 0 1 1-9-11 6 6 0 0 0 9 11z" />',
+  sun: '<circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19" />',
+  crown: '<path d="M4 8l3 4 5-6 5 6 3-4v9H4z" /><path d="M4 20h16" />',
+  trophy: '<path d="M8 4h8v4a4 4 0 0 1-8 0z" /><path d="M8 5H5v1a3 3 0 0 0 3 3M16 5h3v1a3 3 0 0 1-3 3" /><path d="M12 12v4M9 20h6M10 20l.5-4h3l.5 4" />',
   star: '<path d="M12 3l2.6 5.6L20 9.3l-4 4 1 6-5-3-5 3 1-6-4-4 5.4-.7z" />'
 };
 
-// Bounding box of Ukraine — the map won't let the user pan/zoom too far outside it.
+// Bounding box of Ukraine — the map won't let the user pan/zoom too far outside
+// it. Kept just off the real border extent (lat 44.18..52.38, lng 22.14..40.23,
+// see data/ukraineBorder.ts) so the country never sits flush against the
+// viewport edge, but no further: past this there is nothing to see anyway, only
+// the masked-out void.
 const UA_BOUNDS: L.LatLngBoundsExpression = [
-  [43.0, 20.0],
-  [53.6, 41.5],
+  [43.7, 21.4],
+  [52.9, 41.0],
 ];
 const UA_CENTER: [number, number] = [48.9, 31.4];
 
@@ -158,6 +223,11 @@ interface LeafletMapProps {
   // cell that was just unlocked (gets the one-shot reveal glow).
   exploredCells?: string[];
   revealedCell?: string | null;
+
+  // Fog of war: darken everything the user has never travelled to, clearing it
+  // from `exploredCells` outwards. Off for guests, who have nothing to reveal
+  // and would just see a black rectangle.
+  fog?: boolean;
 
   height?: string;
 }
@@ -294,6 +364,7 @@ function LeafletMap({
   liveMarkers,
   exploredCells,
   revealedCell,
+  fog = false,
   height = '460px',
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -301,8 +372,14 @@ function LeafletMap({
   const markersRef = useRef<Map<string | number, L.Marker>>(new Map());
   const liveMarkersRef = useRef<Map<string | number, L.Marker>>(new Map());
   const hexLayersRef = useRef<Map<string, L.Polygon>>(new Map());
+  const fogLayersRef = useRef<L.Polygon[]>([]);
+  const fogRendererRef = useRef<L.SVG | null>(null);
+  const maskRendererRef = useRef<L.SVG | null>(null);
   const pinMarkerRef = useRef<L.Marker | null>(null);
   const [zoom, setZoom] = useState<number>(6);
+  // Bumped on every pan/zoom so the fog effect re-runs and re-culls its fine
+  // holes against the new viewport.
+  const [viewKey, setViewKey] = useState(0);
 
   // Keep the latest callbacks/values in refs so the map-init effect (which only
   // runs once) can reach fresh state without re-creating the map instance.
@@ -331,11 +408,43 @@ function LeafletMap({
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
+      // Don't even fetch what the border mask is going to paint over. Past the
+      // country's bbox there is nothing the user may see, so a tile there is
+      // pure waste — and, until the mask covers it, a flash of the wrong country.
+      bounds: UA_BOUNDS,
     }).addTo(map);
+
+    // Dedicated panes so the fog and the border mask always land between the
+    // tiles and everything we draw on top of them (hexes, place markers, live
+    // dots). Both must let clicks through to the map/markers underneath.
+    for (const [name, z] of [
+      [FOG_PANE, FOG_PANE_Z],
+      [MASK_PANE, MASK_PANE_Z],
+    ] as const) {
+      map.createPane(name);
+      const pane = map.getPane(name);
+      if (pane) {
+        pane.style.zIndex = String(z);
+        pane.style.pointerEvents = 'none';
+      }
+    }
+
+    // Leaflet only draws vectors across the viewport plus `padding` (default a
+    // mere 10%). The map is born inside a grid cell and resized by the
+    // invalidateSize below, and every resize or fast pan briefly exposes a strip
+    // the renderer has not covered — at the edges of this map, that strip is a
+    // neighbouring country showing through the mask. Rendering a viewport's
+    // worth of slack in every direction means the exposed strip never exists.
+    fogRendererRef.current = L.svg({ pane: FOG_PANE, padding: FOG_RENDER_PADDING });
+    maskRendererRef.current = L.svg({ pane: MASK_PANE, padding: FOG_RENDER_PADDING });
 
     map.on('zoomend', () => {
       setZoom(map.getZoom());
     });
+
+    // Fine fog holes are culled to the viewport, so the fog has to be rebuilt
+    // whenever the viewport moves.
+    map.on('moveend', () => setViewKey((k) => k + 1));
 
     // "Locate me" control — handy on a phone while out exploring.
     const LocateControl = L.Control.extend({
@@ -468,6 +577,32 @@ function LeafletMap({
     });
   }, [places, activeId, hoverId, zoom]);
 
+  // --- paint out everything outside Ukraine -----------------------------------
+  // The border never changes, so this is added once and left alone. Declared
+  // after the init effect above, which is what guarantees mapRef is populated
+  // by the time it runs.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const mask = L.polygon([WORLD_RING, UA_BORDER], {
+      pane: MASK_PANE,
+      renderer: maskRendererRef.current ?? undefined,
+      // evenodd (Leaflet's default) makes the border ring a hole in the world
+      // ring, so the fill lands on everything *except* Ukraine.
+      fillColor: OUTSIDE_FILL,
+      fillOpacity: 1,
+      color: BORDER_STROKE,
+      weight: 1,
+      interactive: false,
+    });
+    mask.addTo(map);
+
+    return () => {
+      mask.remove();
+    };
+  }, []);
+
   // --- sync explored-territory hexes ------------------------------------------
   useEffect(() => {
     const map = mapRef.current;
@@ -508,6 +643,97 @@ function LeafletMap({
       existing.set(cellId, polygon);
     });
   }, [exploredCells, revealedCell]);
+
+  // --- sync the fog of war ----------------------------------------------------
+  // Two stacked layers give three tiers of knowledge:
+  //   deep haze  — never travelled here          (world ring, regions punched out)
+  //   light haze — been in the region, not here  (region ring, walked cells punched out)
+  //   clear      — walked it                     (a hole in both layers)
+  // Both are rebuilt wholesale rather than diffed: the rings change on every pan
+  // and a rebuild is two polygons, while diffing them would be real bookkeeping.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    fogLayersRef.current.forEach((layer) => layer.remove());
+    fogLayersRef.current = [];
+    if (!fog) return;
+
+    // Group the walked cells by region once, instead of re-scanning the whole
+    // list for every region below.
+    const byRegion = new Map<string, string[]>();
+    for (const cellId of exploredCells ?? []) {
+      const region = regionOf(cellId);
+      if (!region) continue; // ignore a malformed id rather than break the fog
+      const bucket = byRegion.get(region);
+      if (bucket) bucket.push(cellId);
+      else byRegion.set(region, [cellId]);
+    }
+
+    const regionRings = new Map<string, [number, number][]>();
+    for (const region of byRegion.keys()) {
+      try {
+        regionRings.set(region, cellPolygon(region));
+      } catch {
+        byRegion.delete(region);
+      }
+    }
+
+    // Deep fog: the whole world, with every visited region cut out of it.
+    // With no regions yet this is a solid sheet — a brand-new user starts with
+    // the map entirely dark, which is the point.
+    const deep = L.polygon([WORLD_RING, ...regionRings.values()], {
+      pane: FOG_PANE,
+      renderer: fogRendererRef.current ?? undefined,
+      className: 'at-fog',
+      stroke: false,
+      fillColor: FOG_COLOR,
+      fillOpacity: FOG_DEEP_OPACITY,
+      interactive: false,
+    });
+    deep.addTo(map);
+    fogLayersRef.current.push(deep);
+
+    if (regionRings.size === 0) return;
+
+    // Light haze over each visited region, with the individual walked cells cut
+    // out of it. The fine holes are only worth punching once they're big enough
+    // to see, and only for the part of the world currently on screen.
+    const fine = map.getZoom() >= FOG_FINE_ZOOM;
+    // Cull to what the renderer actually draws, not to the visible viewport:
+    // culling tighter than the padding would leave un-punched haze sitting in
+    // the drawn-but-not-yet-visible slack, which then slides into view on a pan.
+    const view = map.getBounds().pad(FOG_RENDER_PADDING);
+
+    const hazeShapes: [number, number][][][] = [];
+    for (const [region, ring] of regionRings) {
+      const rings: [number, number][][] = [ring];
+      if (fine) {
+        for (const cellId of byRegion.get(region) ?? []) {
+          try {
+            if (!view.contains(cellCenter(cellId))) continue;
+            rings.push(cellPolygon(cellId));
+          } catch {
+            // skip an unparseable cell, keep the rest of the region's haze
+          }
+        }
+      }
+      hazeShapes.push(rings);
+    }
+
+    const haze = L.polygon(hazeShapes, {
+      pane: FOG_PANE,
+      renderer: fogRendererRef.current ?? undefined,
+      className: 'at-fog',
+      color: FOG_REGION_STROKE,
+      weight: 1,
+      fillColor: FOG_COLOR,
+      fillOpacity: FOG_HAZE_OPACITY,
+      interactive: false,
+    });
+    haze.addTo(map);
+    fogLayersRef.current.push(haze);
+  }, [fog, exploredCells, zoom, viewKey]);
 
   // --- sync live GPS markers (self + friends) ----------------------------------
   useEffect(() => {
@@ -579,6 +805,11 @@ function LeafletMap({
         borderRadius: '18px',
         overflow: 'hidden',
         border: '1px solid rgba(255,255,255,0.08)',
+        // Leaflet's container is white by default, so before the first tiles
+        // arrive the map flashes white. Starting from the outside-the-border
+        // colour means the load reads as the void filling in, not as a blank
+        // page — and matches what the mask paints a moment later.
+        background: OUTSIDE_FILL,
         cursor: pickable ? 'crosshair' : undefined,
       }}
     />

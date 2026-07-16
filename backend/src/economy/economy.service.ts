@@ -91,36 +91,52 @@ export class EconomyService {
   async purchase(dto: PurchaseDto) {
     const userId = Number(dto.userId);
     const itemId = (dto.itemId ?? '').trim();
-    const user = await this.getUserOrThrow(userId);
+    await this.getUserOrThrow(userId);
 
     const price = priceOf(itemId);
     if (price === null) {
       throw new BadRequestException('Невідомий товар');
     }
 
-    const owned = parseUnlocked(user.unlockedItems);
-    if (owned.includes(itemId)) {
-      throw new ConflictException('Вже придбано');
-    }
-    if (user.coins < price) {
-      throw new BadRequestException('Не вистачає монет');
-    }
-
-    const nextOwned = [...owned, itemId];
-    const [updated] = await this.prisma.$transaction([
-      this.prisma.user.update({
+    // Re-read, check and debit inside one transaction. Previously the balance
+    // was checked against a row read earlier and `unlockedItems` was written
+    // back wholesale, so two purchases racing each other could both clear the
+    // same balance (driving coins negative), and the second could drop the
+    // first item from the list while still charging for it.
+    return await this.prisma.$transaction(async (tx) => {
+      const fresh = await tx.user.findUnique({
         where: { id: userId },
-        data: {
-          coins: { decrement: price },
-          unlockedItems: JSON.stringify(nextOwned),
-        },
-      }),
-      this.prisma.coinTransaction.create({
-        data: { userId, amount: -price, reason: `purchase:${itemId}` },
-      }),
-    ]);
+        select: { coins: true, unlockedItems: true },
+      });
+      if (!fresh) throw new NotFoundException('Користувача не знайдено');
 
-    return { coins: updated.coins, unlockedItems: nextOwned };
+      const owned = parseUnlocked(fresh.unlockedItems);
+      if (owned.includes(itemId)) {
+        throw new ConflictException('Вже придбано');
+      }
+
+      // Conditional debit: the balance test and the decrement are a single
+      // statement, so it cannot be satisfied by coins another purchase has
+      // already spent. count === 0 means the funds went away underneath us.
+      const debited = await tx.user.updateMany({
+        where: { id: userId, coins: { gte: price } },
+        data: { coins: { decrement: price } },
+      });
+      if (debited.count === 0) {
+        throw new BadRequestException('Не вистачає монет');
+      }
+
+      const nextOwned = [...owned, itemId];
+      const updated = await tx.user.update({
+        where: { id: userId },
+        data: { unlockedItems: JSON.stringify(nextOwned) },
+      });
+      await tx.coinTransaction.create({
+        data: { userId, amount: -price, reason: `purchase:${itemId}` },
+      });
+
+      return { coins: updated.coins, unlockedItems: nextOwned };
+    });
   }
 
   async leaderboard() {

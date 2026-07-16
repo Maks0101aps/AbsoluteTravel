@@ -99,12 +99,15 @@ export class CheckmarksService {
 
     const xpAwarded = DIFFICULTY_XP[place.difficulty] ?? DIFFICULTY_XP[1];
     const coinsAwarded = Math.floor(xpAwarded / 2);
-    const newXp = user.xp + xpAwarded;
-    const newLevel = levelFromXp(newXp);
-    const leveledUp = newLevel > user.level;
 
-    await this.prisma.$transaction([
-      this.prisma.checkmark.create({
+    // `user` was read before the AI call above, so its xp is seconds stale by
+    // now — long enough for the exploration layer to have awarded a cell to the
+    // same user standing at this very place. Increment atomically instead of
+    // writing back a computed total, or that award is silently erased. The
+    // level then has to be derived from the post-increment value, which is why
+    // this is an interactive transaction rather than the batch form.
+    const { newLevel, leveledUp } = await this.prisma.$transaction(async (tx) => {
+      await tx.checkmark.create({
         data: {
           userId,
           placeId,
@@ -114,19 +117,28 @@ export class CheckmarksService {
           aiReason: verdict.reason,
           xpAwarded,
         },
-      }),
-      this.prisma.user.update({
+      });
+
+      const updated = await tx.user.update({
         where: { id: userId },
         data: {
-          xp: newXp,
+          xp: { increment: xpAwarded },
           coins: { increment: coinsAwarded },
-          level: newLevel,
         },
-      }),
-      this.prisma.coinTransaction.create({
+      });
+
+      // `updated.level` is still the pre-award level: we only touched xp above.
+      const level = levelFromXp(updated.xp);
+      if (level !== updated.level) {
+        await tx.user.update({ where: { id: userId }, data: { level } });
+      }
+
+      await tx.coinTransaction.create({
         data: { userId, amount: coinsAwarded, reason: `checkmark:${placeId}` },
-      }),
-    ]);
+      });
+
+      return { newLevel: level, leveledUp: level > updated.level };
+    });
 
     return {
       verified: true,
