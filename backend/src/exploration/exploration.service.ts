@@ -134,9 +134,21 @@ export class ExplorationService {
     let awarded: { newXp: number; newLevel: number; leveledUp: boolean };
     try {
       awarded = await this.prisma.$transaction(async (tx) => {
-        // Create VisitedCell records for all new cells
+        // Create VisitedCell records for all new cells, plus a wall-feed
+        // entry per cell (and a separate, more celebratory one per newly
+        // entered region) — mirrors the XP math above, which already awards
+        // NEW_CELL_XP per cell and NEW_REGION_XP per region as two distinct
+        // amounts.
         for (const cId of newCells) {
           await tx.visitedCell.create({ data: { userId, cellId: cId } });
+          await tx.wallPost.create({
+            data: { userId, type: 'new_cell', cellId: cId, xpAwarded: NEW_CELL_XP },
+          });
+        }
+        for (const region of activeRegions) {
+          await tx.wallPost.create({
+            data: { userId, type: 'new_region', cellId: region, xpAwarded: NEW_REGION_XP },
+          });
         }
 
         const updated = await tx.user.update({

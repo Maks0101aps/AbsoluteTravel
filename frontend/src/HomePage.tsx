@@ -22,6 +22,7 @@ import { getSocket, closeSocket } from './socket';
 import { AVATARS, BACKGROUNDS, BADGES, COLORS, EFFECTS, FRAMES } from './data/profileOptions';
 import { Icon, type IconName } from './icons';
 import { ProfileCardEffect, ProfileCosmosFlourish, ProfileSakuraFlourish } from './itemVisuals';
+import ProfileWall from './ProfileWall';
 
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
@@ -197,7 +198,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
     onUserUpdate?.({ xp: result.newXp, level: result.newLevel });
   };
 
-  const maxWidth = tab === 'profile' ? '860px' : '1140px';
+  const maxWidth = tab === 'profile' ? '1400px' : '1140px';
 
   return (
     <div className={`at-home-root${tab === 'chat' ? ' at-home-root-chat' : ''}`} style={{
@@ -210,8 +211,38 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
       flexDirection: 'column',
       overflow: tab === 'chat' ? 'hidden' : 'visible'
     }}>
+      {/* Fixed, full-viewport backdrop for the profile tab: acts as the
+          page's own background rather than a bounded card — it sits behind
+          the (floating) nav, the hero content, and everything scrolled below
+          it (welcome copy + wall), and never scrolls away. */}
+      {tab === 'profile' && p && (
+        <div
+          className={p.backgroundId === 'sakura' ? 'bg-wind-sway' : undefined}
+          style={{ position: 'fixed', inset: 0, zIndex: 0, background: background?.css ?? 'linear-gradient(135deg,#0B3B29,#071F16)' }}
+        >
+          <ProfileCosmosFlourish backgroundId={p.backgroundId} />
+          <ProfileSakuraFlourish backgroundId={p.backgroundId} />
+          <ProfileCardEffect effectId={p.effectId} color={accent} />
+        </div>
+      )}
+
       {/* navbar */}
-      <nav className="at-home-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '12px 24px', background: BG, borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'nowrap' }}>
+      <nav
+        className="at-home-nav"
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '10px',
+          padding: '12px 24px',
+          background: BG,
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          flexWrap: 'nowrap',
+        }}
+      >
         <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '36px', width: 'auto', display: 'block', flexShrink: 0 }} />
 
         {/* navigation tabs — tightened padding/gaps so everything fits on one line */}
@@ -341,8 +372,12 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
         )}
       </nav>
 
-      <main className={`at-home-main ${tab === 'chat' ? 'at-chat-main-tab' : ''}`} style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
-        {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} background={background} />}
+      {tab === 'profile' && p && (
+        <ProfileHero user={user} accent={accent} onEditProfile={onEditProfile} />
+      )}
+
+      <main className={`at-home-main ${tab === 'chat' ? 'at-chat-main-tab' : ''}`} style={{ position: 'relative', zIndex: 1, maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
+        {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} />}
         {tab === 'map' && (
           <ExploreMap
             accent={accent}
@@ -388,48 +423,27 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
   );
 }
 
-// The original profile view, now the first tab.
-function ProfileTab({
+// Profile header content, sitting directly on top of the fixed full-page
+// backdrop rendered by HomePage (see `tab === 'profile' && p` block above the
+// <nav>) — this component only supplies the avatar/name/XP row, not the
+// background art itself, so the same backdrop keeps showing through as the
+// page scrolls (welcome copy + wall below) instead of being boxed into a
+// single card. Only rendered once a profile exists.
+function ProfileHero({
   user,
-  onEditProfile,
   accent,
-  background,
+  onEditProfile,
 }: {
   user: AuthUser;
-  onEditProfile: () => void;
   accent: string;
-  background: (typeof BACKGROUNDS)[number] | undefined;
+  onEditProfile: () => void;
 }) {
-  const p = user.profile;
-  if (!p) {
-    return (
-      <>
-        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '16px' }}>ЛАСКАВО ПРОСИМО</div>
-        <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(30px, 4vw, 42px)', margin: '0 0 14px' }}>Вітаємо, {user.name}!</h1>
-        <p style={{ fontSize: '15.5px', lineHeight: 1.7, color: 'rgba(244,241,232,0.68)', maxWidth: '520px', margin: '0 0 32px' }}>
-          Ти пропустив налаштування профілю. Персоналізуй його будь-коли.
-        </p>
-        <button onClick={onEditProfile} style={{ background: accent, color: BG, fontFamily: "'Manrope', sans-serif", fontSize: '14.5px', fontWeight: 700, border: 'none', borderRadius: '12px', padding: '15px 30px', cursor: 'pointer' }}>
-          Налаштувати профіль
-        </button>
-      </>
-    );
-  }
-
+  const p = user.profile!;
   return (
-    <>
-      {/* profile banner */}
-      <div style={{ position: 'relative', borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.10)', marginBottom: '30px', boxShadow: '0 24px 60px -20px rgba(0,0,0,0.7)' }}>
-        <div
-          className={p.backgroundId === 'sakura' ? 'bg-wind-sway' : undefined}
-          style={{ position: 'absolute', inset: 0, background: background?.css ?? 'linear-gradient(135deg,#0B3B29,#071F16)' }}
-        />
-        <ProfileCosmosFlourish backgroundId={p.backgroundId} />
-        <ProfileSakuraFlourish backgroundId={p.backgroundId} />
-        <ProfileCardEffect effectId={p.effectId} color={accent} />
-        <div style={{ position: 'relative', padding: '24px 30px 30px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          <XpBar xp={user.xp} accent={accent} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '22px', flexWrap: 'wrap' }}>
+    <div style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ maxWidth: '820px', margin: '0 auto', padding: '40px 24px 34px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <XpBar xp={user.xp} accent={accent} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '22px', flexWrap: 'wrap' }}>
           <ProfileAvatar avatarId={p.avatarId} customAvatar={p.customAvatar} frameId={p.frameId} color={accent} size={104} />
           <div style={{ flex: '1 1 240px', minWidth: '220px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
@@ -451,14 +465,48 @@ function ProfileTab({
           <button onClick={onEditProfile} style={{ background: 'rgba(255,255,255,0.12)', color: CREAM, border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(6px)' }}>
             Редагувати
           </button>
-          </div>
         </div>
       </div>
+    </div>
+  );
+}
 
+// Below the full-bleed ProfileHero: the welcome copy + wall, still living in
+// the padded <main> column. When there's no profile yet, this is the only
+// thing rendered (ProfileHero is skipped entirely in that case).
+function ProfileTab({
+  user,
+  onEditProfile,
+  accent,
+}: {
+  user: AuthUser;
+  onEditProfile: () => void;
+  accent: string;
+}) {
+  const p = user.profile;
+  if (!p) {
+    return (
+      <>
+        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '16px' }}>ЛАСКАВО ПРОСИМО</div>
+        <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(30px, 4vw, 42px)', margin: '0 0 14px' }}>Вітаємо, {user.name}!</h1>
+        <p style={{ fontSize: '15.5px', lineHeight: 1.7, color: 'rgba(244,241,232,0.68)', maxWidth: '520px', margin: '0 0 32px' }}>
+          Ти пропустив налаштування профілю. Персоналізуй його будь-коли.
+        </p>
+        <button onClick={onEditProfile} style={{ background: accent, color: BG, fontFamily: "'Manrope', sans-serif", fontSize: '14.5px', fontWeight: 700, border: 'none', borderRadius: '12px', padding: '15px 30px', cursor: 'pointer' }}>
+          Налаштувати профіль
+        </button>
+      </>
+    );
+  }
+
+  return (
+    <>
       <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: '0 0 12px' }}>Готово, {p.displayName}!</h2>
-      <p style={{ fontSize: '15px', lineHeight: 1.7, color: 'rgba(244,241,232,0.65)', maxWidth: '520px', margin: 0 }}>
+      <p style={{ fontSize: '15px', lineHeight: 1.7, color: 'rgba(244,241,232,0.65)', maxWidth: '520px', margin: '0 0 32px' }}>
         Відкрий вкладку «Мапа мандрівок», щоб дослідити цікаві місця України, або запитай поради у «ШІ-порадника».
       </p>
+
+      <ProfileWall userId={user.id} accent={accent} />
     </>
   );
 }

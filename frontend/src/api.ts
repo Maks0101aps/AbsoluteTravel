@@ -259,6 +259,8 @@ export interface VerifyCheckmarkPayload {
   lat: number;
   lng: number;
   photo: string;
+  // Opt-in: publish this visit (with its photo) to the wall feed.
+  shareToWall?: boolean;
 }
 
 export interface VerifyCheckmarkResult {
@@ -331,6 +333,31 @@ export function getVisitedCells(userId: number) {
 
 export function getExplorationStats(userId: number) {
   return call<ExplorationStats>('GET', `/api/exploration/stats/${userId}`);
+}
+
+// --- Wall (travel activity feed) --------------------------------------------
+
+export interface WallPost {
+  id: number;
+  type: 'visit' | 'new_cell' | 'new_region';
+  placeId: number | null;
+  placeName: string | null;
+  cellId: string | null;
+  photo: string | null;
+  xpAwarded: number;
+  createdAt: string;
+}
+
+export interface WallPage {
+  posts: WallPost[];
+  nextCursor: number | null;
+}
+
+/** A user's own travel-activity wall, newest first, cursor-paginated. */
+export function fetchWall(userId: number, requesterId: number, cursor?: number) {
+  const q = new URLSearchParams({ requesterId: String(requesterId) });
+  if (cursor) q.set('cursor', String(cursor));
+  return call<WallPage>('GET', `/api/wall/${userId}?${q.toString()}`);
 }
 
 // --- Admin accounts & auth -------------------------------------------------

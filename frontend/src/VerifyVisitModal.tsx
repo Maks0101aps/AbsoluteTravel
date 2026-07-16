@@ -26,6 +26,7 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<VerifyCheckmarkResult | null>(null);
+  const [shareToWall, setShareToWall] = useState(true);
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -85,6 +86,7 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
         lat: coords.lat,
         lng: coords.lng,
         photo,
+        shareToWall,
       });
       setResult(res);
       if (res.verified) onVerified(res);
@@ -302,6 +304,11 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
                 </button>
               )}
             </div>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'rgba(244,241,232,0.75)', marginBottom: '18px', cursor: 'pointer' }}>
+              <input type="checkbox" checked={shareToWall} onChange={(e) => setShareToWall(e.target.checked)} />
+              Опублікувати фото на стіні
+            </label>
 
             {error && (
               <div style={{ fontSize: '13px', color: '#E9A6A6', background: 'rgba(224,90,90,0.12)', border: '1px solid rgba(224,90,90,0.3)', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px' }}>
