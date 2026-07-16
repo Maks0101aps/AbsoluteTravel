@@ -95,7 +95,7 @@ export const CASES: CaseDef[] = [
     id: 'legendary',
     name: 'Легендарний кейс',
     tagline: 'Найрідкісніші прикраси. Високий ризик — висока нагорода.',
-    cost: 0, // TODO: temporarily free for testing the new blackhole frame — restore to 500
+    cost: 500,
     oneTime: false,
     accent: '#F0C64B',
     gradient: 'linear-gradient(145deg,#5E4410,#3A2A08 55%,#1E1604)',
@@ -116,7 +116,6 @@ export const CASES: CaseDef[] = [
       { slot: 'avatar', id: 'a23', rarity: 'legendary' },
       { slot: 'avatar', id: 'a14', rarity: 'legendary' },
       { slot: 'effect', id: 'vortex', rarity: 'legendary' },
-      { slot: 'frame', id: 'blackhole', rarity: 'legendary' },
     ],
   },
 ];
