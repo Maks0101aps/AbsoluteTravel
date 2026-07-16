@@ -4,7 +4,9 @@ import 'leaflet/dist/leaflet.css';
 import { CATEGORY_META, DIFFICULTY_META, type Place } from './data/places';
 import { AVATARS } from './data/profileOptions';
 import { cellPolygon, cellCenter, regionOf } from './exploration/h3';
-import { UA_BORDER } from './data/ukraineBorder';
+import { UA_BORDER, UA_REGIONS } from './data/ukraineBorder';
+import { polygonToCells } from 'h3-js';
+import { Icon } from './icons';
 
 // Explored-territory hexes. Soft green, translucent — they tint the map you've
 // walked without hiding it.
@@ -18,6 +20,12 @@ const HEX_STROKE = 'rgba(155,216,180,0.55)';
 // lure the user towards them, they just have no map detail around them.
 const FOG_PANE = 'at-fog';
 const FOG_PANE_Z = 350;
+
+// --- grid lines -------------------------------------------------------------
+// Sits above the fog (350) but below the mask (360), so lines are visible
+// inside unexplored areas of Ukraine, but hidden outside the country.
+const GRID_PANE = 'at-grid';
+const GRID_PANE_Z = 355;
 
 // Tuned against a real render, not by eye in the abstract: at 0.88 the tiles
 // still read straight through the fog — every city name and road legible — which
@@ -374,6 +382,9 @@ function LeafletMap({
   const fogRendererRef = useRef<L.SVG | null>(null);
   const maskRendererRef = useRef<L.SVG | null>(null);
   const pinMarkerRef = useRef<L.Marker | null>(null);
+  const gridLayersRef = useRef<L.Polygon[]>([]);
+  const gridRendererRef = useRef<L.SVG | null>(null);
+  const [showGrid, setShowGrid] = useState(true);
   const [zoom, setZoom] = useState<number>(6);
   // Bumped on every pan/zoom so the fog effect re-runs and re-culls its fine
   // holes against the new viewport.
@@ -412,11 +423,12 @@ function LeafletMap({
       bounds: UA_BOUNDS,
     }).addTo(map);
 
-    // Dedicated panes so the fog and the border mask always land between the
+    // Dedicated panes so the fog, grid lines, and the border mask always land between the
     // tiles and everything we draw on top of them (hexes, place markers, live
-    // dots). Both must let clicks through to the map/markers underneath.
+    // dots). They must let clicks through to the map/markers underneath.
     for (const [name, z] of [
       [FOG_PANE, FOG_PANE_Z],
+      [GRID_PANE, GRID_PANE_Z],
       [MASK_PANE, MASK_PANE_Z],
     ] as const) {
       map.createPane(name);
@@ -434,6 +446,7 @@ function LeafletMap({
     // neighbouring country showing through the mask. Rendering a viewport's
     // worth of slack in every direction means the exposed strip never exists.
     fogRendererRef.current = L.svg({ pane: FOG_PANE, padding: FOG_RENDER_PADDING });
+    gridRendererRef.current = L.svg({ pane: GRID_PANE, padding: FOG_RENDER_PADDING });
     maskRendererRef.current = L.svg({ pane: MASK_PANE, padding: FOG_RENDER_PADDING });
 
     map.on('zoomend', () => {
@@ -732,6 +745,75 @@ function LeafletMap({
     haze.addTo(map);
     fogLayersRef.current.push(haze);
   }, [fog, exploredCells, zoom, viewKey]);
+
+  // --- sync the grid lines ----------------------------------------------------
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    gridLayersRef.current.forEach((layer) => layer.remove());
+    gridLayersRef.current = [];
+
+    if (!showGrid) return;
+
+    // 1. Draw H3 resolution 3 region boundaries (coarse grid)
+    UA_REGIONS.forEach((cellId) => {
+      try {
+        const polygon = L.polygon(cellPolygon(cellId), {
+          pane: GRID_PANE,
+          renderer: gridRendererRef.current ?? undefined,
+          color: 'rgba(155, 216, 180, 0.22)',
+          weight: 1.5,
+          dashArray: '5, 5',
+          fill: false,
+          interactive: false,
+        });
+        polygon.addTo(map);
+        gridLayersRef.current.push(polygon);
+      } catch (e) {
+        // ignore
+      }
+    });
+
+    // 2. Draw H3 resolution 9 cell boundaries (fine grid) when zoomed in
+    if (zoom >= 14) {
+      const bounds = map.getBounds();
+      const west = bounds.getWest();
+      const east = bounds.getEast();
+      const south = bounds.getSouth();
+      const north = bounds.getNorth();
+
+      const viewportPolygon: [number, number][] = [
+        [south, west],
+        [north, west],
+        [north, east],
+        [south, east],
+      ];
+
+      try {
+        const cells = polygonToCells(viewportPolygon, 9);
+        cells.forEach((cellId) => {
+          try {
+            const polygon = L.polygon(cellPolygon(cellId), {
+              pane: GRID_PANE,
+              renderer: gridRendererRef.current ?? undefined,
+              color: 'rgba(155, 216, 180, 0.15)',
+              weight: 1,
+              fill: false,
+              interactive: false,
+            });
+            polygon.addTo(map);
+            gridLayersRef.current.push(polygon);
+          } catch (e) {
+            // ignore
+          }
+        });
+      } catch (err) {
+        // ignore
+      }
+    }
+  }, [showGrid, zoom, viewKey]);
+
   // --- sync live GPS markers (self + friends) ----------------------------------
   useEffect(() => {
     const map = mapRef.current;
@@ -794,22 +876,49 @@ function LeafletMap({
   }, [pin, accent, onPick]);
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        width: '100%',
-        height,
-        borderRadius: '18px',
-        overflow: 'hidden',
-        border: '1px solid rgba(255,255,255,0.08)',
-        // Leaflet's container is white by default, so before the first tiles
-        // arrive the map flashes white. Starting from the outside-the-border
-        // colour means the load reads as the void filling in, not as a blank
-        // page — and matches what the mask paints a moment later.
-        background: OUTSIDE_FILL,
-        cursor: pickable ? 'crosshair' : undefined,
-      }}
-    />
+    <div style={{ position: 'relative', width: '100%', height }}>
+      <div
+        ref={containerRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          borderRadius: '18px',
+          overflow: 'hidden',
+          border: '1px solid rgba(255,255,255,0.08)',
+          // Leaflet's container is white by default, so before the first tiles
+          // arrive the map flashes white. Starting from the outside-the-border
+          // colour means the load reads as the void filling in, not as a blank
+          // page — and matches what the mask paints a moment later.
+          background: OUTSIDE_FILL,
+          cursor: pickable ? 'crosshair' : undefined,
+        }}
+      />
+      {/* Floating grid toggle button */}
+      <button
+        onClick={() => setShowGrid((prev) => !prev)}
+        style={{
+          position: 'absolute',
+          top: '12px',
+          right: '12px',
+          zIndex: 1000, // Show above Leaflet map container (usually around 400-500)
+          background: showGrid ? accent : 'rgba(11, 43, 32, 0.85)',
+          border: `1px solid ${showGrid ? accent : 'rgba(255, 255, 255, 0.15)'}`,
+          color: showGrid ? '#071F16' : 'rgba(244, 241, 232, 0.8)',
+          borderRadius: '10px',
+          width: '36px',
+          height: '36px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+          transition: 'all 0.2s ease',
+        }}
+        title="Показати/приховати сітку туману"
+      >
+        <Icon name="hexagon" size={18} strokeWidth={2} />
+      </button>
+    </div>
   );
 }
 

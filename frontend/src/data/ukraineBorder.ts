@@ -4858,3 +4858,20 @@ export const UA_BORDER: [number, number][] = [
   [48.4327, 22.1377],
   [48.4285, 22.1402],
 ];
+
+export const UA_REGIONS: string[] = [
+  '831e5efffffffff', '831e74fffffffff', '831e49fffffffff', '831f5afffffffff',
+  '831e6dfffffffff', '832d61fffffffff', '831e66fffffffff', '832d28fffffffff',
+  '831e75fffffffff', '831e4afffffffff', '831f5bfffffffff', '831e6efffffffff',
+  '832d62fffffffff', '831e43fffffffff', '831e60fffffffff', '832d29fffffffff',
+  '8311b2fffffffff', '831e76fffffffff', '831e4bfffffffff', '832d63fffffffff',
+  '831e44fffffffff', '831e68fffffffff', '831e61fffffffff', '831e4cfffffffff',
+  '831e70fffffffff', '832d64fffffffff', '831e45fffffffff', '831e69fffffffff',
+  '831e62fffffffff', '831e4dfffffffff', '831e71fffffffff', '832d65fffffffff',
+  '831e46fffffffff', '831e6afffffffff', '831e63fffffffff', '831e0dfffffffff',
+  '831e4efffffffff', '831e72fffffffff', '832d66fffffffff', '831e6bfffffffff',
+  '831e40fffffffff', '832d2dfffffffff', '831e5dfffffffff', '8311b6fffffffff',
+  '832d75fffffffff', '832d6efffffffff', '831e73fffffffff', '831e48fffffffff',
+  '831e6cfffffffff', '832d60fffffffff', '831e41fffffffff'
+];
+
