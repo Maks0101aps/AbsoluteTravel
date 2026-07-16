@@ -311,6 +311,7 @@ export interface VisitCellResult {
   newXp: number;
   newLevel: number;
   leveledUp: boolean;
+  unlockedCellIds?: string[];
 }
 
 export interface ExplorationStats {

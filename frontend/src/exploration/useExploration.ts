@@ -90,11 +90,22 @@ export function useExploration(
     visitCell(userId, selfPosition.lat, selfPosition.lng)
       .then((result) => {
         if (cancelled) return;
-        // The server converts lat/lng → cell itself, so trust its cell id.
-        visitedRef.current.add(result.cellId);
+        
+        // Add all unlocked cell IDs (primary cell + any neighboring cells)
+        const newlyUnlocked = result.unlockedCellIds || [result.cellId];
+        newlyUnlocked.forEach((id) => visitedRef.current.add(id));
+
         if (!result.isNew) return;
 
-        setVisitedCells((prev) => (prev.includes(result.cellId) ? prev : [...prev, result.cellId]));
+        setVisitedCells((prev) => {
+          const next = [...prev];
+          newlyUnlocked.forEach((id) => {
+            if (!next.includes(id)) {
+              next.push(id);
+            }
+          });
+          return next;
+        });
         setTotalRegions(result.totalRegions);
         setLastRevealed(result.cellId);
         if (revealTimerRef.current) clearTimeout(revealTimerRef.current);

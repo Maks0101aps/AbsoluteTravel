@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { latLngToCell, cellToParent, isValidCell } from 'h3-js';
+import { latLngToCell, cellToParent, isValidCell, gridDisk, cellToLatLng, greatCircleDistance } from 'h3-js';
 import { PrismaService } from '../prisma.service';
 import { levelFromXp } from '../leveling';
 
@@ -39,6 +39,7 @@ export interface VisitCellResult {
   newXp: number;
   newLevel: number;
   leveledUp: boolean;
+  unlockedCellIds?: string[];
 }
 
 @Injectable()
@@ -66,17 +67,40 @@ export class ExplorationService {
     if (!user) throw new NotFoundException('Користувача не знайдено');
 
     // Server owns the GPS → cell conversion so clients can't claim arbitrary cells.
-    const cellId = latLngToCell(lat, lng, EXPLORE_RESOLUTION);
+    const primaryCellId = latLngToCell(lat, lng, EXPLORE_RESOLUTION);
+    const candidateCells = [primaryCellId];
 
-    const existing = await this.prisma.visitedCell.findUnique({
-      where: { userId_cellId: { userId, cellId } },
+    try {
+      const neighbors = gridDisk(primaryCellId, 1).filter(c => c !== primaryCellId);
+      for (const n of neighbors) {
+        const nCenter = cellToLatLng(n);
+        const dist = greatCircleDistance([lat, lng], nCenter, 'm');
+        // If user is within 200m of neighbor cell's center, they are within ~30m of the boundary
+        if (dist <= 200) {
+          candidateCells.push(n);
+        }
+      }
+    } catch (err) {
+      // safe fallback if gridDisk or cellToLatLng throws
+    }
+
+    // Check which cells the user has already visited from candidateCells
+    const alreadyVisitedRows = await this.prisma.visitedCell.findMany({
+      where: {
+        userId,
+        cellId: { in: candidateCells },
+      },
+      select: { cellId: true },
     });
+    const alreadyVisited = new Set(alreadyVisitedRows.map((r) => r.cellId));
 
-    if (existing) {
+    const newCells = candidateCells.filter((c) => !alreadyVisited.has(c));
+
+    if (newCells.length === 0) {
       const [totalCells, totalRegions] = await this.countProgress(userId);
       return {
         isNew: false,
-        cellId,
+        cellId: primaryCellId,
         newRegion: false,
         xpAwarded: 0,
         totalCells,
@@ -84,29 +108,40 @@ export class ExplorationService {
         newXp: user.xp,
         newLevel: user.level,
         leveledUp: false,
+        unlockedCellIds: candidateCells,
       };
     }
 
-    // A region is "new" if no already-visited cell shares this cell's coarse
-    // (res-3) parent. Derived on the fly — no separate region table to maintain.
-    const region = cellToParent(cellId, REGION_RESOLUTION);
-    const newRegion = !(await this.hasCellInRegion(userId, region));
+    // Check regions for new cells. A region is new if no already-visited cell
+    // shares the region, and it was not already counted new in this transaction.
+    const activeRegions = new Set<string>();
+    let totalXpAwarded = 0;
+    let newRegion = false;
 
-    const xpAwarded = NEW_CELL_XP + (newRegion ? NEW_REGION_XP : 0);
+    for (const cellId of newCells) {
+      const region = cellToParent(cellId, REGION_RESOLUTION);
+      const isRegionAlreadyVisited = await this.hasCellInRegion(userId, region);
+      const isRegionNewInThisRequest = !isRegionAlreadyVisited && !activeRegions.has(region);
 
-    // Increment atomically rather than writing back `user.xp + xpAwarded`: a
-    // checkmark verification for the place the user is standing at can be
-    // in-flight (its AI call takes seconds), and whichever award landed second
-    // would otherwise overwrite the first. The level is derived from the
-    // post-increment value, hence the interactive transaction.
+      if (isRegionNewInThisRequest) {
+        activeRegions.add(region);
+        newRegion = true;
+      }
+
+      totalXpAwarded += NEW_CELL_XP + (isRegionNewInThisRequest ? NEW_REGION_XP : 0);
+    }
+
     let awarded: { newXp: number; newLevel: number; leveledUp: boolean };
     try {
       awarded = await this.prisma.$transaction(async (tx) => {
-        await tx.visitedCell.create({ data: { userId, cellId } });
+        // Create VisitedCell records for all new cells
+        for (const cId of newCells) {
+          await tx.visitedCell.create({ data: { userId, cellId: cId } });
+        }
 
         const updated = await tx.user.update({
           where: { id: userId },
-          data: { xp: { increment: xpAwarded } },
+          data: { xp: { increment: totalXpAwarded } },
         });
 
         // `updated.level` is still the pre-award level: we only touched xp above.
@@ -119,16 +154,12 @@ export class ExplorationService {
       });
     } catch (e) {
       if (!isUniqueViolation(e)) throw e;
-      // Two requests for the same cell were in flight (a reconnect, a second
-      // tab, or a burst of GPS fixes) and both got past the `existing` check
-      // above. The unique constraint rolls this one back — XP included — so the
-      // award still lands exactly once. Report it as a re-entry instead of
-      // failing a request the user did nothing wrong to trigger.
+      // Two requests for the same cell were in flight
       const fresh = await this.prisma.user.findUnique({ where: { id: userId } });
       const [cells, regions] = await this.countProgress(userId);
       return {
         isNew: false,
-        cellId,
+        cellId: primaryCellId,
         newRegion: false,
         xpAwarded: 0,
         totalCells: cells,
@@ -136,6 +167,7 @@ export class ExplorationService {
         newXp: fresh?.xp ?? user.xp,
         newLevel: fresh?.level ?? user.level,
         leveledUp: false,
+        unlockedCellIds: candidateCells,
       };
     }
 
@@ -144,14 +176,15 @@ export class ExplorationService {
 
     return {
       isNew: true,
-      cellId,
+      cellId: primaryCellId,
       newRegion,
-      xpAwarded,
+      xpAwarded: totalXpAwarded,
       totalCells,
       totalRegions,
       newXp,
       newLevel,
       leveledUp,
+      unlockedCellIds: candidateCells,
     };
   }
 

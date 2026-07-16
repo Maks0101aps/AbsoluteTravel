@@ -399,7 +399,7 @@ function LeafletMap({
   const gridLayersRef = useRef<L.Polygon[]>([]);
   const gridRendererRef = useRef<L.SVG | null>(null);
   const [showGrid, setShowGrid] = useState(true);
-  const [zoom, setZoom] = useState<number>(6);
+  const [zoom, setZoom] = useState<number>(focusPosition ? 15 : 6);
   // Bumped on every pan/zoom so the fog effect re-runs and re-culls its fine
   // holes against the new viewport.
   const [viewKey, setViewKey] = useState(0);
@@ -414,7 +414,7 @@ function LeafletMap({
     if (!containerRef.current || mapRef.current) return;
 
     const startCenter = focusPosition ? [focusPosition.lat, focusPosition.lng] as L.LatLngExpression : UA_CENTER;
-    const startZoom = focusPosition ? 16 : 6;
+    const startZoom = focusPosition ? 15 : 6;
 
     const map = L.map(containerRef.current, {
       center: startCenter,
@@ -504,7 +504,7 @@ function LeafletMap({
           navigator.geolocation.getCurrentPosition(
             (pos) => {
               const { latitude, longitude } = pos.coords;
-              map.flyTo([latitude, longitude], 16, { duration: 0.8 });
+              map.flyTo([latitude, longitude], 15, { duration: 0.8 });
               if (stateRef.current.pickable && stateRef.current.onPick) {
                 stateRef.current.onPick(Number(latitude.toFixed(5)), Number(longitude.toFixed(5)));
               }
@@ -527,9 +527,13 @@ function LeafletMap({
 
     mapRef.current = map;
     setMap(map);
+    setZoom(map.getZoom());
 
     // Fix sizing glitches when the map first renders inside a flex/grid layout.
-    setTimeout(() => map.invalidateSize(), 60);
+    setTimeout(() => {
+      map.invalidateSize();
+      setViewKey((k) => k + 1);
+    }, 60);
 
     return () => {
       map.remove();
@@ -547,7 +551,7 @@ function LeafletMap({
   useEffect(() => {
     if (!map || !focusPosition || hasFocusedRef.current) return;
     hasFocusedRef.current = true;
-    map.flyTo([focusPosition.lat, focusPosition.lng], 16, { duration: 1 });
+    map.flyTo([focusPosition.lat, focusPosition.lng], 15, { duration: 1 });
   }, [map, focusPosition]);
 
   // --- sync place markers -----------------------------------------------------
