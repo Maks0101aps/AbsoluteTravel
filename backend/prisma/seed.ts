@@ -36,7 +36,6 @@ const SEED_PLACES: {
   { name: 'Високий замок', region: 'Львівська область', category: 'nature', lat: 49.8487, lng: 24.0389, bestSeason: 'Травень – жовтень', difficulty: 2, description: 'Найвища точка Львова з панорамою на все місто. Підйом крутою стежкою через парк — легке фізичне навантаження, але того варте.', photos: ['/assets/places/vysokyi_zamok_1.jpg', '/assets/places/vysokyi_zamok_2.jpg', '/assets/places/vysokyi_zamok_3.jpg'] },
   { name: 'Львівська опера', region: 'Львівська область', category: 'city', lat: 49.8425, lng: 24.0217, bestSeason: 'Будь-коли', difficulty: 1, description: 'Неоренесансна будівля театру опери та балету — одна з найкрасивіших в Європі. Легка й доступна точка в центрі.', photos: ['/assets/places/lviv_opera_1.jpg', '/assets/places/lviv_opera_2.jpg', '/assets/places/lviv_opera_3.jpg'] },
   { name: 'Парк Знесіння', region: 'Львівська область', category: 'nature', lat: 49.8578, lng: 24.0631, bestSeason: 'Травень – вересень', difficulty: 3, description: 'Великий лісопарк на околиці з крутими пагорбами й дикими стежками. Повноцінний трекінг для тих, хто хоче втекти від міського шуму.', photos: ['/assets/places/znesinnia_1.jpg', '/assets/places/znesinnia_2.jpg', '/assets/places/znesinnia_3.jpg'] },
-  { name: 'Підземні тунелі Личаківського р-ну', region: 'Львівська область', category: 'history', lat: 49.8289, lng: 24.0692, bestSeason: 'Червень – вересень', difficulty: 4, description: 'Малодосліджені підземні ходи старого району. Потрібна підготовка, ліхтар і обережність — це справжній виклик для мандрівника.', photos: ['/assets/places/lychakiv_district_1.png', '/assets/places/lychakiv_district_2.jpg', '/assets/places/lychakiv_district_3.jpg'] },
 
   { name: 'Львів', region: 'Львівська область', category: 'city', lat: 49.842, lng: 24.032, bestSeason: 'Квітень – жовтень', description: 'Історичний центр під охороною ЮНЕСКО: площа Ринок, кав’ярні, Високий замок. Прогуляйся вуличками Старого міста і піднімись на дах Львівської ратуші.', photos: ['/assets/lviv_thumb.avif', '/assets/places/lviv_extra_1.jpg', '/assets/places/lviv_extra_2.png'] },
   { name: 'Буковель і Карпати', region: 'Івано-Франківська область', category: 'mountains', lat: 48.363, lng: 24.408, bestSeason: 'Грудень – березень, червень – вересень', description: 'Найбільший гірський курорт України. Взимку — лижі та сноуборд, влітку — гірські озера, підйомники й трекінг у Карпатах.', photos: ['/assets/carpathians_thumb.avif', '/assets/places/bukovel_1.jpg', '/assets/places/bukovel_2.jpg'] },
@@ -56,84 +55,7 @@ const SEED_PLACES: {
   { name: 'Одеса', region: 'Одеська область', category: 'coast', lat: 46.482, lng: 30.723, bestSeason: 'Червень – вересень', description: 'Потьомкінські сходи, Дерибасівська, оперний театр і морське узбережжя. Літня столиця з особливим гумором.', photos: ['/assets/places/odesa_1.jpg', '/assets/places/odesa_2.jpg', '/assets/places/odesa_3.jpg'] },
   { name: 'Аккерманська фортеця', region: 'Одеська область', category: 'history', lat: 46.201, lng: 30.352, bestSeason: 'Травень – вересень', description: 'Одна з найбільших фортець України на березі Дністровського лиману в Білгороді-Дністровському. Понад 2000 років історії.', photos: ['/assets/places/akkerman_1.jpg', '/assets/places/akkerman_2.jpg', '/assets/places/akkerman_3.jpg'] },
   
-  // --- Beautiful and Unpopular Places (Hidden Gems of Ukraine) ---------------
-  {
-    name: 'Буцький каньйон',
-    region: 'Черкаська область',
-    category: 'nature',
-    lat: 49.0389,
-    lng: 30.3964,
-    bestSeason: 'Травень – вересень',
-    difficulty: 2,
-    description: 'Величний гранітний каньйон на річці Гірський Тікич біля смт Буки. Скелям тут близько 2 мільярдів років. Чудове місце для скелелазіння, кемпінгу та мальовничих прогулянок біля води.',
-    photos: ['/assets/places/butsky_1.png', '/assets/places/butsky_2.png', '/assets/places/butsky_3.jpg']
-  },
-  {
-    name: 'Тараканівський форт',
-    region: 'Рівненська область',
-    category: 'history',
-    lat: 50.4746,
-    lng: 25.7118,
-    bestSeason: 'Квітень – жовтень',
-    difficulty: 3,
-    description: 'Атмосферні та загадкові руїни оборонного форту XIX століття. Комплекс має безліч підземних ходів, потерн та лабіринтів, які заховані посеред густого лісу.',
-    photos: ['/assets/places/tarakaniv_1.png', '/assets/places/tarakaniv_2.png', '/assets/places/tarakaniv_3.jpg']
-  },
-  {
-    name: 'Базальтові стовпи',
-    region: 'Рівненська область',
-    category: 'nature',
-    lat: 50.9208,
-    lng: 26.2307,
-    bestSeason: 'Травень – вересень',
-    difficulty: 2,
-    description: 'Унікальна геологічна пам\'ятка з величними базальтовими колонами-призмами заввишки до 30 метрів, що височіють над мальовничим затопленим кар\'єром із бірюзовою водою.',
-    photos: ['/assets/places/basalt_1.png', '/assets/places/basalt_2.png', '/assets/places/basalt_3.jpg']
-  },
-  {
-    name: 'Палац Даховських',
-    region: 'Черкаська область',
-    category: 'history',
-    lat: 48.9806,
-    lng: 29.9861,
-    bestSeason: 'Квітень – жовтень',
-    difficulty: 2,
-    description: 'Витончений приватний замок у стилі англійської неоготики, збудований родиною польських шляхтичів Даховських. Оточений мальовничим парком та ставком.',
-    photos: ['/assets/places/dakhovskyi_1.png', '/assets/places/dakhovskyi_2.png']
-  },
-  {
-    name: 'Актівський каньйон',
-    region: 'Миколаївська область',
-    category: 'nature',
-    lat: 47.7122,
-    lng: 31.4655,
-    bestSeason: 'Квітень – вересень',
-    difficulty: 3,
-    description: 'Глибока скеляста ущелина посеред степу, також відома як "Долина диявола". Величні гранітні скелі та річка Мертвовод створюють унікальний рельєф, що нагадує Великий Каньйон у США.',
-    photos: ['/assets/places/aktove_1.png', '/assets/places/aktove_2.png', '/assets/places/aktove_3.jpg']
-  },
-  {
-    name: 'Обсерваторія "Білий Слон" на горі Піп Іван',
-    region: 'Івано-Франківська область',
-    category: 'mountains',
-    lat: 48.0469,
-    lng: 24.6294,
-    bestSeason: 'Червень – вересень',
-    difficulty: 4,
-    description: 'Найвища високогірна споруда в Україні — колишня польська астрономічно-метеорологічна обсерваторія на вершині гори Піп Іван Чорногірський. Взимку будівля покривається льодом та снігом, нагадуючи силует слона.',
-    photos: ['/assets/places/pip_ivan_1.png', '/assets/places/pip_ivan_2.png', '/assets/places/pip_ivan_3.jpg']
-  },
-  {
-    name: 'Станіславські скелі (Херсонський Гранд-Каньйон)',
-    region: 'Херсонська область',
-    category: 'nature',
-    lat: 46.5701,
-    lng: 32.1469,
-    bestSeason: 'Травень – вересень',
-    difficulty: 2,
-    description: 'Унікальні глиняні урвища та глибокі яри ландшафтного заказника "Станіславський", що обриваються прямо у води Дніпро-Бузького лиману. З висоти скель відкриваються неймовірні морські панорами.',
-    photos: ['/assets/places/stanislav_1.png']
-  },
+
 
   // --- Приховані перлини України ------------------------------------------
   // Джерела: списки маловідомих місць (znaki.fm, travel.24tv.ua) звірені з
