@@ -63,6 +63,9 @@ const FOG_RENDER_PADDING = 1;
 // masked off).
 const MASK_PANE = 'at-mask';
 const MASK_PANE_Z = 360;
+
+const LABEL_PANE = 'at-labels';
+const LABEL_PANE_Z = 365;
 // Must stay clearly darker than the deep fog above: at 0.95 the fog resolves to
 // roughly #16291F, and an "outside" anywhere near that makes the country's own
 // silhouette vanish into the void around it.
@@ -154,7 +157,17 @@ function liveIcon(m: LiveMarker) {
   let inner = '';
   const avatarOpt = m.avatar ? AVATARS.find((a) => a.id === m.avatar) : undefined;
   
-  if (avatarOpt) {
+  if (m.id === 'self') {
+    const stroke = "rgba(244,241,232,0.95)";
+    const strokeWidth = 1.9;
+    const svgSize = size * 0.52;
+    inner = `<div style="width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, ${m.color} 0%, rgba(11, 43, 32, 0.9) 100%);box-shadow:inset 0 0 5px rgba(255,255,255,0.75);">
+      <svg width="${svgSize}" height="${svgSize}" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M5 20c0-4 3-6 7-6s7 2 7 6" />
+      </svg>
+    </div>`;
+  } else if (avatarOpt) {
     const pathsHtml = ICON_PATHS[avatarOpt.icon] || '';
     const stroke = "rgba(244,241,232,0.95)";
     const strokeWidth = 1.7;
@@ -372,9 +385,10 @@ function LeafletMap({
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const [map, setMap] = useState<L.Map | null>(null);
   // Only auto-fly to the user once per mount — after that, panning/zooming is
   // theirs to control again.
-  const hasFocusedRef = useRef(false);
+  const hasFocusedRef = useRef(!!focusPosition);
   const markersRef = useRef<Map<string | number, L.Marker>>(new Map());
   const liveMarkersRef = useRef<Map<string | number, L.Marker>>(new Map());
   const hexLayersRef = useRef<Map<string, L.Polygon>>(new Map());
@@ -399,9 +413,12 @@ function LeafletMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
+    const startCenter = focusPosition ? [focusPosition.lat, focusPosition.lng] as L.LatLngExpression : UA_CENTER;
+    const startZoom = focusPosition ? 16 : 6;
+
     const map = L.map(containerRef.current, {
-      center: UA_CENTER,
-      zoom: 6,
+      center: startCenter,
+      zoom: startZoom,
       minZoom: 5,
       maxZoom: 18,
       maxBounds: UA_BOUNDS,
@@ -423,13 +440,14 @@ function LeafletMap({
       bounds: UA_BOUNDS,
     }).addTo(map);
 
-    // Dedicated panes so the fog, grid lines, and the border mask always land between the
+    // Dedicated panes so the fog, grid lines, the border mask, and text labels always land between the
     // tiles and everything we draw on top of them (hexes, place markers, live
     // dots). They must let clicks through to the map/markers underneath.
     for (const [name, z] of [
       [FOG_PANE, FOG_PANE_Z],
       [GRID_PANE, GRID_PANE_Z],
       [MASK_PANE, MASK_PANE_Z],
+      [LABEL_PANE, LABEL_PANE_Z],
     ] as const) {
       map.createPane(name);
       const pane = map.getPane(name);
@@ -438,6 +456,14 @@ function LeafletMap({
         pane.style.pointerEvents = 'none';
       }
     }
+
+    // Transparent labels layer sitting above the fog and mask so settlement names stay visible
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+      pane: LABEL_PANE,
+      attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 19,
+      bounds: UA_BOUNDS,
+    }).addTo(map);
 
     // Leaflet only draws vectors across the viewport plus `padding` (default a
     // mere 10%). The map is born inside a grid cell and resized by the
@@ -478,7 +504,7 @@ function LeafletMap({
           navigator.geolocation.getCurrentPosition(
             (pos) => {
               const { latitude, longitude } = pos.coords;
-              map.flyTo([latitude, longitude], 13, { duration: 0.8 });
+              map.flyTo([latitude, longitude], 16, { duration: 0.8 });
               if (stateRef.current.pickable && stateRef.current.onPick) {
                 stateRef.current.onPick(Number(latitude.toFixed(5)), Number(longitude.toFixed(5)));
               }
@@ -500,6 +526,7 @@ function LeafletMap({
     });
 
     mapRef.current = map;
+    setMap(map);
 
     // Fix sizing glitches when the map first renders inside a flex/grid layout.
     setTimeout(() => map.invalidateSize(), 60);
@@ -507,6 +534,7 @@ function LeafletMap({
     return () => {
       map.remove();
       mapRef.current = null;
+      setMap(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -517,15 +545,13 @@ function LeafletMap({
   // wherever the user actually is (and whatever they've already unlocked
   // nearby) instead of leaving them on the static Ukraine-wide view.
   useEffect(() => {
-    const map = mapRef.current;
     if (!map || !focusPosition || hasFocusedRef.current) return;
     hasFocusedRef.current = true;
-    map.flyTo([focusPosition.lat, focusPosition.lng], 13, { duration: 1 });
-  }, [focusPosition]);
+    map.flyTo([focusPosition.lat, focusPosition.lng], 16, { duration: 1 });
+  }, [map, focusPosition]);
 
   // --- sync place markers -----------------------------------------------------
   useEffect(() => {
-    const map = mapRef.current;
     if (!map) return;
 
     const existing = markersRef.current;
@@ -598,14 +624,13 @@ function LeafletMap({
         }
       }
     });
-  }, [places, activeId, hoverId, zoom]);
+  }, [map, places, activeId, hoverId, zoom]);
 
   // --- paint out everything outside Ukraine -----------------------------------
   // The border never changes, so this is added once and left alone. Declared
   // after the init effect above, which is what guarantees mapRef is populated
   // by the time it runs.
   useEffect(() => {
-    const map = mapRef.current;
     if (!map) return;
 
     const mask = L.polygon([WORLD_RING, UA_BORDER], {
@@ -624,11 +649,10 @@ function LeafletMap({
     return () => {
       mask.remove();
     };
-  }, []);
+  }, [map]);
 
   // --- sync explored-territory hexes ------------------------------------------
   useEffect(() => {
-    const map = mapRef.current;
     if (!map) return;
 
     const existing = hexLayersRef.current;
@@ -665,7 +689,7 @@ function LeafletMap({
       polygon.addTo(map);
       existing.set(cellId, polygon);
     });
-  }, [exploredCells, revealedCell]);
+  }, [map, exploredCells, revealedCell]);
 
   // --- sync the fog of war ----------------------------------------------------
   // A single layer: deep fog everywhere, with a hole punched only at each
@@ -674,7 +698,6 @@ function LeafletMap({
   // Rebuilt wholesale rather than diffed: the ring changes on every pan and a
   // rebuild is one polygon, while diffing it would be real bookkeeping.
   useEffect(() => {
-    const map = mapRef.current;
     if (!map) return;
 
     fogLayersRef.current.forEach((layer) => layer.remove());
@@ -710,11 +733,10 @@ function LeafletMap({
     });
     deep.addTo(map);
     fogLayersRef.current.push(deep);
-  }, [fog, exploredCells, zoom, viewKey]);
+  }, [map, fog, exploredCells, zoom, viewKey]);
 
   // --- sync the grid lines ----------------------------------------------------
   useEffect(() => {
-    const map = mapRef.current;
     if (!map) return;
 
     gridLayersRef.current.forEach((layer) => layer.remove());
@@ -759,11 +781,10 @@ function LeafletMap({
         // ignore
       }
     }
-  }, [showGrid, zoom, viewKey]);
+  }, [map, showGrid, zoom, viewKey]);
 
   // --- sync live GPS markers (self + friends) ----------------------------------
   useEffect(() => {
-    const map = mapRef.current;
     if (!map) return;
 
     const existing = liveMarkersRef.current;
@@ -793,11 +814,10 @@ function LeafletMap({
       // Leaflet renders tooltip strings as HTML — escape the user-derived label.
       marker.bindTooltip(escapeHtml(m.label), { direction: 'top', offset: [0, -18] });
     });
-  }, [liveMarkers]);
+  }, [map, liveMarkers]);
 
   // --- sync the single draggable pick pin -------------------------------------
   useEffect(() => {
-    const map = mapRef.current;
     if (!map) return;
 
     if (!pin) {
@@ -820,7 +840,7 @@ function LeafletMap({
     } else {
       pinMarkerRef.current.setLatLng([pin.lat, pin.lng]);
     }
-  }, [pin, accent, onPick]);
+  }, [map, pin, accent, onPick]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height }}>

@@ -310,6 +310,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
             accent={accent}
             submitterName={p?.displayName ?? user.name}
             userId={user.id}
+            profile={p}
             openedPlaceIds={openedPlaceIds}
             onVerified={handleVerified}
             onExplored={handleExplored}
