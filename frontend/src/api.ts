@@ -480,6 +480,10 @@ export interface XpLeaderboardRow {
   level: number;
   xp: number;
   region: string | null;
+  /** H3 cells unlocked by walking — the exploration equivalent of step count. */
+  cells: number;
+  /** Places verified with a photo checkmark. */
+  places: number;
 }
 
 export interface MyRank {

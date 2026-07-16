@@ -10,6 +10,8 @@ export interface LeaderboardRow {
   level: number;
   xp: number;
   region: string | null;
+  cells: number;
+  places: number;
 }
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes, as per spec
@@ -19,6 +21,28 @@ interface CacheEntry {
   expiresAt: number;
   data: unknown;
 }
+
+interface UserWithCounts {
+  id: number;
+  username: string;
+  name: string;
+  avatar: string;
+  level: number;
+  xp: number;
+  region: string | null;
+  _count: { visitedCells: number; checkmarks: number };
+}
+
+const ROW_SELECT = {
+  id: true,
+  username: true,
+  name: true,
+  avatar: true,
+  level: true,
+  xp: true,
+  region: true,
+  _count: { select: { visitedCells: true, checkmarks: true } },
+} as const;
 
 @Injectable()
 export class LeaderboardService {
@@ -44,7 +68,7 @@ export class LeaderboardService {
     });
   }
 
-  private toRow(u: { id: number; username: string; name: string; avatar: string; level: number; xp: number; region: string | null }, rank: number): LeaderboardRow {
+  private toRow(u: UserWithCounts, rank: number): LeaderboardRow {
     return {
       rank,
       userId: u.id,
@@ -54,6 +78,8 @@ export class LeaderboardService {
       level: u.level,
       xp: u.xp,
       region: u.region,
+      cells: u._count.visitedCells,
+      places: u._count.checkmarks,
     };
   }
 
@@ -74,7 +100,7 @@ export class LeaderboardService {
         where: kind === 'regional' ? { region: { contains: reg } } : undefined,
         orderBy: [{ xp: 'desc' }, { id: 'asc' }],
         take: limit,
-        select: { id: true, username: true, name: true, avatar: true, level: true, xp: true, region: true },
+        select: ROW_SELECT,
       });
       return users.map((u, i) => this.toRow(u, i + 1));
     });
@@ -90,7 +116,7 @@ export class LeaderboardService {
     return this.cached(`me:${userId}`, async () => {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, username: true, name: true, avatar: true, level: true, xp: true, region: true },
+        select: ROW_SELECT,
       });
       if (!user) throw new NotFoundException('Користувача не знайдено');
 
