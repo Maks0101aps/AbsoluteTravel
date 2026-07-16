@@ -50,23 +50,23 @@ export const CATEGORY_ORDER: PlaceCategory[] = ['nature', 'mountains', 'history'
 
 // Offline fallback — mirrors the seeded curated places (data lives in the DB).
 export const PLACES: Place[] = [
-  { id: 'lviv', name: 'Львів', region: 'Львівська область', category: 'city', lat: 49.842, lng: 24.032, bestSeason: 'Квітень – жовтень', description: 'Історичний центр під охороною ЮНЕСКО: площа Ринок, каварні, Високий замок. Прогуляйся вуличками Старого міста і піднімись на дах Львівської ратуші.', photos: ['/assets/lviv_thumb.avif', '/assets/places/lviv_extra_1.jpg', '/assets/places/lviv_extra_2.jpg'] },
-  { id: 'bukovel', name: 'Буковель і Карпати', region: 'Івано-Франківська область', category: 'mountains', lat: 48.363, lng: 24.408, bestSeason: 'Грудень – березень, червень – вересень', description: 'Найбільший гірський курорт України. Взимку — лижі та сноуборд, влітку — гірські озера, підйомники й трекінг у Карпатах.', photos: ['/assets/carpathians_thumb.avif', '/assets/places/bukovel_1.jpg', '/assets/places/bukovel_2.jpg'] },
-  { id: 'hoverla', name: 'Говерла', region: 'Закарпатська / Івано-Франківська', category: 'mountains', lat: 48.160, lng: 24.500, bestSeason: 'Червень – вересень', description: 'Найвища вершина України (2061 м). Одноденне сходження стежкою від Заросляка — must-do для кожного мандрівника.', photos: ['/assets/scenic_gallery_1.avif', '/assets/places/hoverla_1.jpg', '/assets/places/hoverla_2.jpg'] },
-  { id: 'synevyr', name: 'Озеро Синевир', region: 'Закарпатська область', category: 'nature', lat: 48.618, lng: 23.688, bestSeason: 'Травень – жовтень', description: 'Найбільше гірське озеро Карпат серед смерекових лісів. Поряд — реабілітаційний центр бурих ведмедів.', photos: ['/assets/scenic_gallery_2.avif', '/assets/scenic_gallery_3.avif', '/assets/places/synevyr_1.jpg'] },
-  { id: 'kamianets', name: 'Кам’янець-Подільський', region: 'Хмельницька область', category: 'history', lat: 48.674, lng: 26.586, bestSeason: 'Травень – вересень', description: 'Стара фортеця над каньйоном річки Смотрич. Одне з наймальовничіших укріплень України — обов’язково пройдись Замковим мостом.', photos: ['/assets/places/kamianets_1.jpg', '/assets/places/kamianets_2.jpg', '/assets/places/kamianets_3.jpg'] },
-  { id: 'khotyn', name: 'Хотинська фортеця', region: 'Чернівецька область', category: 'history', lat: 48.520, lng: 26.494, bestSeason: 'Травень – вересень', description: 'Могутня середньовічна твердиня на березі Дністра. Часто стає локацією для історичних фільмів та фестивалів.', photos: ['/assets/places/khotyn_1.jpg', '/assets/places/khotyn_2.jpg', '/assets/places/khotyn_3.jpg'] },
-  { id: 'chernivtsi', name: 'Чернівці', region: 'Чернівецька область', category: 'city', lat: 48.292, lng: 25.935, bestSeason: 'Квітень – жовтень', description: 'Резиденція митрополитів Буковини (ЮНЕСКО) та затишний центр у австрійському стилі. «Маленький Відень» України.', photos: ['/assets/places/chernivtsi_1.jpg', '/assets/places/chernivtsi_2.jpg', '/assets/places/chernivtsi_3.jpg'] },
-  { id: 'bakota', name: 'Бакота', region: 'Хмельницька область', category: 'nature', lat: 48.567, lng: 26.900, bestSeason: 'Травень – вересень', description: 'Затоплене село й скельний монастир над Дністровським каньйоном. Ідеальні краєвиди для світанку та фото.', photos: ['/assets/places/bakota_1.jpg', '/assets/places/bakota_2.jpg', '/assets/places/bakota_3.jpg'] },
-  { id: 'uman', name: 'Софіївський парк, Умань', region: 'Черкаська область', category: 'nature', lat: 48.759, lng: 30.221, bestSeason: 'Травень – жовтень', description: 'Один з найкрасивіших дендропарків Європи: водоспади, гроти, підземна річка та романтичні алеї.', photos: ['/assets/places/uman_1.jpg', '/assets/places/uman_2.jpg', '/assets/places/uman_3.jpg'] },
-  { id: 'kyiv', name: 'Київ', region: 'м. Київ', category: 'city', lat: 50.450, lng: 30.523, bestSeason: 'Квітень – жовтень', description: 'Софія Київська, Києво-Печерська лавра, Андріївський узвіз і набережні Дніпра. Серце країни з тисячолітньою історією.', photos: ['/assets/places/kyiv_1.jpg', '/assets/places/kyiv_2.jpg', '/assets/places/kyiv_3.jpg'] },
-  { id: 'klevan', name: 'Тунель кохання, Клевань', region: 'Рівненська область', category: 'nature', lat: 50.746, lng: 25.977, bestSeason: 'Травень, вересень – жовтень', description: 'Залізнична колія, повністю оплетена зеленню в арку. Найкраще виглядає в свіжій зелені або золотій осені.', photos: ['/assets/places/klevan_1.jpg', '/assets/places/klevan_2.jpg', '/assets/places/klevan_3.jpg'] },
-  { id: 'chernihiv', name: 'Чернігів', region: 'Чернігівська область', category: 'history', lat: 51.494, lng: 31.294, bestSeason: 'Квітень – жовтень', description: 'Одне з найдавніших міст Русі: Спаський і Борисоглібський собори, вали Дитинця та легендарні печери.', photos: ['/assets/places/chernihiv_1.jpg', '/assets/places/chernihiv_2.jpg', '/assets/places/chernihiv_3.jpg'] },
-  { id: 'kharkiv', name: 'Харків', region: 'Харківська область', category: 'city', lat: 49.994, lng: 36.230, bestSeason: 'Травень – вересень', description: 'Найбільша площа Європи — площа Свободи, сад Шевченка й потужна університетська атмосфера.', photos: ['/assets/places/kharkiv_1.jpg', '/assets/places/kharkiv_2.jpg', '/assets/places/kharkiv_3.jpg'] },
-  { id: 'khortytsia', name: 'Хортиця, Запоріжжя', region: 'Запорізька область', category: 'history', lat: 47.842, lng: 35.078, bestSeason: 'Травень – вересень', description: 'Найбільший острів на Дніпрі й колиска козацтва. Музей історії запорізького козацтва та реконструйована Січ.', photos: ['/assets/places/khortytsia_1.jpg', '/assets/places/khortytsia_2.jpg', '/assets/places/khortytsia_3.jpg'] },
-  { id: 'askania', name: 'Асканія-Нова', region: 'Херсонська область', category: 'nature', lat: 46.454, lng: 33.881, bestSeason: 'Квітень – червень', description: 'Найстаріший степовий біосферний заповідник світу. Зоопарк просто неба, де в степу пасуться зебри й бізони.', photos: ['/assets/places/askania_1.jpg', '/assets/places/askania_2.jpg', '/assets/places/askania_3.jpg'] },
-  { id: 'odesa', name: 'Одеса', region: 'Одеська область', category: 'coast', lat: 46.482, lng: 30.723, bestSeason: 'Червень – вересень', description: 'Потьомкінські сходи, Дерибасівська, оперний театр і морське узбережжя. Літня столиця з особливим гумором.', photos: ['/assets/places/odesa_1.jpg', '/assets/places/odesa_2.jpg', '/assets/places/odesa_3.jpg'] },
-  { id: 'akkerman', name: 'Аккерманська фортеця', region: 'Одеська область', category: 'history', lat: 46.201, lng: 30.352, bestSeason: 'Травень – вересень', description: 'Одна з найбільших фортець України на березі Дністровського лиману в Білгороді-Дністровському. Понад 2000 років історії.', photos: ['/assets/places/akkerman_1.jpg', '/assets/places/akkerman_2.jpg'] },
+  { id: 'lviv', name: 'Львів', region: 'Львівська область', category: 'city', lat: 49.842, lng: 24.032, bestSeason: 'Квітень – жовтень', description: 'Історичний центр під охороною ЮНЕСКО: площа Ринок, каварні, Високий замок. Прогуляйся вуличками Старого міста і піднімись на дах Львівської ратуші.', photos: ['/assets/lviv_thumb.avif', '/assets/places/lviv_extra_1.avif', '/assets/places/lviv_extra_2.avif'] },
+  { id: 'bukovel', name: 'Буковель і Карпати', region: 'Івано-Франківська область', category: 'mountains', lat: 48.363, lng: 24.408, bestSeason: 'Грудень – березень, червень – вересень', description: 'Найбільший гірський курорт України. Взимку — лижі та сноуборд, влітку — гірські озера, підйомники й трекінг у Карпатах.', photos: ['/assets/carpathians_thumb.avif', '/assets/places/bukovel_1.avif', '/assets/places/bukovel_2.avif'] },
+  { id: 'hoverla', name: 'Говерла', region: 'Закарпатська / Івано-Франківська', category: 'mountains', lat: 48.160, lng: 24.500, bestSeason: 'Червень – вересень', description: 'Найвища вершина України (2061 м). Одноденне сходження стежкою від Заросляка — must-do для кожного мандрівника.', photos: ['/assets/scenic_gallery_1.avif', '/assets/places/hoverla_1.avif', '/assets/places/hoverla_2.avif'] },
+  { id: 'synevyr', name: 'Озеро Синевир', region: 'Закарпатська область', category: 'nature', lat: 48.618, lng: 23.688, bestSeason: 'Травень – жовтень', description: 'Найбільше гірське озеро Карпат серед смерекових лісів. Поряд — реабілітаційний центр бурих ведмедів.', photos: ['/assets/scenic_gallery_2.avif', '/assets/scenic_gallery_3.avif', '/assets/places/synevyr_1.avif'] },
+  { id: 'kamianets', name: 'Кам’янець-Подільський', region: 'Хмельницька область', category: 'history', lat: 48.674, lng: 26.586, bestSeason: 'Травень – вересень', description: 'Стара фортеця над каньйоном річки Смотрич. Одне з наймальовничіших укріплень України — обов’язково пройдись Замковим мостом.', photos: ['/assets/places/kamianets_1.avif', '/assets/places/kamianets_2.avif', '/assets/places/kamianets_3.avif'] },
+  { id: 'khotyn', name: 'Хотинська фортеця', region: 'Чернівецька область', category: 'history', lat: 48.520, lng: 26.494, bestSeason: 'Травень – вересень', description: 'Могутня середньовічна твердиня на березі Дністра. Часто стає локацією для історичних фільмів та фестивалів.', photos: ['/assets/places/khotyn_1.avif', '/assets/places/khotyn_2.avif', '/assets/places/khotyn_3.avif'] },
+  { id: 'chernivtsi', name: 'Чернівці', region: 'Чернівецька область', category: 'city', lat: 48.292, lng: 25.935, bestSeason: 'Квітень – жовтень', description: 'Резиденція митрополитів Буковини (ЮНЕСКО) та затишний центр у австрійському стилі. «Маленький Відень» України.', photos: ['/assets/places/chernivtsi_1.avif', '/assets/places/chernivtsi_2.avif', '/assets/places/chernivtsi_3.avif'] },
+  { id: 'bakota', name: 'Бакота', region: 'Хмельницька область', category: 'nature', lat: 48.567, lng: 26.900, bestSeason: 'Травень – вересень', description: 'Затоплене село й скельний монастир над Дністровським каньйоном. Ідеальні краєвиди для світанку та фото.', photos: ['/assets/places/bakota_1.avif', '/assets/places/bakota_2.avif', '/assets/places/bakota_3.avif'] },
+  { id: 'uman', name: 'Софіївський парк, Умань', region: 'Черкаська область', category: 'nature', lat: 48.759, lng: 30.221, bestSeason: 'Травень – жовтень', description: 'Один з найкрасивіших дендропарків Європи: водоспади, гроти, підземна річка та романтичні алеї.', photos: ['/assets/places/uman_1.avif', '/assets/places/uman_2.avif', '/assets/places/uman_3.avif'] },
+  { id: 'kyiv', name: 'Київ', region: 'м. Київ', category: 'city', lat: 50.450, lng: 30.523, bestSeason: 'Квітень – жовтень', description: 'Софія Київська, Києво-Печерська лавра, Андріївський узвіз і набережні Дніпра. Серце країни з тисячолітньою історією.', photos: ['/assets/places/kyiv_1.avif', '/assets/places/kyiv_2.avif', '/assets/places/kyiv_3.avif'] },
+  { id: 'klevan', name: 'Тунель кохання, Клевань', region: 'Рівненська область', category: 'nature', lat: 50.746, lng: 25.977, bestSeason: 'Травень, вересень – жовтень', description: 'Залізнична колія, повністю оплетена зеленню в арку. Найкраще виглядає в свіжій зелені або золотій осені.', photos: ['/assets/places/klevan_1.avif', '/assets/places/klevan_2.avif', '/assets/places/klevan_3.avif'] },
+  { id: 'chernihiv', name: 'Чернігів', region: 'Чернігівська область', category: 'history', lat: 51.494, lng: 31.294, bestSeason: 'Квітень – жовтень', description: 'Одне з найдавніших міст Русі: Спаський і Борисоглібський собори, вали Дитинця та легендарні печери.', photos: ['/assets/places/chernihiv_1.avif', '/assets/places/chernihiv_2.avif', '/assets/places/chernihiv_3.avif'] },
+  { id: 'kharkiv', name: 'Харків', region: 'Харківська область', category: 'city', lat: 49.994, lng: 36.230, bestSeason: 'Травень – вересень', description: 'Найбільша площа Європи — площа Свободи, сад Шевченка й потужна університетська атмосфера.', photos: ['/assets/places/kharkiv_1.avif', '/assets/places/kharkiv_2.avif', '/assets/places/kharkiv_3.avif'] },
+  { id: 'khortytsia', name: 'Хортиця, Запоріжжя', region: 'Запорізька область', category: 'history', lat: 47.842, lng: 35.078, bestSeason: 'Травень – вересень', description: 'Найбільший острів на Дніпрі й колиска козацтва. Музей історії запорізького козацтва та реконструйована Січ.', photos: ['/assets/places/khortytsia_1.avif', '/assets/places/khortytsia_2.avif', '/assets/places/khortytsia_3.avif'] },
+  { id: 'askania', name: 'Асканія-Нова', region: 'Херсонська область', category: 'nature', lat: 46.454, lng: 33.881, bestSeason: 'Квітень – червень', description: 'Найстаріший степовий біосферний заповідник світу. Зоопарк просто неба, де в степу пасуться зебри й бізони.', photos: ['/assets/places/askania_1.avif', '/assets/places/askania_2.avif', '/assets/places/askania_3.avif'] },
+  { id: 'odesa', name: 'Одеса', region: 'Одеська область', category: 'coast', lat: 46.482, lng: 30.723, bestSeason: 'Червень – вересень', description: 'Потьомкінські сходи, Дерибасівська, оперний театр і морське узбережжя. Літня столиця з особливим гумором.', photos: ['/assets/places/odesa_1.avif', '/assets/places/odesa_2.avif', '/assets/places/odesa_3.avif'] },
+  { id: 'akkerman', name: 'Аккерманська фортеця', region: 'Одеська область', category: 'history', lat: 46.201, lng: 30.352, bestSeason: 'Травень – вересень', description: 'Одна з найбільших фортець України на березі Дністровського лиману в Білгороді-Дністровському. Понад 2000 років історії.', photos: ['/assets/places/akkerman_1.avif', '/assets/places/akkerman_2.avif'] },
 
   // --- Приховані перлини України ------------------------------------------
   // Джерела: списки маловідомих місць (znaki.fm, travel.24tv.ua) звірені з
@@ -83,7 +83,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – жовтень',
     difficulty: 4,
     description: 'Найдовша гіпсова печера світу — понад 260 км ходів під полями біля села Королівка, за що вона потрапила до Книги рекордів Гіннеса. Кристалічні лабіринти вражають, але спуск можливий лише з провідником і спорядженням.',
-    photos: ['/assets/places/optymistychna_1.jpg', '/assets/places/optymistychna_2.jpg', '/assets/places/optymistychna_3.jpg']
+    photos: ['/assets/places/optymistychna_1.avif', '/assets/places/optymistychna_2.avif', '/assets/places/optymistychna_3.avif']
   },
   {
     id: 'oleshky_sands',
@@ -95,7 +95,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – червень, вересень',
     difficulty: 3,
     description: 'Найбільший піщаний масив Європи, який називають «українською Сахарою»: справжні дюни заввишки до 5 метрів посеред степу. Влітку пісок розжарюється до +70 °C, тому найкраще їхати навесні або на початку осені.',
-    photos: ['/assets/places/oleshky_sands_1.jpg', '/assets/places/oleshky_sands_2.jpg', '/assets/places/oleshky_sands_3.jpg']
+    photos: ['/assets/places/oleshky_sands_1.avif', '/assets/places/oleshky_sands_2.avif', '/assets/places/oleshky_sands_3.avif']
   },
   {
     id: 'dnistrovskyi_canyon',
@@ -107,7 +107,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 3,
     description: 'Один із найбільших каньйонів Європи — 250 км звивистих скельних берегів Дністра з відслоненнями віком у сотні мільйонів років. Ідеальний для сплаву на каяках, велотурів і ночівлі просто над водою.',
-    photos: ['/assets/places/dnistrovskyi_canyon_1.jpg', '/assets/places/dnistrovskyi_canyon_2.jpg', '/assets/places/dnistrovskyi_canyon_3.jpg']
+    photos: ['/assets/places/dnistrovskyi_canyon_1.avif', '/assets/places/dnistrovskyi_canyon_2.avif', '/assets/places/dnistrovskyi_canyon_3.avif']
   },
   {
     id: 'tustan',
@@ -119,7 +119,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – жовтень',
     difficulty: 2,
     description: 'Унікальна наскельна фортеця IX–XVI століть біля села Урич: від дерев’яного міста лишилися тільки пази й вирубки у велетенських скелях. Аналогів такої конструкції в Європі немає.',
-    photos: ['/assets/places/tustan_1.jpg', '/assets/places/tustan_2.jpg', '/assets/places/tustan_3.jpg']
+    photos: ['/assets/places/tustan_1.avif', '/assets/places/tustan_2.avif', '/assets/places/tustan_3.avif']
   },
   {
     id: 'pidhirtsi',
@@ -131,7 +131,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – жовтень',
     difficulty: 2,
     description: 'Ренесансний палац-фортеця XVII століття з італійськими терасами — його називають найкращим зразком палацової архітектури Східної Європи. Овіяний легендами про Білу пані, входить до «Золотої підкови Львівщини».',
-    photos: ['/assets/places/pidhirtsi_1.jpg', '/assets/places/pidhirtsi_2.jpg', '/assets/places/pidhirtsi_3.jpg']
+    photos: ['/assets/places/pidhirtsi_1.avif', '/assets/places/pidhirtsi_2.avif', '/assets/places/pidhirtsi_3.avif']
   },
   {
     id: 'olesko',
@@ -143,7 +143,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – жовтень',
     difficulty: 1,
     description: 'Замок XIV століття на пагорбі серед боліт, де народився король Ян III Собеський. Усередині — багата колекція давнього мистецтва, ззовні — французький парк зі скульптурами.',
-    photos: ['/assets/places/olesko_1.jpg', '/assets/places/olesko_2.jpg', '/assets/places/olesko_3.jpg']
+    photos: ['/assets/places/olesko_1.avif', '/assets/places/olesko_2.avif', '/assets/places/olesko_3.avif']
   },
   {
     id: 'zolochiv',
@@ -155,7 +155,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – жовтень',
     difficulty: 1,
     description: 'Зразкова бастіонна фортеця XVII століття з Великим і Китайським палацами. У дворі — загадкові «каміння тамплієрів» із досі нерозшифрованими написами.',
-    photos: ['/assets/places/zolochiv_1.jpg', '/assets/places/zolochiv_2.jpg', '/assets/places/zolochiv_3.jpg']
+    photos: ['/assets/places/zolochiv_1.avif', '/assets/places/zolochiv_2.avif', '/assets/places/zolochiv_3.avif']
   },
   {
     id: 'medzhybizh',
@@ -167,7 +167,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – жовтень',
     difficulty: 1,
     description: 'Біла твердиня XVI століття на стрілці Південного Бугу та Бужка, яку за форму називають кораблем. Одна з найкраще збережених фортець Поділля з музеєм і лицарськими фестивалями.',
-    photos: ['/assets/places/medzhybizh_1.jpg', '/assets/places/medzhybizh_2.jpg', '/assets/places/medzhybizh_3.jpg']
+    photos: ['/assets/places/medzhybizh_1.avif', '/assets/places/medzhybizh_2.avif', '/assets/places/medzhybizh_3.avif']
   },
   {
     id: 'svirzh',
@@ -179,7 +179,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 2,
     description: 'Романтичний замок XV–XVII століть над ставком, оточений парком і підйомним мостом. Настільки кінематографічний, що тут знімали «Д’Артаньяна і трьох мушкетерів».',
-    photos: ['/assets/places/svirzh_1.jpg', '/assets/places/svirzh_2.jpg', '/assets/places/svirzh_3.jpg']
+    photos: ['/assets/places/svirzh_1.avif', '/assets/places/svirzh_2.avif', '/assets/places/svirzh_3.avif']
   },
   {
     id: 'rozhirche',
@@ -191,7 +191,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – жовтень',
     difficulty: 3,
     description: 'Двоярусний скельний монастир, вирубаний у пісковиковій скелі ще у XIII–XIV століттях. Стоїть у лісі над селом — тиха й майже безлюдна альтернатива популярним замкам.',
-    photos: ['/assets/places/rozhirche_1.jpg', '/assets/places/rozhirche_2.jpg', '/assets/places/rozhirche_3.jpg']
+    photos: ['/assets/places/rozhirche_1.avif', '/assets/places/rozhirche_2.avif', '/assets/places/rozhirche_3.avif']
   },
   {
     id: 'kryvorivnia',
@@ -203,7 +203,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Червень – вересень',
     difficulty: 2,
     description: 'Гуцульське село на Черемоші, де Параджанов знімав «Тіні забутих предків», а Франко й Грушевський проводили літо. Досі жива автентика: ґражди, дерев’яна церква і музеї просто в хатах.',
-    photos: ['/assets/places/kryvorivnia_1.jpg', '/assets/places/kryvorivnia_2.jpg', '/assets/places/kryvorivnia_3.jpg']
+    photos: ['/assets/places/kryvorivnia_1.avif', '/assets/places/kryvorivnia_2.avif', '/assets/places/kryvorivnia_3.avif']
   },
   {
     id: 'lumshory',
@@ -215,7 +215,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – жовтень',
     difficulty: 2,
     description: 'Гірське село, відоме сірководневими джерелами й купанням у чавунних чанах, які нагрівають дровами просто неба з XVII століття. Поруч — водоспади на потоці Туриця.',
-    photos: ['/assets/places/lumshory_1.jpg', '/assets/places/lumshory_2.jpg', '/assets/places/lumshory_3.jpg']
+    photos: ['/assets/places/lumshory_1.avif', '/assets/places/lumshory_2.avif', '/assets/places/lumshory_3.avif']
   },
   {
     id: 'tovtry',
@@ -227,7 +227,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 2,
     description: 'Найбільший національний парк України — скелясте пасмо, що є рештками бар’єрного рифу давнього моря. Каньйони, печери, джерела й унікальна степова флора на вапнякових гребенях.',
-    photos: ['/assets/places/tovtry_1.jpg', '/assets/places/tovtry_2.jpg', '/assets/places/tovtry_3.jpg']
+    photos: ['/assets/places/tovtry_1.avif', '/assets/places/tovtry_2.avif', '/assets/places/tovtry_3.avif']
   },
   {
     id: 'mavryn',
@@ -239,7 +239,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – жовтень',
     difficulty: 3,
     description: 'Загадкова земляна споруда діаметром понад 100 метрів — розкопаний скіфський курган, схожий на кратер із «пелюстками». Вік оцінюють у 5 тисяч років, а призначення досі остаточно не з’ясоване.',
-    photos: ['/assets/places/mavryn_1.jpg', '/assets/places/mavryn_2.jpg', '/assets/places/mavryn_3.jpg']
+    photos: ['/assets/places/mavryn_1.avif', '/assets/places/mavryn_2.avif', '/assets/places/mavryn_3.avif']
   },
   {
     id: 'trostianets',
@@ -251,7 +251,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – жовтень',
     difficulty: 1,
     description: 'Містечко з садибою цукрозаводчика Кеніга, де Чайковський написав першу симфонію. Головна дивина — Круглий двір, кругла «фортеця» XVIII століття, що служила манежем і ареною.',
-    photos: ['/assets/places/trostianets_1.jpg', '/assets/places/trostianets_2.jpg', '/assets/places/trostianets_3.jpg']
+    photos: ['/assets/places/trostianets_1.avif', '/assets/places/trostianets_2.avif', '/assets/places/trostianets_3.avif']
   },
   {
     id: 'opishnia',
@@ -263,7 +263,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 1,
     description: 'Неофіційна гончарна столиця України з Національним музеєм-заповідником українського гончарства і найбільшою в країні колекцією кераміки. Тут можна сісти за круг і зробити глек власноруч.',
-    photos: ['/assets/places/opishnia_1.jpg', '/assets/places/opishnia_2.jpg', '/assets/places/opishnia_3.jpg']
+    photos: ['/assets/places/opishnia_1.avif', '/assets/places/opishnia_2.avif', '/assets/places/opishnia_3.avif']
   },
   {
     id: 'buzkyi_hard',
@@ -275,7 +275,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 3,
     description: 'Гранітно-степове Побужжя, де Південний Буг проривається крізь скелі віком 2 млрд років. Пороги для рафтингу, Білі скелі, Турецький стіл і пам’ять про козацький Гард.',
-    photos: ['/assets/places/buzkyi_hard_1.jpg', '/assets/places/buzkyi_hard_2.jpg', '/assets/places/buzkyi_hard_3.jpg']
+    photos: ['/assets/places/buzkyi_hard_1.avif', '/assets/places/buzkyi_hard_2.avif', '/assets/places/buzkyi_hard_3.avif']
   },
   {
     id: 'nesamovyte',
@@ -287,7 +287,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Липень – вересень',
     difficulty: 4,
     description: 'Льодовикове озеро на висоті 1750 м просто на хребті Чорногора, оточене легендами про бурю, яку викликає кинутий у воду камінь. Дістатися можна лише пішки — це частина маршруту на Говерлу й Піп Іван.',
-    photos: ['/assets/places/nesamovyte_1.jpg', '/assets/places/nesamovyte_2.jpg', '/assets/places/nesamovyte_3.jpg']
+    photos: ['/assets/places/nesamovyte_1.avif', '/assets/places/nesamovyte_2.avif', '/assets/places/nesamovyte_3.avif']
   },
   {
     id: 'brebeneskul',
@@ -299,7 +299,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Липень – вересень',
     difficulty: 4,
     description: 'Найвисокогірніше озеро України — 1801 м над рівнем моря, у суворому карі під однойменною вершиною. Вода крижана цілий рік, а дорога сюди — це повноцінний високогірний трекінг.',
-    photos: ['/assets/places/brebeneskul_1.jpg', '/assets/places/brebeneskul_2.jpg', '/assets/places/brebeneskul_3.jpg']
+    photos: ['/assets/places/brebeneskul_1.avif', '/assets/places/brebeneskul_2.avif', '/assets/places/brebeneskul_3.avif']
   },
   {
     id: 'shypit',
@@ -311,7 +311,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – червень, вересень – жовтень',
     difficulty: 2,
     description: 'Каскадний водоспад заввишки 14 метрів біля підніжжя Боржави, найповноводніший навесні. Легко доступний від села Пилипець — гарний старт перед підйомом на полонину.',
-    photos: ['/assets/places/shypit_1.jpg', '/assets/places/shypit_2.jpg', '/assets/places/shypit_3.jpg']
+    photos: ['/assets/places/shypit_1.avif', '/assets/places/shypit_2.avif', '/assets/places/shypit_3.avif']
   },
   {
     id: 'maniava',
@@ -323,7 +323,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 2,
     description: 'Найвищий водоспад Ґорґан — близько 20 метрів у вузькій лісовій ущелині, яку місцеві звуть Слов’янським. Стежка сюди веде повз Манявський скит.',
-    photos: ['/assets/places/maniava_1.jpg', '/assets/places/maniava_2.jpg', '/assets/places/maniava_3.jpg']
+    photos: ['/assets/places/maniava_1.avif', '/assets/places/maniava_2.avif', '/assets/places/maniava_3.avif']
   },
   {
     id: 'dzhuryn',
@@ -335,7 +335,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 2,
     description: 'Найвищий рівнинний водоспад України — 16 метрів у каньйоні біля села Нирків. Рукотворний: русло Джурину прокопали ще у XVI столітті, а зараз тут купаються й ставлять намети.',
-    photos: ['/assets/places/dzhuryn_1.jpg', '/assets/places/dzhuryn_2.jpg', '/assets/places/dzhuryn_3.jpg']
+    photos: ['/assets/places/dzhuryn_1.avif', '/assets/places/dzhuryn_2.avif', '/assets/places/dzhuryn_3.avif']
   },
   {
     id: 'dovbush',
@@ -347,7 +347,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – жовтень',
     difficulty: 2,
     description: 'Величезні пісковикові брили в лісі біля Бубнища з печерами, сходами й переходами, вирубаними ще у давньоруські часи. За легендою, тут ховав скарби опришок Олекса Довбуш.',
-    photos: ['/assets/places/dovbush_1.jpg', '/assets/places/dovbush_2.jpg', '/assets/places/dovbush_3.jpg']
+    photos: ['/assets/places/dovbush_1.avif', '/assets/places/dovbush_2.avif', '/assets/places/dovbush_3.avif']
   },
   {
     id: 'narcissi',
@@ -359,7 +359,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Кінець квітня – середина травня',
     difficulty: 1,
     description: 'Єдиний у світі рівнинний масив нарциса вузьколистого — 170 гектарів білого цвіту біля Хуста. Реліктове диво цвіте лише два тижні на рік, тому час треба ловити.',
-    photos: ['/assets/places/narcissi_1.jpg', '/assets/places/narcissi_2.jpg', '/assets/places/narcissi_3.jpg']
+    photos: ['/assets/places/narcissi_1.avif', '/assets/places/narcissi_2.avif', '/assets/places/narcissi_3.avif']
   },
   {
     id: 'zacharovanyi_krai',
@@ -371,7 +371,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – жовтень',
     difficulty: 3,
     description: 'Національний парк на Вигорлат-Гутинському хребті з вулканічними скелями химерних форм — Смерековий Камінь, Барвисті скелі, урочище Чорне Багно. Мало туристів і багато справжнього лісу.',
-    photos: ['/assets/places/zacharovanyi_krai_1.jpg', '/assets/places/zacharovanyi_krai_2.jpg', '/assets/places/zacharovanyi_krai_3.jpg']
+    photos: ['/assets/places/zacharovanyi_krai_1.avif', '/assets/places/zacharovanyi_krai_2.avif', '/assets/places/zacharovanyi_krai_3.avif']
   },
   {
     id: 'smotrych',
@@ -383,7 +383,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – жовтень',
     difficulty: 2,
     description: 'Каньйон-петля глибиною до 50 метрів, що кільцем обіймає Старе місто Кам’янця-Подільського. Найкращі краєвиди — знизу, зі стежки вздовж річки, а не з мосту.',
-    photos: ['/assets/places/smotrych_1.jpg', '/assets/places/smotrych_2.jpg', '/assets/places/smotrych_3.jpg']
+    photos: ['/assets/places/smotrych_1.avif', '/assets/places/smotrych_2.avif', '/assets/places/smotrych_3.avif']
   },
   {
     id: 'stilske',
@@ -395,7 +395,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 3,
     description: 'Одне з найбільших слов’янських городищ Європи — площею близько 250 гектарів, столиця білих хорватів IX століття. У скелях збереглися вирубані печери, храм і житла.',
-    photos: ['/assets/places/stilske_1.jpg', '/assets/places/stilske_2.jpg', '/assets/places/stilske_3.jpg']
+    photos: ['/assets/places/stilske_1.avif', '/assets/places/stilske_2.avif', '/assets/places/stilske_3.avif']
   },
   {
     id: 'chyhyryn',
@@ -407,7 +407,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 2,
     description: 'Колишня гетьманська столиця з відбудованою резиденцією Богдана Хмельницького на Замковій горі. З бастіонів відкривається краєвид на Тясмин і всю козацьку округу.',
-    photos: ['/assets/places/chyhyryn_1.jpg', '/assets/places/chyhyryn_2.jpg', '/assets/places/chyhyryn_3.jpg']
+    photos: ['/assets/places/chyhyryn_1.avif', '/assets/places/chyhyryn_2.avif', '/assets/places/chyhyryn_3.avif']
   },
   {
     id: 'palanok',
@@ -419,7 +419,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Будь-коли',
     difficulty: 2,
     description: 'Могутній замок на 68-метровій вулканічній горі над Мукачевом, який ніколи не був узятий штурмом. Три яруси дворів, 85-метрова криниця і панорама на все Закарпаття.',
-    photos: ['/assets/places/palanok_1.jpg', '/assets/places/palanok_2.jpg', '/assets/places/palanok_3.jpg']
+    photos: ['/assets/places/palanok_1.avif', '/assets/places/palanok_2.avif', '/assets/places/palanok_3.avif']
   },
   {
     id: 'nevytske',
@@ -431,7 +431,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – жовтень',
     difficulty: 2,
     description: 'Романтичні руїни замку XIII століття на вулканічній скелі над Ужем, оточені старим дендропарком. За легендою, будувала його «Погана Діва» на курячих яйцях замість розчину.',
-    photos: ['/assets/places/nevytske_1.jpg', '/assets/places/nevytske_2.jpg', '/assets/places/nevytske_3.jpg']
+    photos: ['/assets/places/nevytske_1.avif', '/assets/places/nevytske_2.avif', '/assets/places/nevytske_3.avif']
   },
   {
     id: 'vylkove',
@@ -443,7 +443,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 2,
     description: 'Місто на воді в дельті Дунаю, де замість вулиць — канали-єрики, а замість авто — човни. Звідси рукою подати до нульового кілометра Дунаю та пеліканів біосферного заповідника.',
-    photos: ['/assets/places/vylkove_1.jpg', '/assets/places/vylkove_2.jpg', '/assets/places/vylkove_3.jpg']
+    photos: ['/assets/places/vylkove_1.avif', '/assets/places/vylkove_2.avif', '/assets/places/vylkove_3.avif']
   },
   {
     id: 'tuzly',
@@ -455,7 +455,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 3,
     description: 'Дикий національний парк — ланцюг солоних лиманів, відрізаних від моря вузьким пересипом. Жодної інфраструктури, зате тисячі птахів і абсолютно порожні пляжі.',
-    photos: ['/assets/places/tuzly_1.jpg', '/assets/places/tuzly_2.jpg', '/assets/places/tuzly_3.jpg']
+    photos: ['/assets/places/tuzly_1.avif', '/assets/places/tuzly_2.avif', '/assets/places/tuzly_3.avif']
   },
   {
     id: 'tokivskyi',
@@ -467,7 +467,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – червень',
     difficulty: 2,
     description: 'Каскади річки Кам’янки по рожевому граніту — тому ж, з якого зроблено саркофаг Наполеона. Найефектніший навесні у велику воду; поруч — покинуті кар’єри.',
-    photos: ['/assets/places/tokivskyi_1.jpg', '/assets/places/tokivskyi_2.jpg', '/assets/places/tokivskyi_3.jpg']
+    photos: ['/assets/places/tokivskyi_1.avif', '/assets/places/tokivskyi_2.avif', '/assets/places/tokivskyi_3.avif']
   },
   {
     id: 'radomysl',
@@ -479,7 +479,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Будь-коли',
     difficulty: 1,
     description: 'Історико-культурний комплекс у відреставрованому водяному млині XIX століття на місці папірні 1612 року. Усередині — унікальний музей української домашньої ікони.',
-    photos: ['/assets/places/radomysl_1.jpg', '/assets/places/radomysl_2.jpg', '/assets/places/radomysl_3.jpg']
+    photos: ['/assets/places/radomysl_1.avif', '/assets/places/radomysl_2.avif', '/assets/places/radomysl_3.avif']
   },
   {
     id: 'korostyshiv',
@@ -491,7 +491,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 2,
     description: 'Затоплений гранітний кар’єр із прозорою водою, скельними стінами й соснами по берегах — місцеві звуть його житомирським фіордом. Популярне місце для дайвінгу та кемпінгу.',
-    photos: ['/assets/places/korostyshiv_1.jpg', '/assets/places/korostyshiv_2.jpg']
+    photos: ['/assets/places/korostyshiv_1.avif', '/assets/places/korostyshiv_2.avif']
   },
   {
     id: 'kachanivka',
@@ -503,7 +503,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – жовтень',
     difficulty: 1,
     description: 'Найбільший в Україні палацово-парковий ансамбль — 560 гектарів парку навколо палацу Тарновських, де гостювали Шевченко, Гоголь і Рєпін. Алеї, ставки, амфітеатр і Горбатий міст.',
-    photos: ['/assets/places/kachanivka_1.jpg', '/assets/places/kachanivka_2.jpg', '/assets/places/kachanivka_3.jpg']
+    photos: ['/assets/places/kachanivka_1.avif', '/assets/places/kachanivka_2.avif', '/assets/places/kachanivka_3.avif']
   },
   {
     id: 'baturyn',
@@ -515,7 +515,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – жовтень',
     difficulty: 1,
     description: 'Відбудована цитадель гетьманської столиці, зруйнованої військами Меншикова у 1708 році. Поруч — палац Розумовського, один із найкращих зразків класицизму в Україні.',
-    photos: ['/assets/places/baturyn_1.jpg', '/assets/places/baturyn_2.jpg', '/assets/places/baturyn_3.jpg']
+    photos: ['/assets/places/baturyn_1.avif', '/assets/places/baturyn_2.avif', '/assets/places/baturyn_3.avif']
   },
   {
     id: 'sanzhiyka',
@@ -527,7 +527,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Червень – вересень',
     difficulty: 1,
     description: 'Село на обриві над морем, під яким ховається широкий піщаний пляж і старий маяк. Тиха альтернатива переповненим одеським курортам за годину їзди від міста.',
-    photos: ['/assets/places/sanzhiyka_1.jpg', '/assets/places/sanzhiyka_2.jpg', '/assets/places/sanzhiyka_3.jpg']
+    photos: ['/assets/places/sanzhiyka_1.avif', '/assets/places/sanzhiyka_2.avif', '/assets/places/sanzhiyka_3.avif']
   },
   {
     id: 'atlantyda',
@@ -539,7 +539,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – жовтень',
     difficulty: 4,
     description: 'Триярусна гіпсова печера біля Завалля з рідкісними кристалами й кальцитовими натічними формами. Проходи місцями дуже вузькі — лише з провідником і без страху перед тіснотою.',
-    photos: ['/assets/places/atlantyda_1.jpg', '/assets/places/atlantyda_2.jpg', '/assets/places/atlantyda_3.jpg']
+    photos: ['/assets/places/atlantyda_1.avif', '/assets/places/atlantyda_2.avif', '/assets/places/atlantyda_3.avif']
   },
   {
     id: 'dzembronia',
@@ -551,7 +551,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Червень – вересень',
     difficulty: 3,
     description: 'Найвисокогірніше село Івано-Франківщини і брама на Чорногору з боку Дзембронських скель-останців. Звідси починають маршрут на Смотрич, Піп Іван і Вухатий Камінь.',
-    photos: ['/assets/places/dzembronia_1.jpg', '/assets/places/dzembronia_2.jpg', '/assets/places/dzembronia_3.jpg']
+    photos: ['/assets/places/dzembronia_1.avif', '/assets/places/dzembronia_2.avif', '/assets/places/dzembronia_3.avif']
   },
   {
     id: 'hutsulshchyna',
@@ -563,7 +563,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – жовтень',
     difficulty: 2,
     description: 'Парк навколо Косова, що поєднує буковий ліс, скельні гребені Сокільського та живі гуцульські ремесла. Чудові короткі маршрути з панорамами на Карпати.',
-    photos: ['/assets/places/hutsulshchyna_1.jpg', '/assets/places/hutsulshchyna_2.jpg', '/assets/places/hutsulshchyna_3.jpg']
+    photos: ['/assets/places/hutsulshchyna_1.avif', '/assets/places/hutsulshchyna_2.avif', '/assets/places/hutsulshchyna_3.avif']
   },
   {
     id: 'probiy',
@@ -575,7 +575,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – жовтень',
     difficulty: 1,
     description: 'Найповноводніший водоспад Карпат просто в центрі Яремчого: Прут пробиває скельний поріг заввишки 8 метрів. Поруч — знаменитий сувенірний ринок і скеля Ведмідь.',
-    photos: ['/assets/places/probiy_1.jpg', '/assets/places/probiy_2.jpg', '/assets/places/probiy_3.jpg']
+    photos: ['/assets/places/probiy_1.avif', '/assets/places/probiy_2.avif', '/assets/places/probiy_3.avif']
   },
   {
     id: 'kuyalnyk',
@@ -587,7 +587,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Червень – вересень',
     difficulty: 2,
     description: 'Солоне озеро, вода якого влітку рожевіє через мікроводорість дуналієлу, з цілющими чорними грязями й курортом із 1833 року. Сюрреалістичні краєвиди із соляною кіркою по берегах.',
-    photos: ['/assets/places/kuyalnyk_1.jpg', '/assets/places/kuyalnyk_2.jpg', '/assets/places/kuyalnyk_3.jpg']
+    photos: ['/assets/places/kuyalnyk_1.avif', '/assets/places/kuyalnyk_2.avif', '/assets/places/kuyalnyk_3.avif']
   },
   {
     id: 'kryshtaleva',
@@ -599,7 +599,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – жовтень',
     difficulty: 3,
     description: 'Обладнана гіпсова печера біля Кривчого — єдина в регіоні з екскурсійним маршрутом і освітленням. Стіни вкриті кристалами гіпсу, а зали мають назви на кшталт «Голова Бика».',
-    photos: ['/assets/places/kryshtaleva_1.jpg', '/assets/places/kryshtaleva_2.jpg', '/assets/places/kryshtaleva_3.jpg']
+    photos: ['/assets/places/kryshtaleva_1.avif', '/assets/places/kryshtaleva_2.avif', '/assets/places/kryshtaleva_3.avif']
   },
   {
     id: 'zbarazh',
@@ -611,7 +611,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Квітень – жовтень',
     difficulty: 1,
     description: 'Бастіонний замок XVII століття, оспіваний Сенкевичем у «Вогнем і мечем» за легендарну оборону 1649 року. Відреставрований палац, вали й музей у центрі містечка.',
-    photos: ['/assets/places/zbarazh_1.jpg', '/assets/places/zbarazh_2.jpg', '/assets/places/zbarazh_3.jpg']
+    photos: ['/assets/places/zbarazh_1.avif', '/assets/places/zbarazh_2.avif', '/assets/places/zbarazh_3.avif']
   },
   {
     id: 'berezhany',
@@ -623,7 +623,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 2,
     description: 'Ренесансний замок Сенявських на острові між рукавами Золотої Липи — колись його називали галицьким Вавелем. Зараз це атмосферні руїни з залишками унікальної замкової каплиці.',
-    photos: ['/assets/places/berezhany_1.jpg', '/assets/places/berezhany_2.jpg', '/assets/places/berezhany_3.jpg']
+    photos: ['/assets/places/berezhany_1.avif', '/assets/places/berezhany_2.avif', '/assets/places/berezhany_3.avif']
   },
   {
     id: 'sataniv',
@@ -635,7 +635,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 2,
     description: 'Містечко з замком XVI століття, найстарішою синагогою-фортецею Поділля і мінеральними джерелами. Довкола — товтри й лісові стежки національного парку.',
-    photos: ['/assets/places/sataniv_1.jpg', '/assets/places/sataniv_2.jpg', '/assets/places/sataniv_3.jpg']
+    photos: ['/assets/places/sataniv_1.avif', '/assets/places/sataniv_2.avif', '/assets/places/sataniv_3.avif']
   },
   {
     id: 'kudryntsi',
@@ -647,7 +647,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 3,
     description: 'Руїни замку XVII століття на вершині Стрілецької гори над Збручем — найдикіший і найменш відвідуваний із подільських замків. Підйом крутий, але панорама на долину того варта.',
-    photos: ['/assets/places/kudryntsi_1.jpg', '/assets/places/kudryntsi_2.jpg', '/assets/places/kudryntsi_3.jpg']
+    photos: ['/assets/places/kudryntsi_1.avif', '/assets/places/kudryntsi_2.avif', '/assets/places/kudryntsi_3.avif']
   },
   {
     id: 'khrinnyky',
@@ -659,7 +659,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Червень – вересень',
     difficulty: 2,
     description: 'Велике водосховище на Стирі, яке називають рівненським морем: піщані коси, острови й затоки серед лісу. Головне місце регіону для кемпінгу, віндсерфінгу та риболовлі.',
-    photos: ['/assets/places/khrinnyky_1.jpg', '/assets/places/khrinnyky_2.jpg', '/assets/places/khrinnyky_3.jpg']
+    photos: ['/assets/places/khrinnyky_1.avif', '/assets/places/khrinnyky_2.avif', '/assets/places/khrinnyky_3.avif']
   },
   {
     id: 'shatsk',
@@ -671,7 +671,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Червень – серпень',
     difficulty: 1,
     description: 'Найглибше природне озеро України (58 м) з прозорою карстовою водою і піщаним дном — серце Шацького національного парку. Купання, велосипед і соснові ліси навколо.',
-    photos: ['/assets/places/shatsk_1.jpg', '/assets/places/shatsk_2.jpg', '/assets/places/shatsk_3.jpg']
+    photos: ['/assets/places/shatsk_1.avif', '/assets/places/shatsk_2.avif', '/assets/places/shatsk_3.avif']
   },
   {
     id: 'kaniv',
@@ -683,7 +683,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 2,
     description: 'Канівські гори — «українська Швейцарія» з ярами, дібровами й дніпровськими кручами поруч із могилою Шевченка. Один із найстаріших заповідників країни з науковою стежкою.',
-    photos: ['/assets/places/kaniv_1.jpg', '/assets/places/kaniv_2.jpg', '/assets/places/kaniv_3.jpg']
+    photos: ['/assets/places/kaniv_1.avif', '/assets/places/kaniv_2.avif', '/assets/places/kaniv_3.avif']
   },
   {
     id: 'vukhatyi',
@@ -695,7 +695,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Червень – вересень',
     difficulty: 3,
     description: 'Скельні останці на гребені Чорногори, схожі на вуха, з видом на Піп Іван і всю Дземброню. Одне з найкращих місць Карпат для зустрічі світанку над морем хмар.',
-    photos: ['/assets/places/vukhatyi_1.jpg', '/assets/places/vukhatyi_2.jpg', '/assets/places/vukhatyi_3.jpg']
+    photos: ['/assets/places/vukhatyi_1.avif', '/assets/places/vukhatyi_2.avif', '/assets/places/vukhatyi_3.avif']
   },
   {
     id: 'shyshkovi',
@@ -707,7 +707,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – жовтень',
     difficulty: 2,
     description: 'Конусоподібні вапнякові горби — рештки давнього коралового рифу — на кручах Дністра біля села Нагоряни. Ранкові тумани над водою роблять це місце майже нереальним.',
-    photos: ['/assets/places/shyshkovi_1.jpg', '/assets/places/shyshkovi_2.jpg', '/assets/places/shyshkovi_3.jpg']
+    photos: ['/assets/places/shyshkovi_1.avif', '/assets/places/shyshkovi_2.avif', '/assets/places/shyshkovi_3.avif']
   },
   {
     id: 'chervonohorod',
@@ -719,7 +719,7 @@ export const PLACES: Place[] = [
     bestSeason: 'Травень – вересень',
     difficulty: 3,
     description: 'Дві самотні вежі палацу посеред зниклого міста в каньйоні Джурину — місто вимерло, а замок лишився. За 700 метрів шумить найвищий рівнинний водоспад України.',
-    photos: ['/assets/places/chervonohorod_1.jpg', '/assets/places/chervonohorod_2.jpg', '/assets/places/chervonohorod_3.jpg']
+    photos: ['/assets/places/chervonohorod_1.avif', '/assets/places/chervonohorod_2.avif', '/assets/places/chervonohorod_3.avif']
   },
   {
     id: 'drahobrat',
@@ -731,6 +731,6 @@ export const PLACES: Place[] = [
     bestSeason: 'Грудень – березень, липень – вересень',
     difficulty: 3,
     description: 'Найвисокогірніший гірськолижний курорт України (1400 м) під вершинами Стога і Близниці, куди можна дістатися лише позашляховиком. Сніг лежить до травня, а влітку тут льодовикові озера й чорниця.',
-    photos: ['/assets/places/drahobrat_1.jpg', '/assets/places/drahobrat_2.jpg', '/assets/places/drahobrat_3.jpg']
+    photos: ['/assets/places/drahobrat_1.avif', '/assets/places/drahobrat_2.avif', '/assets/places/drahobrat_3.avif']
   }
 ];
