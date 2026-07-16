@@ -31,7 +31,6 @@ model User {
   achievements       UserAchievement[]
   transactions       CoinTransaction[]
   checkmarks         Checkmark[]
-  visitedCells       VisitedCell[]
 
   sentFriendRequests     Friend[]  @relation("FriendSender")
   receivedFriendRequests Friend[]  @relation("FriendReceiver")
@@ -181,24 +180,4 @@ model Checkmark {
 
   // A place can be counted for a user only once.
   @@unique([userId, placeId])
-}
-
-// Territory exploration. Each row is one H3 cell the user has physically
-// entered (see backend/src/exploration). We deliberately store only the H3
-// cell id — never the raw GPS trace — so a lifetime of walking is a handful of
-// short strings, not thousands of coordinates. The cell is captured at a fixed
-// resolution (EXPLORE_RESOLUTION); its res-3 parent is used to detect entering
-// a brand-new "region" for the milestone bonus, so no separate region table is
-// needed.
-model VisitedCell {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  cellId    String // H3 index at EXPLORE_RESOLUTION
-  visitedAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
-
-  // A cell counts once per user — unlocking is idempotent.
-  @@unique([userId, cellId])
-  @@index([userId])
 }

@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { purchaseItem, type AuthUser, type ProfileCustomization } from './api';
+import React, { useRef, useState } from 'react';
+import { type AuthUser, type ProfileCustomization } from './api';
 import ProfileAvatar from './ProfileAvatar';
-import ProfileShop, { type EquipKey } from './ProfileShop';
 import XpBar from './XpBar';
 import Popover, { type AnchorRect } from './Popover';
 import { Icon, type IconName } from './icons';
@@ -16,6 +15,7 @@ import {
   type Lock,
 } from './data/profileOptions';
 import { MAX_LEVEL } from './data/leveling';
+import { ProfileCardEffect, ProfileCosmosFlourish, ProfileSakuraFlourish } from './itemVisuals';
 
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
@@ -26,10 +26,6 @@ interface ProfileSetupProps {
   user: AuthUser;
   onComplete: (profile: ProfileCustomization) => void;
   onSkip: () => void;
-  onUserUpdate?: (patch: Partial<AuthUser>) => void;
-  /** Open the shop popup as soon as this screen mounts (e.g. navbar "Магазин" entry). */
-  autoOpenShop?: boolean;
-  onAutoShopConsumed?: () => void;
 }
 
 // ---- shared bits ----------------------------------------------------------
@@ -132,7 +128,7 @@ function Editable({
 
 // ---- main -----------------------------------------------------------------
 
-function ProfileSetup({ user, onComplete, onSkip, onUserUpdate, autoOpenShop, onAutoShopConsumed }: ProfileSetupProps) {
+function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
   const init = user.profile;
   const [avatarId, setAvatarId] = useState(init?.avatarId ?? AVATARS[0].id);
   const [customAvatar, setCustomAvatar] = useState<string | undefined>(init?.customAvatar);
@@ -144,77 +140,19 @@ function ProfileSetup({ user, onComplete, onSkip, onUserUpdate, autoOpenShop, on
   const [badges, setBadges] = useState<string[]>(init?.badges ?? ['newcomer']);
   const [effectId, setEffectId] = useState(init?.effectId ?? 'none');
 
-  // --- economy / shop state ---
-  const [coins, setCoins] = useState(user.coins ?? 0);
-  const [owned, setOwned] = useState<string[]>(user.unlockedItems ?? []);
-  const [shopOpen, setShopOpen] = useState(false);
-  const [buying, setBuying] = useState<string | null>(null);
-  const [shopError, setShopError] = useState<string | null>(null);
+  // Cosmetics are bought in the shop (opened from the HomePage navbar); here we
+  // only need the current balance/ownership to gate items in the editor.
+  const coins = user.coins ?? 0;
+  const owned = user.unlockedItems ?? [];
 
   const [active, setActive] = useState<EditorKey | null>(null);
   const [anchor, setAnchor] = useState<AnchorRect | null>(null);
-
-  // Jumped here from the navbar "Магазин" entry — open the shop immediately.
-  useEffect(() => {
-    if (!autoOpenShop) return;
-    setShopError(null);
-    setShopOpen(true);
-    onAutoShopConsumed?.();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoOpenShop]);
 
   // An item is usable if it's free, its level is reached, or it has been purchased.
   const canUse = (lock: Lock, id: string): boolean => {
     if (lock.type === 'free') return true;
     if (lock.type === 'level') return user.level >= lock.level;
     return owned.includes(id);
-  };
-
-  // Equip a just-bought (or already-owned) cosmetic from the shop.
-  const equip = (key: EquipKey, id: string) => {
-    switch (key) {
-      case 'avatar': setAvatarId(id); setCustomAvatar(undefined); break;
-      case 'background': setBackgroundId(id); break;
-      case 'frame': setFrameId(id); break;
-      case 'color': setColor(id); break;
-      case 'effect': setEffectId(id); break;
-      case 'badges':
-        setBadges((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-        break;
-    }
-  };
-
-  // Which equip slot an item id belongs to (used to auto-equip after purchase).
-  const equipKeyOf = (itemId: string): EquipKey | null => {
-    if (AVATARS.some((a) => a.id === itemId)) return 'avatar';
-    if (BACKGROUNDS.some((b) => b.id === itemId)) return 'background';
-    if (FRAMES.some((f) => f.id === itemId)) return 'frame';
-    if (BADGES.some((b) => b.id === itemId)) return 'badges';
-    if (EFFECTS.some((e) => e.id === itemId)) return 'effect';
-    const c = COLORS.find((c) => c.id === itemId);
-    if (c) return 'color';
-    return null;
-  };
-
-  const handleBuy = async (itemId: string) => {
-    setBuying(itemId);
-    setShopError(null);
-    try {
-      const res = await purchaseItem(user.id, itemId);
-      setCoins(res.coins);
-      setOwned(res.unlockedItems);
-      onUserUpdate?.({ coins: res.coins, unlockedItems: res.unlockedItems });
-      // auto-equip the freshly purchased item so buying feels immediate
-      const key = equipKeyOf(itemId);
-      if (key) {
-        const colorOpt = COLORS.find((c) => c.id === itemId);
-        equip(key, colorOpt ? colorOpt.value : itemId);
-      }
-    } catch (e: any) {
-      setShopError(e?.message ?? 'Не вдалося придбати товар');
-    } finally {
-      setBuying(null);
-    }
   };
 
   const fileRef = useRef<HTMLInputElement>(null);
@@ -297,10 +235,13 @@ function ProfileSetup({ user, onComplete, onSkip, onUserUpdate, autoOpenShop, on
               transition: 'outline-color 0.18s ease',
             }}
           >
-            <div style={{ position: 'absolute', inset: 0, background: background.css, transition: 'background 0.25s ease' }} />
-            {effectId === 'glow' && (
-              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', boxShadow: `inset 0 0 80px -10px ${color}bf`, animation: 'softGlowOpacity 3.5s ease-in-out infinite' }} />
-            )}
+            <div
+              className={backgroundId === 'sakura' ? 'bg-wind-sway' : undefined}
+              style={{ position: 'absolute', inset: 0, background: background.css, transition: 'background 0.25s ease' }}
+            />
+            <ProfileCosmosFlourish backgroundId={backgroundId} />
+            <ProfileSakuraFlourish backgroundId={backgroundId} />
+            <ProfileCardEffect effectId={effectId} color={color} />
 
             <div style={{ position: 'relative', padding: '24px 30px 30px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <XpBar xp={user.xp} accent={color} />
@@ -458,21 +399,6 @@ function ProfileSetup({ user, onComplete, onSkip, onUserUpdate, autoOpenShop, on
 
       {/* hidden upload input */}
       <input ref={fileRef} type="file" accept="image/*" onChange={handleUpload} style={{ display: 'none' }} />
-
-      {/* ============ SHOP ============ */}
-      {shopOpen && (
-        <ProfileShop
-          coins={coins}
-          level={user.level}
-          owned={owned}
-          buying={buying}
-          error={shopError}
-          selections={{ avatarId, customAvatar, backgroundId, frameId, color, badges, effectId }}
-          onBuy={handleBuy}
-          onEquip={equip}
-          onClose={() => setShopOpen(false)}
-        />
-      )}
 
       {/* ============ POPOVERS ============ */}
       {active && anchor && (

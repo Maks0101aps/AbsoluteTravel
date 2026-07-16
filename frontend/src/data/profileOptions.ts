@@ -5,11 +5,13 @@ import type { IconName } from '../icons';
 export type Lock =
   | { type: 'free' }
   | { type: 'level'; level: number }
-  | { type: 'coins'; price: number };
+  | { type: 'coins'; price: number }
+  | { type: 'case' }; // obtainable only from loot cases
 
 export function lockLabel(lock: Lock): string | null {
   if (lock.type === 'free') return null;
   if (lock.type === 'level') return `Рівень ${lock.level}`;
+  if (lock.type === 'case') return 'З кейсу';
   return `${lock.price} монет`;
 }
 
@@ -19,6 +21,7 @@ export interface AvatarOption {
   icon: IconName;
   gradient: string;
   lock: Lock;
+  imageUrl?: string;
 }
 
 export const AVATARS: AvatarOption[] = [
@@ -32,17 +35,19 @@ export const AVATARS: AvatarOption[] = [
   { id: 'a8', icon: 'binoculars', gradient: 'linear-gradient(135deg,#E1734B,#8C381E)', lock: { type: 'free' } },
   { id: 'a9', icon: 'feather', gradient: 'linear-gradient(135deg,#6E7B8A,#2E3A46)', lock: { type: 'free' } },
   { id: 'a10', icon: 'flame', gradient: 'linear-gradient(135deg,#3FA6A0,#1E6B67)', lock: { type: 'free' } },
-  { id: 'a11', icon: 'shield', gradient: 'linear-gradient(135deg,#9AA4B0,#4A5560)', lock: { type: 'level', level: 5 } },
-  { id: 'a12', icon: 'moon', gradient: 'linear-gradient(135deg,#B07A4B,#5E3C1E)', lock: { type: 'level', level: 10 } },
+  { id: 'a12', icon: 'moon', gradient: 'linear-gradient(135deg,#B07A4B,#5E3C1E)', lock: { type: 'free' }, imageUrl: '/assets/avatar_a12.avif' },
   // --- premium avatars (coins) ---
-  { id: 'a15', icon: 'star', gradient: 'linear-gradient(135deg,#F0C64B,#B07A16)', lock: { type: 'coins', price: 300 } },
-  { id: 'a16', icon: 'flame', gradient: 'linear-gradient(135deg,#F0713F,#8C2E16)', lock: { type: 'coins', price: 400 } },
-  { id: 'a17', icon: 'feather', gradient: 'linear-gradient(135deg,#7CC6E1,#2E6B8C)', lock: { type: 'coins', price: 450 } },
-  { id: 'a13', icon: 'sun', gradient: 'linear-gradient(135deg,#F5A742,#B85C10)', lock: { type: 'coins', price: 500 } },
-  { id: 'a18', icon: 'shield', gradient: 'linear-gradient(135deg,#8A7CDF,#3A2E8C)', lock: { type: 'coins', price: 650 } },
-  { id: 'a19', icon: 'moon', gradient: 'linear-gradient(135deg,#5A6ED8,#241E6B)', lock: { type: 'coins', price: 800 } },
-  { id: 'a20', icon: 'trophy', gradient: 'linear-gradient(135deg,#F0C64B,#8C6510)', lock: { type: 'coins', price: 1000 } },
-  { id: 'a14', icon: 'crown', gradient: 'linear-gradient(135deg,#E7C34B,#B0851A)', lock: { type: 'coins', price: 1500 } },
+  { id: 'a15', icon: 'star', gradient: 'linear-gradient(135deg,#F0C64B,#B07A16)', lock: { type: 'free' }, imageUrl: '/assets/avatar_a15.avif' },
+  { id: 'a16', icon: 'flame', gradient: 'linear-gradient(135deg,#F0713F,#8C2E16)', lock: { type: 'free' }, imageUrl: '/assets/avatar_a16.avif' },
+  { id: 'a17', icon: 'feather', gradient: 'linear-gradient(135deg,#7CC6E1,#2E6B8C)', lock: { type: 'free' }, imageUrl: '/assets/avatar_a17.avif' },
+  { id: 'a13', icon: 'sun', gradient: 'linear-gradient(135deg,#F5A742,#B85C10)', lock: { type: 'free' }, imageUrl: '/assets/avatar_a13.avif' },
+  { id: 'a19', icon: 'moon', gradient: 'linear-gradient(135deg,#5A6ED8,#241E6B)', lock: { type: 'free' }, imageUrl: '/assets/avatar_a19.avif' },
+  { id: 'a20', icon: 'trophy', gradient: 'linear-gradient(135deg,#F0C64B,#8C6510)', lock: { type: 'free' }, imageUrl: '/assets/avatar_a20.avif' },
+  { id: 'a14', icon: 'crown', gradient: 'linear-gradient(135deg,#E7C34B,#B0851A)', lock: { type: 'free' }, imageUrl: '/assets/avatar_a14.avif' },
+  // --- case-exclusive avatars (only from loot cases) ---
+  { id: 'a21', icon: 'sparkle', gradient: 'linear-gradient(135deg,#D32CE6,#6A1580)', lock: { type: 'free' }, imageUrl: '/assets/avatar_a21.avif' },
+  { id: 'a22', icon: 'trophy', gradient: 'linear-gradient(135deg,#5BB8F5,#1E5A8C)', lock: { type: 'free' }, imageUrl: '/assets/avatar_a22.avif' },
+  { id: 'a23', icon: 'crown', gradient: 'linear-gradient(135deg,#EB4B4B,#7A1818)', lock: { type: 'free' }, imageUrl: '/assets/avatar_a23.avif' },
 ];
 
 // --- Profile accent colors ---
@@ -78,12 +83,17 @@ export const BACKGROUNDS: BackgroundOption[] = [
   { id: 'emerald', label: 'Смарагд', css: 'linear-gradient(135deg,#0B3B29,#071F16)', lock: { type: 'free' } },
   { id: 'scenic3', label: 'Захід сонця', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/scenic_gallery_3.avif') center/cover", lock: { type: 'level', level: 5 } },
   // --- premium backgrounds (coins) ---
-  { id: 'ocean', label: 'Океан', css: 'linear-gradient(135deg,#0B3B4A,#071F2E)', lock: { type: 'coins', price: 350 } },
-  { id: 'ember', label: 'Багаття', css: 'linear-gradient(135deg,#3B1A0B,#2E0F07)', lock: { type: 'coins', price: 450 } },
-  { id: 'midnight', label: 'Опівніч', css: 'linear-gradient(135deg,#141B3B,#07091F)', lock: { type: 'coins', price: 600 } },
-  { id: 'aurora', label: 'Аврора', css: 'linear-gradient(135deg,#12324a,#3a1a5e)', lock: { type: 'coins', price: 800 } },
-  { id: 'sakura', label: 'Сакура', css: 'linear-gradient(135deg,#4A1B34,#2E0F22)', lock: { type: 'coins', price: 1000 } },
-  { id: 'cosmos', label: 'Космос', css: 'radial-gradient(circle at 30% 20%,#3a1a5e,#0b1030 60%,#050616)', lock: { type: 'coins', price: 1300 } },
+  { id: 'ocean', label: 'Океан', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/bg_ocean.avif') center/cover", lock: { type: 'coins', price: 350 } },
+  { id: 'ember', label: 'Багаття', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/bg_ember.avif') center/cover", lock: { type: 'coins', price: 450 } },
+  { id: 'midnight', label: 'Опівніч', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/bg_midnight.avif') center/cover", lock: { type: 'coins', price: 600 } },
+  { id: 'aurora', label: 'Аврора', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/bg_aurora.avif') center/cover", lock: { type: 'coins', price: 800 } },
+  { id: 'sakura', label: 'Сакура', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/bg_sakura.avif') center/cover", lock: { type: 'coins', price: 1000 } },
+  { id: 'cosmos', label: 'Космос', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/bg_cosmos.avif') center/cover", lock: { type: 'coins', price: 1300 } },
+  // --- case-exclusive backgrounds (only from loot cases) ---
+  { id: 'glacier', label: 'Льодовик', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/bg_glacier.avif') center/cover", lock: { type: 'case' } },
+  { id: 'volcano', label: 'Вулкан', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/bg_volcano.avif') center/cover", lock: { type: 'case' } },
+  { id: 'nebula', label: 'Туманність', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/bg_nebula.avif') center/cover", lock: { type: 'case' } },
+  { id: 'mirage', label: 'Міраж', css: "linear-gradient(180deg,rgba(7,31,22,0.45),rgba(7,31,22,0.9)),url('/assets/bg_mirage.avif') center/cover", lock: { type: 'case' } },
 ];
 
 // --- Avatar frames ---
@@ -101,6 +111,11 @@ export const FRAMES: FrameOption[] = [
   { id: 'glow', label: 'Сяйво', ring: 'glow', lock: { type: 'free' } },
   { id: 'gold', label: 'Золота', ring: 'gold', lock: { type: 'level', level: 10 } },
   { id: 'gem', label: 'Самоцвіт', ring: 'gem', lock: { type: 'coins', price: 1200 } },
+  // --- case-exclusive frames (only from loot cases) ---
+  { id: 'frost', label: 'Іній', ring: 'frost', lock: { type: 'case' } },
+  { id: 'magma', label: 'Магма', ring: 'magma', lock: { type: 'case' } },
+  { id: 'prism', label: 'Призма', ring: 'prism', lock: { type: 'case' } },
+  { id: 'blackhole', label: 'Горизонт Подій', ring: 'blackhole', lock: { type: 'case' } },
 ];
 
 // --- Profile badges (small emblems shown next to the level pill) ---
@@ -118,6 +133,9 @@ export const BADGES: BadgeOption[] = [
   { id: 'explorer', icon: 'flag', label: 'Дослідник', lock: { type: 'level', level: 5 } },
   { id: 'mountaineer', icon: 'mountain', label: 'Підкорювач вершин', lock: { type: 'level', level: 10 } },
   { id: 'legend', icon: 'trophy', label: 'Легенда', lock: { type: 'coins', price: 1000 } },
+  // --- case-exclusive badges (only from loot cases) ---
+  { id: 'voyager', icon: 'compass', label: 'Вояжер', lock: { type: 'case' } },
+  { id: 'pathfinder', icon: 'signpost', label: 'Шукач шляхів', lock: { type: 'case' } },
 ];
 
 // --- Card effects (visual flourish over the whole card) ---
@@ -132,4 +150,8 @@ export const EFFECTS: EffectOption[] = [
   { id: 'glow', label: 'Мʼяке сяйво', lock: { type: 'free' } },
   { id: 'aurora', label: 'Аврора', lock: { type: 'level', level: 5 } },
   { id: 'sparkle', label: 'Іскри', lock: { type: 'coins', price: 900 } },
+  // --- case-exclusive effects ---
+  { id: 'fireflies', label: 'Світлячки', lock: { type: 'case' } },
+  { id: 'matrix', label: 'Неоновий дощ', lock: { type: 'case' } },
+  { id: 'vortex', label: 'Космічний вир', lock: { type: 'case' } },
 ];
