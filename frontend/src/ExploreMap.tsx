@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PLACES, CATEGORY_META, CATEGORY_ORDER, DIFFICULTY_META, DIFFICULTY_ORDER, type Place, type PlaceCategory } from './data/places';
-import { getPlaces, type VerifyCheckmarkResult, type VisitCellResult } from './api';
+import { getPlaces, type VerifyCheckmarkResult, type VisitCellResult, type ProfileCustomization } from './api';
 import AddPlaceForm from './AddPlaceForm';
 import VerifyVisitModal from './VerifyVisitModal';
 import LeafletMap, { type LiveMarker } from './LeafletMap';
@@ -28,6 +28,8 @@ interface ExploreMapProps {
   submitterName?: string;
   // The logged-in user's id (enables visit verification). Undefined = guest.
   userId?: number;
+  // Client-side profile customization
+  profile?: ProfileCustomization;
   // Place ids the user has already verified (opened).
   openedPlaceIds?: Set<string | number>;
   // Called after a successful verification: award XP/coins and mark opened.
@@ -95,7 +97,7 @@ function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): nu
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
-function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds, onVerified, onExplored, onMessageFriend }: ExploreMapProps) {
+function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, openedPlaceIds, onVerified, onExplored, onMessageFriend }: ExploreMapProps) {
   const [places, setPlaces] = useState<Place[]>(PLACES);
   const [activeId, setActiveId] = useState<string | number | null>(null);
   const [hoverId, setHoverId] = useState<string | number | null>(null);
@@ -120,7 +122,14 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
   const liveMarkers: LiveMarker[] = useMemo(() => {
     const markers: LiveMarker[] = [];
     if (selfPosition && sharing && userId != null) {
-      markers.push({ id: 'self', ...selfPosition, color: '#4D9DE0', label: 'Ти тут', pulse: true });
+      markers.push({
+        id: 'self',
+        ...selfPosition,
+        color: profile?.color ?? accent ?? '#4D9DE0',
+        label: `${profile?.displayName ?? submitterName ?? 'Ви'} (Ви тут)`,
+        avatar: profile?.customAvatar || profile?.avatarId || undefined,
+        pulse: true
+      });
     }
     friendDots.forEach((d, i) => {
       markers.push({
@@ -135,7 +144,19 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
       });
     });
     return markers;
-  }, [selfPosition, sharing, userId, friendDots]);
+  }, [selfPosition, sharing, userId, friendDots, profile, accent, submitterName]);
+
+  const top3Nearby = useMemo(() => {
+    if (!selfPosition || places.length === 0) return [];
+    return [...places]
+      .map((place) => ({
+        place,
+        dist: haversineKm(selfPosition.lat, selfPosition.lng, place.lat, place.lng),
+      }))
+      .sort((a, b) => a.dist - b.dist)
+      .slice(0, 3)
+      .map((item) => item.place);
+  }, [selfPosition, places]);
 
   // Load live places from the backend; fall back to the bundled dataset.
   const loadPlaces = () => {
@@ -504,6 +525,72 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
               </div>
             )}
           </div>
+
+          {/* Top 3 places nearby */}
+          {selfPosition && top3Nearby.length > 0 && (
+            <div style={{
+              background: 'rgba(63, 166, 107, 0.06)',
+              border: '1px solid rgba(63, 166, 107, 0.18)',
+              borderRadius: '16px',
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 800, color: '#3FA66B', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                <Icon name="compass" size={15} strokeWidth={2.2} />
+                <span>Найближчі місця поруч</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {top3Nearby.map((place) => {
+                  const dist = haversineKm(selfPosition.lat, selfPosition.lng, place.lat, place.lng);
+                  const meta = CATEGORY_META[place.category];
+                  const isHovered = place.id === hoverId;
+                  const isActive = place.id === activeId;
+                  return (
+                    <button
+                      key={`nearby-${place.id}`}
+                      onClick={() => setActiveId(place.id)}
+                      onMouseEnter={() => setHoverId(place.id)}
+                      onMouseLeave={() => setHoverId(cur => cur === place.id ? null : cur)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        textAlign: 'left',
+                        background: isActive ? 'rgba(255, 255, 255, 0.06)' : 'rgba(11, 43, 32, 0.65)',
+                        border: '1px solid',
+                        borderColor: isActive ? `${meta.color}55` : isHovered ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                        borderRadius: '10px',
+                        padding: '9px 12px',
+                        color: CREAM,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        width: '100%',
+                        outline: 'none',
+                        fontFamily: "'Manrope', sans-serif"
+                      }}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '26px', height: '26px', borderRadius: '50%', background: `${meta.color}20`, color: meta.color, flex: '0 0 auto' }}>
+                        <Icon name={CATEGORY_ICON[place.category]} size={13} strokeWidth={2} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {place.name}
+                        </div>
+                        <div style={{ fontSize: '11.5px', color: 'rgba(244, 241, 232, 0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {place.region}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '12px', fontWeight: 800, color: '#3FA66B', flex: '0 0 auto', paddingLeft: '6px' }}>
+                        {dist < 1 ? `${(dist * 1000).toFixed(0)} м` : `${dist.toFixed(1)} км`}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* quick list */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '260px', overflowY: 'auto' }}>
