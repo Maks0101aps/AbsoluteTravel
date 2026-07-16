@@ -84,10 +84,24 @@ function DifficultyBadge({ difficulty }: { difficulty: number }) {
   );
 }
 
+// Great-circle distance in km — used to find the place nearest the user.
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371;
+  const dLat = ((bLat - aLat) * Math.PI) / 180;
+  const dLng = ((bLng - aLng) * Math.PI) / 180;
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+
 function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds, onVerified, onExplored, onMessageFriend }: ExploreMapProps) {
   const [places, setPlaces] = useState<Place[]>(PLACES);
   const [activeId, setActiveId] = useState<string | number | null>(null);
   const [hoverId, setHoverId] = useState<string | number | null>(null);
+  // Only auto-pick the nearest place once per session — after that the user's
+  // own clicks own `activeId`.
+  const hasAutoSelectedRef = useRef(false);
   const [filter, setFilter] = useState<PlaceCategory | 'all'>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<number | 'all'>('all');
   const [showForm, setShowForm] = useState(false);
@@ -146,6 +160,24 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
     loadPlaces();
     setActiveId((cur) => cur ?? PLACES[0]?.id ?? null);
   }, []);
+
+  // As soon as we know where the user is (and have places to compare against),
+  // highlight the nearest one instead of leaving the arbitrary first-in-list
+  // selection from loadPlaces().
+  useEffect(() => {
+    if (hasAutoSelectedRef.current || !selfPosition || places.length === 0) return;
+    hasAutoSelectedRef.current = true;
+    let nearest = places[0];
+    let nearestKm = haversineKm(selfPosition.lat, selfPosition.lng, nearest.lat, nearest.lng);
+    for (const p of places) {
+      const km = haversineKm(selfPosition.lat, selfPosition.lng, p.lat, p.lng);
+      if (km < nearestKm) {
+        nearest = p;
+        nearestKm = km;
+      }
+    }
+    setActiveId(nearest.id);
+  }, [selfPosition, places]);
 
   const visiblePlaces = useMemo(
     () =>
@@ -254,6 +286,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
             onSelect={(id) => setActiveId(id)}
             onHover={(id) => setHoverId(id)}
             liveMarkers={userId != null ? liveMarkers : undefined}
+            focusPosition={userId != null ? selfPosition : undefined}
             exploredCells={userId != null ? visitedCells : undefined}
             revealedCell={lastRevealed}
             // Guests have nothing unlocked, so fogging them would just hand them
