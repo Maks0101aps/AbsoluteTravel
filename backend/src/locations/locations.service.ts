@@ -145,6 +145,14 @@ export class LocationsService {
     if (!name) {
       throw new BadRequestException('Ім’я не може бути порожнім');
     }
+    // Same stale-session guard as setVisibility above: without it a client
+    // carrying a user id that no longer exists gets a raw Prisma P2025 500
+    // instead of a clean 404.
+    const exists = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (!exists) throw new NotFoundException('Користувача не знайдено');
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: { name, avatar },

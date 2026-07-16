@@ -256,6 +256,9 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
             liveMarkers={userId != null ? liveMarkers : undefined}
             exploredCells={userId != null ? visitedCells : undefined}
             revealedCell={lastRevealed}
+            // Guests have nothing unlocked, so fogging them would just hand them
+            // a black rectangle instead of the map they came to browse.
+            fog={userId != null}
             height="clamp(320px, 60vh, 560px)"
           />
 
