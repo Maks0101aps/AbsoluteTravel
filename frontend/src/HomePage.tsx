@@ -1,14 +1,24 @@
 import { useEffect, useState } from 'react';
-import { getUnreadCounts, getUserCheckmarks, type AuthUser, type VerifyCheckmarkResult, type VisitCellResult } from './api';
+import {
+  getUnreadCounts,
+  getUserCheckmarks,
+  purchaseItem,
+  updateProfile,
+  openCase,
+  getCasesState,
+  type AuthUser,
+  type ProfileCustomization,
+  type VerifyCheckmarkResult,
+} from './api';
 import ProfileAvatar from './ProfileAvatar';
+import ProfileShop, { type EquipKey } from './ProfileShop';
 import XpBar from './XpBar';
 import ExploreMap from './ExploreMap';
-import AiAdvisor from './AiAdvisor';
 import FriendsPage from './FriendsPage';
 import LeaderboardPage from './LeaderboardPage';
 import ChatPage from './ChatPage';
 import { getSocket, closeSocket } from './socket';
-import { BACKGROUNDS, BADGES } from './data/profileOptions';
+import { AVATARS, BACKGROUNDS, BADGES, COLORS, EFFECTS, FRAMES } from './data/profileOptions';
 import { Icon, type IconName } from './icons';
 
 const CREAM = '#F4F1E8';
@@ -17,25 +27,24 @@ const DEFAULT_ACCENT = '#3FA66B';
 
 type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'advisor' | 'profile';
 
+// The profile view is opened by clicking the avatar (top-right), not a tab.
 const TABS: { id: Tab; label: string; icon: IconName }[] = [
   { id: 'map', label: 'Мапа мандрівок', icon: 'map' },
   { id: 'friends', label: 'Друзі', icon: 'users' },
   { id: 'leaderboard', label: 'Рейтинг', icon: 'trophy' },
   { id: 'chat', label: 'Чат', icon: 'messageSquare' },
   { id: 'advisor', label: 'ШІ-порадник', icon: 'compass' },
-  { id: 'profile', label: 'Профіль', icon: 'user' },
 ];
 
 interface HomePageProps {
   user: AuthUser;
   onLogout: () => void;
   onEditProfile: () => void;
-  onOpenShop?: () => void;
-  // Persist updated user fields (xp/coins/level) after a verified visit.
+  // Persist updated user fields (xp/coins/level/profile) after a shop purchase or verified visit.
   onUserUpdate?: (patch: Partial<AuthUser>) => void;
 }
 
-function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: HomePageProps) {
+function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps) {
   const p = user.profile;
   const accent = p?.color ?? DEFAULT_ACCENT;
   const background = BACKGROUNDS.find((b) => b.id === p?.backgroundId);
@@ -44,6 +53,80 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
   // Preselected friend when jumping into chat from "Написати" buttons.
   const [chatFriendId, setChatFriendId] = useState<number | null>(null);
   const [totalUnread, setTotalUnread] = useState(0);
+
+  // --- shop (self-contained overlay: opening/closing is a local toggle, no
+  // navigation and no profile editor involved) ---
+  const [shopOpen, setShopOpen] = useState(false);
+  const [buying, setBuying] = useState<string | null>(null);
+  const [shopError, setShopError] = useState<string | null>(null);
+  const [openedCaseIds, setOpenedCaseIds] = useState<string[]>([]);
+
+  // Which one-time cases (the free starter) the user has already opened.
+  useEffect(() => {
+    if (!shopOpen) return;
+    getCasesState(user.id)
+      .then((s) => setOpenedCaseIds(s.openedCaseIds))
+      .catch(() => {
+        // non-blocking: cases still openable, server enforces the once-only rule
+      });
+  }, [shopOpen, user.id]);
+
+  const handleOpenCase = async (caseId: string) => {
+    const res = await openCase(user.id, caseId);
+    onUserUpdate?.({ coins: res.coins, unlockedItems: res.unlockedItems });
+    // The free starter case can only be opened once — remember it locally.
+    setOpenedCaseIds((prev) => (prev.includes(caseId) ? prev : [...prev, caseId]));
+    return res;
+  };
+
+  // Apply a cosmetic to the profile and persist it (localStorage via onUserUpdate,
+  // plus name/avatar to the backend).
+  const equip = (key: EquipKey, id: string) => {
+    if (!p) return;
+    const next: ProfileCustomization = { ...p };
+    switch (key) {
+      case 'avatar': next.avatarId = id; next.customAvatar = undefined; break;
+      case 'background': next.backgroundId = id; break;
+      case 'frame': next.frameId = id; break;
+      case 'color': next.color = id; break;
+      case 'effect': next.effectId = id; break;
+      case 'badges':
+        next.badges = p.badges.includes(id) ? p.badges.filter((x) => x !== id) : [...p.badges, id];
+        break;
+    }
+    const avatar = next.customAvatar || next.avatarId;
+    onUserUpdate?.({ profile: next, name: next.displayName, avatar });
+    updateProfile(user.id, { name: next.displayName, avatar }).catch(() => {});
+  };
+
+  const equipKeyOf = (itemId: string): EquipKey | null => {
+    if (AVATARS.some((a) => a.id === itemId)) return 'avatar';
+    if (BACKGROUNDS.some((b) => b.id === itemId)) return 'background';
+    if (FRAMES.some((f) => f.id === itemId)) return 'frame';
+    if (BADGES.some((b) => b.id === itemId)) return 'badges';
+    if (EFFECTS.some((e) => e.id === itemId)) return 'effect';
+    if (COLORS.some((c) => c.id === itemId)) return 'color';
+    return null;
+  };
+
+  const handleBuy = async (itemId: string) => {
+    setBuying(itemId);
+    setShopError(null);
+    try {
+      const res = await purchaseItem(user.id, itemId);
+      onUserUpdate?.({ coins: res.coins, unlockedItems: res.unlockedItems });
+      // auto-equip the freshly purchased item so buying feels immediate
+      const key = equipKeyOf(itemId);
+      if (key) {
+        const colorOpt = COLORS.find((c) => c.id === itemId);
+        equip(key, colorOpt ? colorOpt.value : itemId);
+      }
+    } catch (e: any) {
+      setShopError(e?.message ?? 'Не вдалося придбати товар');
+    } finally {
+      setBuying(null);
+    }
+  };
 
   const openChatWith = (friendId: number) => {
     setChatFriendId(friendId);
@@ -104,13 +187,6 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
     });
   };
 
-  // A new territory cell was unlocked. The server returns the authoritative new
-  // totals, so apply them directly rather than incrementing (avoids drift when
-  // several cells unlock in quick succession).
-  const handleExplored = (result: VisitCellResult) => {
-    onUserUpdate?.({ xp: result.newXp, level: result.newLevel });
-  };
-
   const maxWidth = tab === 'profile' ? '860px' : '1140px';
 
   return (
@@ -118,11 +194,11 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
       fontFamily: "'Manrope', sans-serif", 
       background: BG, 
       color: CREAM, 
-      height: tab === 'chat' ? '100dvh' : 'auto',
+      height: (tab === 'chat' || tab === 'advisor') ? '100dvh' : 'auto',
       minHeight: '100dvh', 
       display: 'flex', 
       flexDirection: 'column',
-      overflow: tab === 'chat' ? 'hidden' : 'visible'
+      overflow: (tab === 'chat' || tab === 'advisor') ? 'hidden' : 'visible'
     }}>
       {/* navbar */}
       <nav className="at-home-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '12px 24px', background: BG, borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'nowrap' }}>
@@ -164,9 +240,9 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
               </button>
             );
           })}
-          {onOpenShop && (
+          {p && (
             <button
-              onClick={onOpenShop}
+              onClick={() => { setShopError(null); setShopOpen(true); }}
               title="Магазин"
               style={{
                 display: 'inline-flex',
@@ -204,7 +280,7 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
           <button
             onClick={() => setTab('profile')}
             title="Мій профіль"
-            style={{ background: 'transparent', border: 'none', padding: 0, lineHeight: 0, cursor: 'pointer', flexShrink: 0, borderRadius: '50%' }}
+            style={{ background: 'transparent', border: 'none', padding: 0, lineHeight: 0, cursor: 'pointer', flexShrink: 0, borderRadius: '50%', outline: tab === 'profile' ? `2px solid ${accent}` : '2px solid transparent', outlineOffset: '2px', transition: 'outline-color 0.2s ease' }}
           >
             {p ? (
               <ProfileAvatar avatarId={p.avatarId} customAvatar={p.customAvatar} frameId={p.frameId} color={accent} size={36} />
@@ -218,7 +294,7 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
         </div>
       </nav>
 
-      <main className={`at-home-main ${tab === 'chat' ? 'at-chat-main-tab' : ''}`} style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
+      <main className={`at-home-main ${(tab === 'chat' || tab === 'advisor') ? 'at-chat-main-tab' : ''}`} style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
         {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} background={background} />}
         {tab === 'map' && (
           <ExploreMap
@@ -227,15 +303,38 @@ function HomePage({ user, onLogout, onEditProfile, onOpenShop, onUserUpdate }: H
             userId={user.id}
             openedPlaceIds={openedPlaceIds}
             onVerified={handleVerified}
-            onExplored={handleExplored}
             onMessageFriend={openChatWith}
           />
         )}
         {tab === 'friends' && <FriendsPage userId={user.id} accent={accent} onMessage={openChatWith} />}
         {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} />}
         {tab === 'chat' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId={chatFriendId} />}
-        {tab === 'advisor' && <AiAdvisor accent={accent} user={user} userName={p?.displayName ?? user.name} />}
+        {tab === 'advisor' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId="advisor" hideSidebar={true} />}
       </main>
+
+      {shopOpen && p && (
+        <ProfileShop
+          coins={user.coins ?? 0}
+          level={user.level}
+          owned={user.unlockedItems ?? []}
+          buying={buying}
+          error={shopError}
+          selections={{
+            avatarId: p.avatarId,
+            customAvatar: p.customAvatar,
+            backgroundId: p.backgroundId,
+            frameId: p.frameId,
+            color: p.color,
+            badges: p.badges,
+            effectId: p.effectId,
+          }}
+          openedCaseIds={openedCaseIds}
+          onBuy={handleBuy}
+          onEquip={equip}
+          onOpenCase={handleOpenCase}
+          onClose={() => setShopOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -306,7 +405,7 @@ function ProfileTab({
 
       <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: '0 0 12px' }}>Готово, {p.displayName}!</h2>
       <p style={{ fontSize: '15px', lineHeight: 1.7, color: 'rgba(244,241,232,0.65)', maxWidth: '520px', margin: 0 }}>
-        Відкрий вкладку «Мапа мандрівок», щоб дослідити цікаві місця України, або запитай поради у «ШІ-порадника» у розділі «Чат».
+        Відкрий вкладку «Мапа мандрівок», щоб дослідити цікаві місця України, або запитай поради у «ШІ-порадника».
       </p>
     </>
   );

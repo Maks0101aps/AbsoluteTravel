@@ -299,39 +299,6 @@ export function getUserCheckmarks(userId: number) {
   return call<Checkmark[]>('GET', `/api/checkmarks/user/${userId}`);
 }
 
-// --- Territory exploration (H3 cells) --------------------------------------
-
-export interface VisitCellResult {
-  isNew: boolean;
-  cellId: string;
-  newRegion: boolean;
-  xpAwarded: number;
-  totalCells: number;
-  totalRegions: number;
-  newXp: number;
-  newLevel: number;
-  leveledUp: boolean;
-}
-
-export interface ExplorationStats {
-  totalCells: number;
-  totalRegions: number;
-}
-
-/** Unlock the H3 cell the user currently stands in; awards XP when it's new. */
-export function visitCell(userId: number, lat: number, lng: number) {
-  return call<VisitCellResult>('POST', '/api/exploration/visit', { userId, lat, lng });
-}
-
-/** All cell ids the user has already unlocked (to paint the map on load). */
-export function getVisitedCells(userId: number) {
-  return call<{ cells: string[] }>('GET', `/api/exploration/cells/${userId}`);
-}
-
-export function getExplorationStats(userId: number) {
-  return call<ExplorationStats>('GET', `/api/exploration/stats/${userId}`);
-}
-
 // --- Admin accounts & auth -------------------------------------------------
 
 export interface AdminAccount {

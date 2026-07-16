@@ -58,9 +58,6 @@ function persistAdmin(session: AdminSession | null) {
 function Root() {
   const [user, setUser] = useState<AuthUser | null>(loadUser);
   const [admin, setAdmin] = useState<AdminSession | null>(loadAdmin);
-  // Set when the navbar's "Магазин" entry jumps into the profile editor, so it
-  // opens straight to the shop instead of the plain editor.
-  const [openShopOnSetup, setOpenShopOnSetup] = useState(false);
   const [view, setView] = useState<View>(() => {
     // An active admin session takes precedence (validated in the effect below).
     if (loadAdmin()) return 'admin';
@@ -169,9 +166,6 @@ function Root() {
         user={user}
         onComplete={handleProfileComplete}
         onSkip={() => setView('home')}
-        onUserUpdate={handleUserUpdate}
-        autoOpenShop={openShopOnSetup}
-        onAutoShopConsumed={() => setOpenShopOnSetup(false)}
       />
     );
   }
@@ -182,10 +176,6 @@ function Root() {
         user={user}
         onLogout={handleLogout}
         onEditProfile={() => setView('setup')}
-        onOpenShop={() => {
-          setOpenShopOnSetup(true);
-          setView('setup');
-        }}
         onUserUpdate={handleUserUpdate}
       />
     );

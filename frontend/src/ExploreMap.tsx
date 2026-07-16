@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PLACES, CATEGORY_META, CATEGORY_ORDER, DIFFICULTY_META, DIFFICULTY_ORDER, type Place, type PlaceCategory } from './data/places';
-import { getPlaces, type VerifyCheckmarkResult, type VisitCellResult } from './api';
+import { getPlaces, type VerifyCheckmarkResult } from './api';
 import AddPlaceForm from './AddPlaceForm';
 import VerifyVisitModal from './VerifyVisitModal';
 import LeafletMap, { type LiveMarker } from './LeafletMap';
 import { useLiveGps, type FriendDot } from './useLiveGps';
-import { useExploration } from './exploration/useExploration';
 import { UserAvatar } from './UserCard';
 import { Icon, type IconName } from './icons';
 
@@ -32,8 +31,6 @@ interface ExploreMapProps {
   openedPlaceIds?: Set<string | number>;
   // Called after a successful verification: award XP/coins and mark opened.
   onVerified?: (placeId: string | number, result: VerifyCheckmarkResult) => void;
-  // Called after a new territory cell is unlocked: fold the new xp/level in.
-  onExplored?: (result: VisitCellResult) => void;
   // Open the chat tab with this friend (from the live-map mini profile card).
   onMessageFriend?: (friendId: number) => void;
 }
@@ -84,7 +81,7 @@ function DifficultyBadge({ difficulty }: { difficulty: number }) {
   );
 }
 
-function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds, onVerified, onExplored, onMessageFriend }: ExploreMapProps) {
+function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds, onVerified, onMessageFriend }: ExploreMapProps) {
   const [places, setPlaces] = useState<Place[]>(PLACES);
   const [activeId, setActiveId] = useState<string | number | null>(null);
   const [hoverId, setHoverId] = useState<string | number | null>(null);
@@ -97,12 +94,6 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
   // Live GPS: own pulsing dot + friends' dots (server broadcasts every 10s).
   const { selfPosition, friendDots, sharing, geoError, setSharing } = useLiveGps(userId);
 
-  // Territory exploration: unlock the H3 cell under the user, award XP, animate.
-  const { visitedCells, lastRevealed, events, totalCells, totalRegions } = useExploration(
-    userId,
-    selfPosition,
-    onExplored,
-  );
   const liveMarkers: LiveMarker[] = useMemo(() => {
     const markers: LiveMarker[] = [];
     if (selfPosition && sharing && userId != null) {
@@ -254,52 +245,8 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
             onSelect={(id) => setActiveId(id)}
             onHover={(id) => setHoverId(id)}
             liveMarkers={userId != null ? liveMarkers : undefined}
-            exploredCells={userId != null ? visitedCells : undefined}
-            revealedCell={lastRevealed}
             height="clamp(320px, 60vh, 560px)"
           />
-
-          {/* territory progress + floating "+XP" popups (logged-in users only) */}
-          {userId != null && (
-            <>
-              <ExplorationHud totalCells={totalCells} totalRegions={totalRegions} accent={accent} />
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  zIndex: 25,
-                  pointerEvents: 'none',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                {events.map((e) => (
-                  <div
-                    key={e.id}
-                    className="at-xp-pop"
-                    style={{
-                      background: 'rgba(11,43,32,0.94)',
-                      border: `1px solid ${accent}88`,
-                      borderRadius: '999px',
-                      padding: '8px 16px',
-                      fontSize: '14px',
-                      fontWeight: 800,
-                      color: '#9BD8B4',
-                      boxShadow: '0 10px 30px -8px rgba(0,0,0,0.7)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    +{e.xp} XP{e.newRegion ? ' · Новий регіон!' : ' · Нова клітинка'}
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
 
           {/* live-GPS controls (logged-in users only) */}
           {userId != null && (
@@ -325,7 +272,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
                 {sharing ? 'Геолокація увімкнена — друзі бачать тебе' : 'Геолокація вимкнена'}
               </button>
               <span style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.45)' }}>
-                {geoError ?? `Друзів на мапі: ${friendDots.length} · Клітинок відкрито: ${totalCells}`}
+                {geoError ?? `Друзів на мапі: ${friendDots.length}`}
               </span>
             </div>
           )}
@@ -531,66 +478,6 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, openedPlaceIds,
           onVerified={(result) => onVerified?.(verifyPlace.id, result)}
         />
       )}
-    </div>
-  );
-}
-
-// Compact overlay in the map's top-left corner: how much territory the user has
-// uncovered. The numbers flash briefly whenever they change.
-function ExplorationHud({ totalCells, totalRegions, accent }: { totalCells: number; totalRegions: number; accent: string }) {
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        top: '22px',
-        left: '22px',
-        zIndex: 20,
-        display: 'flex',
-        gap: '8px',
-        pointerEvents: 'none',
-      }}
-    >
-      <HudStat icon="hexagon" label="Клітинки" value={totalCells} accent={accent} />
-      <HudStat icon="compass" label="Регіони" value={totalRegions} accent={accent} />
-    </div>
-  );
-}
-
-function HudStat({ icon, label, value, accent }: { icon: IconName; label: string; value: number; accent: string }) {
-  const [bump, setBump] = useState(false);
-  const prev = useRef(value);
-  useEffect(() => {
-    if (value !== prev.current) {
-      prev.current = value;
-      setBump(true);
-      const t = setTimeout(() => setBump(false), 500);
-      return () => clearTimeout(t);
-    }
-  }, [value]);
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        background: 'rgba(8,26,18,0.82)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255,255,255,0.10)',
-        borderRadius: '12px',
-        padding: '8px 12px',
-        boxShadow: '0 8px 24px -10px rgba(0,0,0,0.6)',
-      }}
-    >
-      <Icon name={icon} size={16} stroke={accent} strokeWidth={1.9} />
-      <div style={{ lineHeight: 1.15 }}>
-        <div key={value} className={bump ? 'at-stat-bump' : undefined} style={{ fontSize: '17px', fontWeight: 800, color: CREAM, transformOrigin: 'left center' }}>
-          {value}
-        </div>
-        <div style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(244,241,232,0.5)', textTransform: 'uppercase' }}>
-          {label}
-        </div>
-      </div>
     </div>
   );
 }
