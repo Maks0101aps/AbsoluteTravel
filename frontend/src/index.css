@@ -297,75 +297,73 @@ a:hover {
 }
 
 /* ===================================================================
-   BLACK HOLE AVATAR FRAME ("Горизонт Подій", legendary loot-case frame)
+   BLACK HOLE AVATAR FRAME ("Чорна діра", free frame)
    Rendered by BlackHoleFrame.tsx (frame id: "blackhole" in
-   data/profileOptions.ts). Every layer animates transform/opacity only,
-   except the two feTurbulence filters (gravitational lensing + inner-edge
-   space warp), which are cheap because they're masked to thin ring strokes.
-
-   Coordinate system: the SVG uses viewBox="0 0 100 100", so rotation
-   transform-origin is given in raw viewBox units (50px 50px = center) —
-   the standard technique for animating <g> rotation in an SVG that scales
-   via its viewBox rather than fixed pixel dimensions.
+   data/profileOptions.ts) from the user-supplied artwork at
+   public/assets/blackhole_frame.png — a swirling blue/orange event-horizon
+   ring, chroma-keyed to a transparent center and transparent black
+   background. Two copies of that image are layered and spun in opposite
+   directions at different speeds for parallax depth, on top of a pulsing
+   glow and a handful of twinkling sparks.
    =================================================================== */
 
 .bhf-ring {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  overflow: visible; /* the outer glow is allowed to bleed past the avatar box */
+  overflow: visible; /* the glow/rotating rings are allowed to bleed past the avatar box */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* layer 1 (furthest back): soft outer glow, gently pulsing */
+/* soft outer glow, gently pulsing */
 .bhf-glow {
   position: absolute;
-  inset: -9%;
+  inset: -14%;
   border-radius: 50%;
   background:
     radial-gradient(circle closest-side,
-      transparent 65%,
-      color-mix(in srgb, #8a5cff 36%, transparent) 79%,
-      color-mix(in srgb, #3f66ff 24%, transparent) 91%,
+      transparent 55%,
+      color-mix(in srgb, #5CA9E8 40%, transparent) 76%,
+      color-mix(in srgb, #F0913F 28%, transparent) 92%,
       transparent 100%);
   animation: atBhfPulse 7.5s ease-in-out infinite;
 }
 
-/* layer 5 (front): bright rotating accretion ring, a conic-gradient
-   masked down to a thin annulus right at the avatar's edge */
-.bhf-accretion {
+/* the artwork itself: two counter-rotating copies for depth */
+.bhf-img {
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg,
-    #e6dbff 0deg, #8a5cff 55deg, #3f66ff 160deg, #8a5cff 260deg, #e6dbff 360deg);
-  -webkit-mask-image: radial-gradient(circle closest-side,
-    transparent 0%, transparent 79.5%, #000 80.5%, #000 84%, transparent 85%);
-          mask-image: radial-gradient(circle closest-side,
-    transparent 0%, transparent 79.5%, #000 80.5%, #000 84%, transparent 85%);
-  filter:
-    drop-shadow(0 0 3px rgba(138,92,255,.6))
-    drop-shadow(0 0 7px rgba(63,102,255,.4));
-  animation: atBhfSpin 40s linear infinite;
+  top: 50%;
+  left: 50%;
+  max-width: none;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 6px rgba(92,169,232,.5)) drop-shadow(0 0 10px rgba(240,145,63,.35));
 }
 
-.bhf-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.bhf-img-a { animation: atBhfSpinCentered    46s linear infinite; opacity: .95; }
+.bhf-img-b { animation: atBhfSpinCenteredRev 64s linear infinite; opacity: .55; mix-blend-mode: screen; }
 
-.bhf-dust-a  { animation: atBhfSpin      90s  linear infinite; transform-origin: 50px 50px; }
-.bhf-dust-b  { animation: atBhfSpinRev  130s  linear infinite; transform-origin: 50px 50px; }
-.bhf-lens-out{ animation: atBhfSpinRev   70s  linear infinite; transform-origin: 50px 50px; }
-.bhf-lens-in { animation: atBhfSpin      55s  linear infinite; transform-origin: 50px 50px; }
-.bhf-lane-b  { transform: rotate(160deg); transform-origin: 50px 50px; }
+.bhf-sparks { position: absolute; inset: -6%; }
+.bhf-spark {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #ffe8c9;
+  box-shadow: 0 0 4px 1px rgba(255,232,201,.9);
+  animation: atBhfFlash 11s ease-in-out infinite;
+}
+.bhf-spark:nth-of-type(1) { top: 4%;  left: 78%; }
+.bhf-spark:nth-of-type(2) { top: 82%; left: 86%; animation-duration: 14s; animation-delay: -3.2s; }
+.bhf-spark:nth-of-type(3) { top: 88%; left: 12%; animation-duration: 17s; animation-delay: -7.5s; }
+.bhf-spark:nth-of-type(4) { top: 10%; left: 8%;  animation-duration: 21s; animation-delay: -12s; }
 
-.bhf-spark { animation: atBhfFlash 11s ease-in-out infinite; transform-origin: 50px 50px; }
-.bhf-spark:nth-of-type(2) { animation-duration: 14s; animation-delay: -3.2s; }
-.bhf-spark:nth-of-type(3) { animation-duration: 17s; animation-delay: -7.5s; }
-.bhf-spark:nth-of-type(4) { animation-duration: 21s; animation-delay: -12s; }
-
-@keyframes atBhfSpin    { to { transform: rotate(360deg); } }
-@keyframes atBhfSpinRev { to { transform: rotate(-360deg); } }
+@keyframes atBhfSpinCentered    { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes atBhfSpinCenteredRev { to { transform: translate(-50%, -50%) rotate(-360deg); } }
 @keyframes atBhfPulse {
   0%, 100% { opacity: .78; transform: scale(1); }
-  50%      { opacity: 1;   transform: scale(1.018); }
+  50%      { opacity: 1;   transform: scale(1.05); }
 }
 @keyframes atBhfFlash {
   0%, 100% { opacity: 0; }
@@ -376,11 +374,8 @@ a:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bhf-glow, .bhf-accretion,
-  .bhf-dust-a, .bhf-dust-b,
-  .bhf-lens-out, .bhf-lens-in,
-  .bhf-spark { animation: none !important; }
-  .bhf-particles, .bhf-lens-out, .bhf-lens-in { display: none !important; }
+  .bhf-glow, .bhf-img-a, .bhf-img-b, .bhf-spark { animation: none !important; }
+  .bhf-img-b { display: none !important; }
 }
 
 /* ===================================================================
@@ -551,4 +546,162 @@ a:hover {
   0% { transform: scale(1); color: #9BD8B4; }
   40% { transform: scale(1.18); color: #9BD8B4; }
   100% { transform: scale(1); }
+}
+
+/* ---- Preview flourishes for cosmetics ---- */
+.preview-sparkle {
+  position: absolute;
+  color: #F0C64B;
+  font-size: 10px;
+  text-shadow: 0 0 4px #F0C64B;
+  animation: atPreviewSparkle 2s ease-in-out infinite alternate;
+}
+@keyframes atPreviewSparkle {
+  0% { opacity: 0.2; transform: scale(0.7) rotate(0deg); }
+  100% { opacity: 1; transform: scale(1.1) rotate(45deg); }
+}
+
+.preview-firefly {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #7bdaa2;
+  box-shadow: 0 0 6px 2px #7bdaa2;
+  animation: atPreviewFirefly 2.5s ease-in-out infinite alternate;
+}
+@keyframes atPreviewFirefly {
+  0% { opacity: 0.1; transform: translate(0, 0) scale(0.8); }
+  100% { opacity: 0.9; transform: translate(8px, -10px) scale(1.1); }
+}
+
+.preview-matrix-stream {
+  position: absolute;
+  top: -20px;
+  width: 1px;
+  height: 30px;
+  background: linear-gradient(180deg, transparent, #4b84e0);
+  animation: atPreviewMatrix 2s linear infinite;
+}
+@keyframes atPreviewMatrix {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 0.8; }
+  80% { opacity: 0.8; }
+  100% { transform: translateY(140px); opacity: 0; }
+}
+
+.preview-vortex-ring {
+  box-shadow: inset 0 0 12px rgba(211, 44, 230, 0.4);
+}
+
+/* ---- Active card profile effects ---- */
+.effect-firefly-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: #7bdaa2;
+  box-shadow: 0 0 8px 3px #7bdaa2;
+  animation: atFireflyFloat linear infinite alternate;
+}
+@keyframes atFireflyFloat {
+  0% { transform: translate(0, 0) scale(0.8); opacity: 0.15; }
+  50% { opacity: 0.95; }
+  100% { transform: translate(25px, -35px) scale(1.1); opacity: 0.15; }
+}
+
+.effect-sparkle-particle {
+  position: absolute;
+  color: #F0C64B;
+  text-shadow: 0 0 6px #F0C64B;
+  font-size: 12px;
+  animation: atSparkleTwinkle 2.2s ease-in-out infinite alternate;
+}
+@keyframes atSparkleTwinkle {
+  0% { opacity: 0.15; transform: scale(0.6) rotate(0deg); }
+  100% { opacity: 1; transform: scale(1.2) rotate(90deg); }
+}
+
+.effect-matrix-drop {
+  position: absolute;
+  top: -40px;
+  width: 2px;
+  height: 45px;
+  background: linear-gradient(180deg, transparent, #4b84e0);
+  animation: atMatrixDrop linear infinite;
+}
+@keyframes atMatrixDrop {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 0.95; }
+  90% { opacity: 0.95; }
+  100% { transform: translateY(320px); opacity: 0; }
+}
+
+.effect-vortex-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #d32ce6;
+  box-shadow: 0 0 6px 2px #d32ce6;
+  top: 50%;
+  left: 50%;
+  animation: atVortexSuck 6s linear infinite;
+}
+@keyframes atVortexSuck {
+  0% {
+    transform: rotate(var(--start-angle)) translate(var(--start-radius)) scale(1.2);
+    opacity: 0.9;
+  }
+  100% {
+    transform: rotate(calc(var(--start-angle) + 720deg)) translate(0px) scale(0.1);
+    opacity: 0;
+  }
+}
+
+/* ---- Animated Avatar Frames (Rings) ---- */
+.avatar-frame-glow {
+  animation: atFrameGlow 2s ease-in-out infinite alternate;
+}
+@keyframes atFrameGlow {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.02); filter: brightness(1.15) saturate(1.1); }
+}
+
+.avatar-frame-gold {
+  animation: atFrameGold 3.5s ease-in-out infinite alternate;
+}
+@keyframes atFrameGold {
+  0% { box-shadow: 0 0 0 3px rgba(231,195,75,0.35), 0 0 12px rgba(231,195,75,0.5); filter: contrast(1); }
+  100% { box-shadow: 0 0 0 5px rgba(231,195,75,0.55), 0 0 24px rgba(231,195,75,0.85); filter: contrast(1.15) brightness(1.1); }
+}
+
+.avatar-frame-gem {
+  animation: atFrameGem 5s linear infinite;
+}
+@keyframes atFrameGem {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.avatar-frame-frost {
+  animation: atFrameFrost 2.5s ease-in-out infinite alternate;
+}
+@keyframes atFrameFrost {
+  0% { box-shadow: 0 0 0 3px rgba(143,212,232,0.35), 0 0 12px rgba(143,212,232,0.5); }
+  100% { box-shadow: 0 0 0 6px rgba(143,212,232,0.6), 0 0 26px rgba(143,212,232,0.85); filter: brightness(1.2); }
+}
+
+.avatar-frame-magma {
+  animation: atFrameMagma 1.5s ease-in-out infinite alternate;
+}
+@keyframes atFrameMagma {
+  0% { transform: scale(1); box-shadow: 0 0 0 3px rgba(240,113,63,0.4), 0 0 16px rgba(240,113,63,0.6); }
+  100% { transform: scale(1.01); box-shadow: 0 0 0 5px rgba(255,60,0,0.65), 0 0 28px rgba(255,60,0,0.95); filter: brightness(1.25) saturate(1.3); }
+}
+
+.avatar-frame-prism {
+  animation: atFramePrism 6s linear infinite;
+}
+@keyframes atFramePrism {
+  0% { filter: hue-rotate(0deg) saturate(1.2); }
+  100% { filter: hue-rotate(360deg) saturate(1.2); }
 }

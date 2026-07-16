@@ -115,7 +115,7 @@ export const FRAMES: FrameOption[] = [
   { id: 'frost', label: 'Іній', ring: 'frost', lock: { type: 'case' } },
   { id: 'magma', label: 'Магма', ring: 'magma', lock: { type: 'case' } },
   { id: 'prism', label: 'Призма', ring: 'prism', lock: { type: 'case' } },
-  { id: 'blackhole', label: 'Горизонт Подій', ring: 'blackhole', lock: { type: 'case' } },
+  { id: 'blackhole', label: 'Чорна діра', ring: 'blackhole', lock: { type: 'free' } },
 ];
 
 // --- Profile badges (small emblems shown next to the level pill) ---
