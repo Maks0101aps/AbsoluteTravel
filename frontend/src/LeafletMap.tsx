@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { CATEGORY_META, DIFFICULTY_META, type Place } from './data/places';
 import { AVATARS } from './data/profileOptions';
 import { cellPolygon, cellCenter } from './exploration/h3';
-import { UA_BORDER, UA_REGIONS } from './data/ukraineBorder';
+import { UA_BORDER } from './data/ukraineBorder';
 import { polygonToCells } from 'h3-js';
 import { Icon } from './icons';
 
@@ -722,26 +722,7 @@ function LeafletMap({
 
     if (!showGrid) return;
 
-    // 1. Draw H3 resolution 3 region boundaries (coarse grid)
-    UA_REGIONS.forEach((cellId) => {
-      try {
-        const polygon = L.polygon(cellPolygon(cellId), {
-          pane: GRID_PANE,
-          renderer: gridRendererRef.current ?? undefined,
-          color: 'rgba(155, 216, 180, 0.22)',
-          weight: 1.5,
-          dashArray: '5, 5',
-          fill: false,
-          interactive: false,
-        });
-        polygon.addTo(map);
-        gridLayersRef.current.push(polygon);
-      } catch (e) {
-        // ignore
-      }
-    });
-
-    // 2. Draw H3 resolution 9 cell boundaries (fine grid) when zoomed in
+    // Draw H3 resolution 9 cell boundaries (fine grid) when zoomed in
     if (zoom >= 14) {
       const bounds = map.getBounds();
       const west = bounds.getWest();
