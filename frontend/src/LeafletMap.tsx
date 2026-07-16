@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { CATEGORY_META, DIFFICULTY_META, type Place } from './data/places';
 import { AVATARS } from './data/profileOptions';
-import { cellPolygon, cellCenter, regionOf } from './exploration/h3';
+import { cellPolygon, cellCenter } from './exploration/h3';
 import { UA_BORDER, UA_REGIONS } from './data/ukraineBorder';
 import { polygonToCells } from 'h3-js';
 import { Icon } from './icons';
@@ -34,10 +34,6 @@ const GRID_PANE_Z = 355;
 const FOG_COLOR = '#0A1F16';
 // Never been anywhere near: full darkness.
 const FOG_DEEP_OPACITY = 0.95;
-// Been in the region, but not on this exact spot: a haze — you know roughly
-// what's here, the detail still has to be walked.
-const FOG_HAZE_OPACITY = 0.5;
-const FOG_REGION_STROKE = 'rgba(155,216,180,0.22)';
 
 // The outer ring of the fog. Deliberately the whole Mercator world rather than
 // Ukraine's bbox: the map bounces a little past maxBounds when panned hard, and
@@ -49,12 +45,6 @@ const WORLD_RING: [number, number][] = [
   [85, 180],
   [85, -180],
 ];
-
-// Below this zoom a res-9 hex is smaller than a pixel, so punching the fine
-// holes would cost thousands of rings to render something invisible. Zoomed
-// out, a visited region reads as one haze patch; zoom in and the walked cells
-// clear inside it.
-const FOG_FINE_ZOOM = 10;
 
 // How much slack the fog/mask renderers draw beyond the viewport, as a fraction
 // of its size (Leaflet's own default is 0.1, which is not enough — see where the
@@ -226,6 +216,12 @@ interface LeafletMapProps {
   // Live layer: current user + friends, rendered above the place markers.
   liveMarkers?: LiveMarker[];
 
+  // The user's own live position, if known. The first time this becomes
+  // available the map flies there once (see the centering effect below), so
+  // opening the map lands on wherever the user actually is instead of the
+  // static country-wide view.
+  focusPosition?: { lat: number; lng: number } | null;
+
   // Territory-exploration layer: H3 cell ids to paint as hexes, and the single
   // cell that was just unlocked (gets the one-shot reveal glow).
   exploredCells?: string[];
@@ -368,6 +364,7 @@ function LeafletMap({
   onPick,
   accent = '#3FA66B',
   liveMarkers,
+  focusPosition,
   exploredCells,
   revealedCell,
   fog = false,
@@ -375,6 +372,9 @@ function LeafletMap({
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  // Only auto-fly to the user once per mount — after that, panning/zooming is
+  // theirs to control again.
+  const hasFocusedRef = useRef(false);
   const markersRef = useRef<Map<string | number, L.Marker>>(new Map());
   const liveMarkersRef = useRef<Map<string | number, L.Marker>>(new Map());
   const hexLayersRef = useRef<Map<string, L.Polygon>>(new Map());
@@ -510,6 +510,18 @@ function LeafletMap({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // --- fly to the user's own position, once -----------------------------------
+  // `focusPosition` starts null and arrives asynchronously once the browser's
+  // geolocation resolves; fly there the first time it does so the map opens on
+  // wherever the user actually is (and whatever they've already unlocked
+  // nearby) instead of leaving them on the static Ukraine-wide view.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !focusPosition || hasFocusedRef.current) return;
+    hasFocusedRef.current = true;
+    map.flyTo([focusPosition.lat, focusPosition.lng], 13, { duration: 1 });
+  }, [focusPosition]);
 
   // --- sync place markers -----------------------------------------------------
   useEffect(() => {
@@ -656,12 +668,11 @@ function LeafletMap({
   }, [exploredCells, revealedCell]);
 
   // --- sync the fog of war ----------------------------------------------------
-  // Two stacked layers give three tiers of knowledge:
-  //   deep haze  — never travelled here          (world ring, regions punched out)
-  //   light haze — been in the region, not here  (region ring, walked cells punched out)
-  //   clear      — walked it                     (a hole in both layers)
-  // Both are rebuilt wholesale rather than diffed: the rings change on every pan
-  // and a rebuild is two polygons, while diffing them would be real bookkeeping.
+  // A single layer: deep fog everywhere, with a hole punched only at each
+  // individual walked cell — no separate "whole region" haze tier, so only the
+  // small hex you've actually stood in ever clears.
+  // Rebuilt wholesale rather than diffed: the ring changes on every pan and a
+  // rebuild is one polygon, while diffing it would be real bookkeeping.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -670,30 +681,25 @@ function LeafletMap({
     fogLayersRef.current = [];
     if (!fog) return;
 
-    // Group the walked cells by region once, instead of re-scanning the whole
-    // list for every region below.
-    const byRegion = new Map<string, string[]>();
-    for (const cellId of exploredCells ?? []) {
-      const region = regionOf(cellId);
-      if (!region) continue; // ignore a malformed id rather than break the fog
-      const bucket = byRegion.get(region);
-      if (bucket) bucket.push(cellId);
-      else byRegion.set(region, [cellId]);
-    }
+    // Cull to what the renderer actually draws, not to the visible viewport:
+    // culling tighter than the padding would leave un-punched fog sitting in
+    // the drawn-but-not-yet-visible slack, which then slides into view on a pan.
+    const view = map.getBounds().pad(FOG_RENDER_PADDING);
 
-    const regionRings = new Map<string, [number, number][]>();
-    for (const region of byRegion.keys()) {
+    const holes: [number, number][][] = [];
+    for (const cellId of exploredCells ?? []) {
       try {
-        regionRings.set(region, cellPolygon(region));
+        if (!view.contains(cellCenter(cellId))) continue;
+        holes.push(cellPolygon(cellId));
       } catch {
-        byRegion.delete(region);
+        // skip an unparseable cell, keep the rest of the fog
       }
     }
 
-    // Deep fog: the whole world, with every visited region cut out of it.
-    // With no regions yet this is a solid sheet — a brand-new user starts with
-    // the map entirely dark, which is the point.
-    const deep = L.polygon([WORLD_RING, ...regionRings.values()], {
+    // Deep fog: the whole world, with every walked cell cut out of it. With no
+    // cells yet this is a solid sheet — a brand-new user starts with the map
+    // entirely dark, which is the point.
+    const deep = L.polygon([WORLD_RING, ...holes], {
       pane: FOG_PANE,
       renderer: fogRendererRef.current ?? undefined,
       className: 'at-fog',
@@ -704,46 +710,6 @@ function LeafletMap({
     });
     deep.addTo(map);
     fogLayersRef.current.push(deep);
-
-    if (regionRings.size === 0) return;
-
-    // Light haze over each visited region, with the individual walked cells cut
-    // out of it. The fine holes are only worth punching once they're big enough
-    // to see, and only for the part of the world currently on screen.
-    const fine = map.getZoom() >= FOG_FINE_ZOOM;
-    // Cull to what the renderer actually draws, not to the visible viewport:
-    // culling tighter than the padding would leave un-punched haze sitting in
-    // the drawn-but-not-yet-visible slack, which then slides into view on a pan.
-    const view = map.getBounds().pad(FOG_RENDER_PADDING);
-
-    const hazeShapes: [number, number][][][] = [];
-    for (const [region, ring] of regionRings) {
-      const rings: [number, number][][] = [ring];
-      if (fine) {
-        for (const cellId of byRegion.get(region) ?? []) {
-          try {
-            if (!view.contains(cellCenter(cellId))) continue;
-            rings.push(cellPolygon(cellId));
-          } catch {
-            // skip an unparseable cell, keep the rest of the region's haze
-          }
-        }
-      }
-      hazeShapes.push(rings);
-    }
-
-    const haze = L.polygon(hazeShapes, {
-      pane: FOG_PANE,
-      renderer: fogRendererRef.current ?? undefined,
-      className: 'at-fog',
-      color: FOG_REGION_STROKE,
-      weight: 1,
-      fillColor: FOG_COLOR,
-      fillOpacity: FOG_HAZE_OPACITY,
-      interactive: false,
-    });
-    haze.addTo(map);
-    fogLayersRef.current.push(haze);
   }, [fog, exploredCells, zoom, viewKey]);
 
   // --- sync the grid lines ----------------------------------------------------
