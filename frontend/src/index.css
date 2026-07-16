@@ -297,75 +297,73 @@ a:hover {
 }
 
 /* ===================================================================
-   BLACK HOLE AVATAR FRAME ("Горизонт Подій", legendary loot-case frame)
+   BLACK HOLE AVATAR FRAME ("Чорна діра", free frame)
    Rendered by BlackHoleFrame.tsx (frame id: "blackhole" in
-   data/profileOptions.ts). Every layer animates transform/opacity only,
-   except the two feTurbulence filters (gravitational lensing + inner-edge
-   space warp), which are cheap because they're masked to thin ring strokes.
-
-   Coordinate system: the SVG uses viewBox="0 0 100 100", so rotation
-   transform-origin is given in raw viewBox units (50px 50px = center) —
-   the standard technique for animating <g> rotation in an SVG that scales
-   via its viewBox rather than fixed pixel dimensions.
+   data/profileOptions.ts) from the user-supplied artwork at
+   public/assets/blackhole_frame.png — a swirling blue/orange event-horizon
+   ring, chroma-keyed to a transparent center and transparent black
+   background. Two copies of that image are layered and spun in opposite
+   directions at different speeds for parallax depth, on top of a pulsing
+   glow and a handful of twinkling sparks.
    =================================================================== */
 
 .bhf-ring {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  overflow: visible; /* the outer glow is allowed to bleed past the avatar box */
+  overflow: visible; /* the glow/rotating rings are allowed to bleed past the avatar box */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* layer 1 (furthest back): soft outer glow, gently pulsing */
+/* soft outer glow, gently pulsing */
 .bhf-glow {
   position: absolute;
-  inset: -9%;
+  inset: -14%;
   border-radius: 50%;
   background:
     radial-gradient(circle closest-side,
-      transparent 65%,
-      color-mix(in srgb, #8a5cff 36%, transparent) 79%,
-      color-mix(in srgb, #3f66ff 24%, transparent) 91%,
+      transparent 55%,
+      color-mix(in srgb, #5CA9E8 40%, transparent) 76%,
+      color-mix(in srgb, #F0913F 28%, transparent) 92%,
       transparent 100%);
   animation: atBhfPulse 7.5s ease-in-out infinite;
 }
 
-/* layer 5 (front): bright rotating accretion ring, a conic-gradient
-   masked down to a thin annulus right at the avatar's edge */
-.bhf-accretion {
+/* the artwork itself: two counter-rotating copies for depth */
+.bhf-img {
   position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg,
-    #e6dbff 0deg, #8a5cff 55deg, #3f66ff 160deg, #8a5cff 260deg, #e6dbff 360deg);
-  -webkit-mask-image: radial-gradient(circle closest-side,
-    transparent 0%, transparent 79.5%, #000 80.5%, #000 84%, transparent 85%);
-          mask-image: radial-gradient(circle closest-side,
-    transparent 0%, transparent 79.5%, #000 80.5%, #000 84%, transparent 85%);
-  filter:
-    drop-shadow(0 0 3px rgba(138,92,255,.6))
-    drop-shadow(0 0 7px rgba(63,102,255,.4));
-  animation: atBhfSpin 40s linear infinite;
+  top: 50%;
+  left: 50%;
+  max-width: none;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 6px rgba(92,169,232,.5)) drop-shadow(0 0 10px rgba(240,145,63,.35));
 }
 
-.bhf-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.bhf-img-a { animation: atBhfSpinCentered    46s linear infinite; opacity: .95; }
+.bhf-img-b { animation: atBhfSpinCenteredRev 64s linear infinite; opacity: .55; mix-blend-mode: screen; }
 
-.bhf-dust-a  { animation: atBhfSpin      90s  linear infinite; transform-origin: 50px 50px; }
-.bhf-dust-b  { animation: atBhfSpinRev  130s  linear infinite; transform-origin: 50px 50px; }
-.bhf-lens-out{ animation: atBhfSpinRev   70s  linear infinite; transform-origin: 50px 50px; }
-.bhf-lens-in { animation: atBhfSpin      55s  linear infinite; transform-origin: 50px 50px; }
-.bhf-lane-b  { transform: rotate(160deg); transform-origin: 50px 50px; }
+.bhf-sparks { position: absolute; inset: -6%; }
+.bhf-spark {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #ffe8c9;
+  box-shadow: 0 0 4px 1px rgba(255,232,201,.9);
+  animation: atBhfFlash 11s ease-in-out infinite;
+}
+.bhf-spark:nth-of-type(1) { top: 4%;  left: 78%; }
+.bhf-spark:nth-of-type(2) { top: 82%; left: 86%; animation-duration: 14s; animation-delay: -3.2s; }
+.bhf-spark:nth-of-type(3) { top: 88%; left: 12%; animation-duration: 17s; animation-delay: -7.5s; }
+.bhf-spark:nth-of-type(4) { top: 10%; left: 8%;  animation-duration: 21s; animation-delay: -12s; }
 
-.bhf-spark { animation: atBhfFlash 11s ease-in-out infinite; transform-origin: 50px 50px; }
-.bhf-spark:nth-of-type(2) { animation-duration: 14s; animation-delay: -3.2s; }
-.bhf-spark:nth-of-type(3) { animation-duration: 17s; animation-delay: -7.5s; }
-.bhf-spark:nth-of-type(4) { animation-duration: 21s; animation-delay: -12s; }
-
-@keyframes atBhfSpin    { to { transform: rotate(360deg); } }
-@keyframes atBhfSpinRev { to { transform: rotate(-360deg); } }
+@keyframes atBhfSpinCentered    { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes atBhfSpinCenteredRev { to { transform: translate(-50%, -50%) rotate(-360deg); } }
 @keyframes atBhfPulse {
   0%, 100% { opacity: .78; transform: scale(1); }
-  50%      { opacity: 1;   transform: scale(1.018); }
+  50%      { opacity: 1;   transform: scale(1.05); }
 }
 @keyframes atBhfFlash {
   0%, 100% { opacity: 0; }
@@ -376,11 +374,8 @@ a:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bhf-glow, .bhf-accretion,
-  .bhf-dust-a, .bhf-dust-b,
-  .bhf-lens-out, .bhf-lens-in,
-  .bhf-spark { animation: none !important; }
-  .bhf-particles, .bhf-lens-out, .bhf-lens-in { display: none !important; }
+  .bhf-glow, .bhf-img-a, .bhf-img-b, .bhf-spark { animation: none !important; }
+  .bhf-img-b { display: none !important; }
 }
 
 /* ===================================================================
