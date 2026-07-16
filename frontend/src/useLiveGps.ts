@@ -11,10 +11,29 @@ const STALE_AFTER_MS = 5 * 60 * 1000;
 // Accept a recent cached fix instead of forcing a brand-new (slow) GPS lock.
 const GEO_MAX_AGE_MS = 60_000;
 
-// Last good fix, kept at module scope so it survives the hook unmounting when
-// the map tab is switched away. Lets the self dot reappear instantly on return
-// instead of waiting for a fresh geolocation fix.
-let lastKnownSelf: { lat: number; lng: number } | null = null;
+const LOCAL_STORAGE_GPS_KEY = 'at-last-known-gps';
+
+let lastKnownSelf: { lat: number; lng: number } | null = (() => {
+  try {
+    const saved = localStorage.getItem(LOCAL_STORAGE_GPS_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+})();
+
+function updateLastKnownSelf(pos: { lat: number; lng: number } | null) {
+  lastKnownSelf = pos;
+  try {
+    if (pos) {
+      localStorage.setItem(LOCAL_STORAGE_GPS_KEY, JSON.stringify(pos));
+    } else {
+      localStorage.removeItem(LOCAL_STORAGE_GPS_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
 
 export interface FriendDot extends LiveLocation {
   friend: FriendEntry;
@@ -81,7 +100,7 @@ export function useLiveGps(userId: number | undefined, enabled = true): LiveGpsS
         if (stopped || !sharingRef.current) return;
         const lat = Number(pos.coords.latitude.toFixed(6));
         const lng = Number(pos.coords.longitude.toFixed(6));
-        lastKnownSelf = { lat, lng };
+        updateLastKnownSelf({ lat, lng });
         setSelfPosition({ lat, lng });
         setGeoError(null);
 
@@ -120,7 +139,7 @@ export function useLiveGps(userId: number | undefined, enabled = true): LiveGpsS
           (pos) => {
             const lat = Number(pos.coords.latitude.toFixed(6));
             const lng = Number(pos.coords.longitude.toFixed(6));
-            lastKnownSelf = { lat, lng };
+            updateLastKnownSelf({ lat, lng });
             setSelfPosition({ lat, lng });
             if (userId) {
               getSocket(userId).then((socket) => {
