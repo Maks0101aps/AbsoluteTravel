@@ -297,7 +297,7 @@ function reelRewardSlot(def: CaseDef, result: OpenCaseResult): EquipKey {
 function openBtnStyle(accent: string, enabled: boolean): React.CSSProperties {
   return {
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '9px',
-    minWidth: '240px', padding: '15px 30px', borderRadius: '14px',
+    minWidth: 'min(240px, 100%)', maxWidth: '100%', padding: '15px 30px', borderRadius: '14px',
     border: 'none', cursor: enabled ? 'pointer' : 'not-allowed',
     background: enabled ? `linear-gradient(135deg, ${accent}, ${accent}CC)` : 'rgba(255,255,255,0.06)',
     color: enabled ? BG : 'rgba(244,241,232,0.4)',
