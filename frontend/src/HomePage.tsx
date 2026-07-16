@@ -30,12 +30,13 @@ const DEFAULT_ACCENT = '#3FA66B';
 type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'advisor' | 'profile';
 
 // The profile view is opened by clicking the avatar (top-right), not a tab.
-const TABS: { id: Tab; label: string; icon: IconName }[] = [
-  { id: 'map', label: 'Мапа мандрівок', icon: 'map' },
-  { id: 'friends', label: 'Друзі', icon: 'users' },
-  { id: 'leaderboard', label: 'Рейтинг', icon: 'trophy' },
-  { id: 'chat', label: 'Чат', icon: 'messageSquare' },
-  { id: 'advisor', label: 'ШІ-порадник', icon: 'compass' },
+// `short` is what the phone tab bar shows — the full labels don't fit six-across.
+const TABS: { id: Tab; label: string; short: string; icon: IconName }[] = [
+  { id: 'map', label: 'Мапа мандрівок', short: 'Мапа', icon: 'map' },
+  { id: 'friends', label: 'Друзі', short: 'Друзі', icon: 'users' },
+  { id: 'leaderboard', label: 'Рейтинг', short: 'Рейтинг', icon: 'trophy' },
+  { id: 'chat', label: 'Чат', short: 'Чат', icon: 'messageSquare' },
+  { id: 'advisor', label: 'ШІ-порадник', short: 'Порадник', icon: 'compass' },
 ];
 
 interface HomePageProps {
@@ -199,10 +200,10 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
   const maxWidth = tab === 'profile' ? '860px' : '1140px';
 
   return (
-    <div style={{ 
-      fontFamily: "'Manrope', sans-serif", 
-      background: BG, 
-      color: CREAM, 
+    <div className={`at-home-root${tab === 'chat' ? ' at-home-root-chat' : ''}`} style={{
+      fontFamily: "'Manrope', sans-serif",
+      background: BG,
+      color: CREAM,
       height: tab === 'chat' ? '100dvh' : 'auto',
       minHeight: '100dvh', 
       display: 'flex', 
@@ -301,6 +302,43 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
             Вийти
           </button>
         </div>
+      </nav>
+
+      {/* phone tab bar — CSS decides whether it shows, so the nav stays one source of truth */}
+      <nav className="at-tabbar" aria-label="Основна навігація">
+        {TABS.map((t) => {
+          const isActive = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`at-tabbar-btn${isActive ? ' at-tabbar-btn-on' : ''}`}
+              style={{ color: isActive ? accent : 'rgba(244,241,232,0.5)' }}
+            >
+              <span className="at-tabbar-icon">
+                <Icon name={t.icon} size={19} strokeWidth={1.9} />
+                {t.id === 'chat' && totalUnread > 0 && (
+                  <span className="at-tabbar-badge" style={{ background: accent, color: BG }}>
+                    {totalUnread > 9 ? '9+' : totalUnread}
+                  </span>
+                )}
+              </span>
+              {t.short}
+            </button>
+          );
+        })}
+        {p && (
+          <button
+            onClick={() => { setShopError(null); setShopOpen(true); }}
+            className="at-tabbar-btn"
+            style={{ color: '#F0C64B' }}
+          >
+            <span className="at-tabbar-icon">
+              <Icon name="shoppingBag" size={19} strokeWidth={1.9} stroke="#F0C64B" />
+            </span>
+            Магазин
+          </button>
+        )}
       </nav>
 
       <main className={`at-home-main ${tab === 'chat' ? 'at-chat-main-tab' : ''}`} style={{ maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>

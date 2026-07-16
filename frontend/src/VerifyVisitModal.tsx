@@ -105,6 +105,7 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
   return (
     <div
       onClick={onClose}
+      className="at-sheet-shell"
       style={{
         position: 'fixed',
         inset: 0,
@@ -120,6 +121,7 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        className="at-sheet-panel"
         style={{
           width: '100%',
           maxWidth: '520px',

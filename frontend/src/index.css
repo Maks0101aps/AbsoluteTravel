@@ -705,3 +705,184 @@ a:hover {
   0% { filter: hue-rotate(0deg) saturate(1.2); }
   100% { filter: hue-rotate(360deg) saturate(1.2); }
 }
+
+/* ============================================================================
+   Mobile layer. Most of the app styles inline, so the overrides that have to
+   win against a style attribute carry !important. Breakpoints match the ones
+   already used above: 860 (tablet) / 560 (phone) / 380 (small phone).
+   ========================================================================= */
+
+@keyframes sheetUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Nothing should ever scroll the page sideways. `clip` rather than `hidden`
+   on purpose: `hidden` turns the element into a scroll container, which breaks
+   the sticky home navbar. `clip` trims the overflow without that side effect. */
+body { overflow-x: clip; max-width: 100%; }
+img, svg, video, canvas { max-width: 100%; }
+
+@media (max-width: 860px) {
+  /* iOS Safari zooms the whole page when a focused field is under 16px.
+     Every form in this app sets 13-14px inline, so pin it here instead. */
+  input, textarea, select { font-size: 16px !important; }
+}
+
+/* ---- phone tab bar ------------------------------------------------------
+   The logged-in nav carries five tabs plus a shop button, which cannot share
+   one row with the avatar and logout on a phone. Below 860px those tabs move
+   to a fixed bar at the bottom, native-app style, and the top nav keeps only
+   identity + coins. --at-tabbar is what everything else pads around. */
+
+:root { --at-tabbar: 0px; }
+.at-tabbar { display: none; }
+
+@media (max-width: 860px) {
+  :root { --at-tabbar: calc(58px + env(safe-area-inset-bottom)); }
+
+  .at-home-nav-tabs { display: none !important; }
+
+  .at-tabbar {
+    display: flex;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 60;
+    align-items: stretch;
+    background: rgba(7,31,22,0.94);
+    backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .at-tabbar-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 8px 2px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Manrope', sans-serif;
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.2s ease;
+  }
+  .at-tabbar-icon { position: relative; display: inline-flex; }
+  .at-tabbar-badge {
+    position: absolute;
+    top: -5px; left: 10px;
+    font-size: 8.5px;
+    font-weight: 800;
+    line-height: 1;
+    border-radius: 999px;
+    padding: 2px 4px;
+  }
+  /* the active tab gets a bar on its top edge rather than a filled pill */
+  .at-tabbar-btn-on { position: relative; }
+  .at-tabbar-btn-on::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 22px; height: 2px;
+    border-radius: 0 0 3px 3px;
+    background: currentColor;
+  }
+
+  /* keep page content clear of the bar — but not the chat tab, which instead
+     shrinks its own viewport height below */
+  .at-home-main:not(.at-chat-main-tab) {
+    padding-bottom: calc(40px + var(--at-tabbar)) !important;
+  }
+  .at-home-root-chat { height: calc(100dvh - var(--at-tabbar)) !important; min-height: 0 !important; }
+}
+
+@media (max-width: 380px) {
+  .at-tabbar-btn { font-size: 8.5px; }
+}
+
+/* ---- modals become sheets on phones -------------------------------------
+   The form modals (verify visit, add place, edit place) centre a card in a
+   padded overlay. On a phone that wastes the edges and puts the submit button
+   below the fold, so they dock to the bottom edge instead. */
+
+@media (max-width: 560px) {
+  .at-sheet-shell {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+  .at-sheet-panel {
+    max-width: 100% !important;
+    max-height: 94dvh;
+    overflow-y: auto;
+    border-radius: 20px 20px 0 0 !important;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom)) !important;
+    animation: sheetUp 0.26s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+  }
+
+  /* the shop is dense enough to earn the whole screen */
+  .at-shop-shell { padding: 0 !important; }
+  .at-shop-panel {
+    max-width: 100% !important;
+    height: 100dvh;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* profile editor */
+  .at-ps-page { padding: 26px 14px 40px !important; }
+  .at-ps-card { min-width: 0 !important; flex-basis: 100% !important; }
+}
+
+@media (max-width: 380px) {
+  .at-ps-page { padding: 20px 10px 32px !important; }
+}
+
+/* Two-column flex layouts (friends, admin, profile editor) declare a minWidth
+   so they sit side by side on desktop. On a small phone that minimum is wider
+   than the viewport, which is what pushes the page sideways. */
+@media (max-width: 560px) {
+  .at-col { min-width: 0 !important; flex-basis: 100% !important; }
+  /* the map is the point of the explore tab — give it more of the screen */
+  .at-explore-grid { gap: 16px !important; }
+}
+
+/* ---- landing + auth -----------------------------------------------------
+   The landing panels lay out as flex rows whose columns declare a desktop
+   minWidth (320px for the map, 240px for its caption). Below that width the
+   minimum, not the content, is what pushes the page sideways. */
+
+@media (max-width: 560px) {
+  .at-panel > div { min-width: 0 !important; }
+  /* the decorative Ukraine map keeps a workable height once it goes full width */
+  .at-panel svg { min-height: 0; }
+
+  .at-hero { padding: 28px 16px 44px !important; }
+  .at-hero-inner { gap: 28px !important; }
+  .at-cta { padding: 56px 16px 64px !important; }
+  .at-auth-card { padding: 26px 18px !important; border-radius: 16px !important; }
+}
+
+@media (max-width: 380px) {
+  .at-hero { padding: 22px 12px 36px !important; }
+  .at-auth-card { padding: 22px 14px !important; }
+  .at-cta { padding: 44px 12px 52px !important; }
+}
+
+/* ---- admin moderation panel --------------------------------------------- */
+@media (max-width: 860px) {
+  .at-admin-nav { padding: 12px 16px !important; }
+  .at-admin-main { padding: 28px 16px 56px !important; }
+}
+@media (max-width: 380px) {
+  .at-admin-main { padding: 22px 12px 44px !important; }
+}
