@@ -312,18 +312,25 @@ function openBtnStyle(accent: string, enabled: boolean): React.CSSProperties {
 function IdleCase({ def, locked }: { def: CaseDef; locked: boolean }) {
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ position: 'relative', width: '150px', height: '110px' }}>
+      <div style={{ position: 'relative', width: '190px', height: '110px' }}>
         {/* glow */}
         <div style={{ position: 'absolute', inset: '-30px', borderRadius: '50%', background: `radial-gradient(circle, ${def.accent}44, transparent 70%)`, animation: 'softGlowOpacity 3s ease-in-out infinite' }} />
         {/* box */}
-        <div style={{ position: 'absolute', inset: 0, borderRadius: '14px', background: def.gradient, border: `2px solid ${def.accent}`, boxShadow: `0 16px 40px -12px ${def.accent}, inset 0 0 30px -10px rgba(0,0,0,0.6)`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', filter: locked ? 'grayscale(0.6) brightness(0.7)' : 'none' }}>
-          {/* lid seam */}
-          <div style={{ position: 'absolute', top: '34%', left: 0, right: 0, height: '2px', background: 'rgba(0,0,0,0.35)' }} />
-          {/* latch */}
-          <div style={{ position: 'absolute', top: 'calc(34% - 10px)', left: '50%', transform: 'translateX(-50%)', width: '26px', height: '20px', borderRadius: '5px', background: `${def.accent}`, boxShadow: '0 2px 6px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name={locked ? 'check' : 'lock'} size={12} strokeWidth={2.2} stroke={BG} />
-          </div>
-          <Icon name="gift" size={46} strokeWidth={1.5} stroke="rgba(255,255,255,0.9)" />
+        <div style={{ position: 'absolute', inset: 0, borderRadius: '14px', border: `2px solid ${def.accent}`, boxShadow: `0 16px 40px -12px ${def.accent}`, overflow: 'hidden', filter: locked ? 'grayscale(0.6) brightness(0.7)' : 'none' }}>
+          {def.imageUrl ? (
+            <img src={def.imageUrl} alt={def.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ width: '100%', height: '100%', background: def.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ position: 'absolute', top: '34%', left: 0, right: 0, height: '2px', background: 'rgba(0,0,0,0.35)' }} />
+              <Icon name="gift" size={46} strokeWidth={1.5} stroke="rgba(255,255,255,0.9)" />
+            </div>
+          )}
+          {/* overlay lock/checkmark icons if locked */}
+          {locked && (
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon name="check" size={24} strokeWidth={2.5} stroke="#FFF" />
+            </div>
+          )}
         </div>
       </div>
     </div>

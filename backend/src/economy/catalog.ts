@@ -9,7 +9,6 @@ export const PRICES: Record<string, number> = {
   a16: 400,
   a17: 450,
   a13: 500,
-  a18: 650,
   a19: 800,
   a20: 1000,
   a14: 1500,

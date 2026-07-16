@@ -27,7 +27,9 @@ export function itemVisual(slot: EquipKey, id: string, size = 40): ItemVisual {
       return {
         label: AVATAR_NAMES[a.icon] ?? 'Аватар',
         slotLabel: 'Аватар',
-        node: (
+        node: a.imageUrl ? (
+          <img src={a.imageUrl} alt={a.id} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
           <div style={{ width: '100%', height: '100%', background: a.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name={a.icon} size={size} stroke="rgba(244,241,232,0.95)" strokeWidth={1.7} />
           </div>
@@ -84,8 +86,11 @@ export function itemVisual(slot: EquipKey, id: string, size = 40): ItemVisual {
         label: ef?.label ?? 'Ефект',
         slotLabel: 'Ефект',
         node: (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: 'linear-gradient(135deg,#0B3B29,#071F16)' }}>
-            <Icon name="sparkle" size={size} strokeWidth={1.6} stroke="#F0C64B" />
+          <div style={{ position: 'relative', width: '100%', height: '100%', background: 'linear-gradient(135deg,#0B3B29,#071F16)', overflow: 'hidden' }}>
+            <ProfileCardEffect effectId={id} color="#F0C64B" />
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+              <Icon name="sparkle" size={size} strokeWidth={1.6} stroke="#F0C64B" />
+            </div>
           </div>
         ),
       };
@@ -97,4 +102,127 @@ export function itemVisual(slot: EquipKey, id: string, size = 40): ItemVisual {
 export function equipValue(slot: EquipKey, id: string): string {
   if (slot === 'color') return COLORS.find((c) => c.id === id)?.value ?? id;
   return id;
+}
+
+export function ProfileCardEffect({ effectId, color }: { effectId: string | undefined; color: string }) {
+  if (!effectId || effectId === 'none') return null;
+  switch (effectId) {
+    case 'glow':
+      return (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            boxShadow: `inset 0 0 80px -10px ${color}bf`,
+            animation: 'softGlowOpacity 3.5s ease-in-out infinite',
+            zIndex: 1,
+          }}
+        />
+      );
+    case 'aurora':
+      return <div className="effect-aurora" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', mixBlendMode: 'screen', zIndex: 1 }} />;
+    case 'sparkle':
+      return <div className="effect-sparkle" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }} />;
+    case 'fireflies':
+      return <div className="effect-fireflies" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }} />;
+    case 'matrix':
+      return <div className="effect-matrix" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }} />;
+    case 'vortex':
+      return <div className="effect-vortex" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }} />;
+    default:
+      return null;
+  }
+}
+
+// Hand-placed star field for the "Космос" background — position (top%, left%),
+// size in px and animation-delay in seconds, so the twinkle never looks synced.
+const COSMOS_STARS: { top: number; left: number; size: number; delay: number }[] = [
+  { top: 8, left: 12, size: 2, delay: 0 },
+  { top: 14, left: 68, size: 1.5, delay: 0.4 },
+  { top: 22, left: 34, size: 2, delay: 1.1 },
+  { top: 6, left: 82, size: 1.5, delay: 1.8 },
+  { top: 30, left: 8, size: 1.5, delay: 2.4 },
+  { top: 18, left: 52, size: 2.5, delay: 0.9 },
+  { top: 40, left: 90, size: 1.5, delay: 3.1 },
+  { top: 4, left: 45, size: 1.5, delay: 1.4 },
+  { top: 26, left: 76, size: 2, delay: 2.7 },
+  { top: 12, left: 25, size: 1.5, delay: 0.2 },
+  { top: 35, left: 60, size: 1.5, delay: 3.6 },
+  { top: 46, left: 15, size: 2, delay: 1.6 },
+  { top: 10, left: 95, size: 1.5, delay: 2.1 },
+  { top: 42, left: 40, size: 1.5, delay: 4 },
+  { top: 2, left: 65, size: 2, delay: 0.7 },
+  { top: 33, left: 4, size: 1.5, delay: 3.3 },
+];
+
+// Extra flourish layered over the "Космос" (cosmos) profile background: a
+// twinkling star field and an occasional comet streak. Screen-blended so it
+// glows through the background's own dark gradient instead of being hidden
+// under it. CSS-only, transform/opacity.
+export function ProfileCosmosFlourish({ backgroundId }: { backgroundId: string | undefined }) {
+  if (backgroundId !== 'cosmos') return null;
+  return (
+    <div className="bg-cosmos-flourish" aria-hidden="true">
+      {COSMOS_STARS.map((s, i) => (
+        <span
+          key={i}
+          className="bg-cosmos-star"
+          style={{
+            top: `${s.top}%`,
+            left: `${s.left}%`,
+            width: s.size,
+            height: s.size,
+            animationDelay: `${s.delay}s`,
+          }}
+        />
+      ))}
+      <div className="bg-cosmos-comet" />
+    </div>
+  );
+}
+
+// Hand-placed falling petals for the "Сакура" background — horizontal start
+// position (left%), size in px, and independent delay/duration so the drift
+// never looks synced or mechanical.
+const SAKURA_PETALS: { left: number; size: number; delay: number; duration: number }[] = [
+  { left: 4, size: 7, delay: 0, duration: 9 },
+  { left: 14, size: 6, delay: -2.4, duration: 11 },
+  { left: 24, size: 8, delay: -5.1, duration: 8 },
+  { left: 33, size: 6, delay: -1.2, duration: 12 },
+  { left: 42, size: 7, delay: -7.6, duration: 10 },
+  { left: 50, size: 6, delay: -3.8, duration: 9 },
+  { left: 58, size: 8, delay: -6.4, duration: 13 },
+  { left: 66, size: 6, delay: -0.6, duration: 10 },
+  { left: 74, size: 7, delay: -4.5, duration: 8 },
+  { left: 82, size: 6, delay: -8.2, duration: 12 },
+  { left: 90, size: 8, delay: -2.9, duration: 9 },
+  { left: 96, size: 6, delay: -5.9, duration: 11 },
+];
+
+// Extra flourish layered over the "Сакура" (cherry blossom) profile
+// background: faint pink petals, cut to an actual petal silhouette (not a
+// blob), drifting down across the whole card. The background photo itself
+// gets its wind-sway animation separately, via the .bg-wind-sway class
+// applied where the background is rendered (HomePage/ProfileSetup) — no
+// extra branch elements here. CSS-only, transform/opacity.
+export function ProfileSakuraFlourish({ backgroundId }: { backgroundId: string | undefined }) {
+  if (backgroundId !== 'sakura') return null;
+  return (
+    <div className="bg-sakura-flourish" aria-hidden="true">
+      {SAKURA_PETALS.map((p, i) => (
+        <span
+          key={i}
+          className="sakura-petal"
+          style={{
+            left: `${p.left}%`,
+            width: p.size,
+            height: p.size,
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${p.duration}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
 }

@@ -15,6 +15,7 @@ import {
   type Lock,
 } from './data/profileOptions';
 import { MAX_LEVEL } from './data/leveling';
+import { ProfileCardEffect, ProfileCosmosFlourish, ProfileSakuraFlourish } from './itemVisuals';
 
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
@@ -234,10 +235,13 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
               transition: 'outline-color 0.18s ease',
             }}
           >
-            <div style={{ position: 'absolute', inset: 0, background: background.css, transition: 'background 0.25s ease' }} />
-            {effectId === 'glow' && (
-              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', boxShadow: `inset 0 0 80px -10px ${color}bf`, animation: 'softGlowOpacity 3.5s ease-in-out infinite' }} />
-            )}
+            <div
+              className={backgroundId === 'sakura' ? 'bg-wind-sway' : undefined}
+              style={{ position: 'absolute', inset: 0, background: background.css, transition: 'background 0.25s ease' }}
+            />
+            <ProfileCosmosFlourish backgroundId={backgroundId} />
+            <ProfileSakuraFlourish backgroundId={backgroundId} />
+            <ProfileCardEffect effectId={effectId} color={color} />
 
             <div style={{ position: 'relative', padding: '24px 30px 30px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <XpBar xp={user.xp} accent={color} />

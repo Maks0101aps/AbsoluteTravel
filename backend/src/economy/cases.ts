@@ -45,6 +45,7 @@ export const CASES: Record<string, CaseDef> = {
       { itemId: 'aurora', rarity: 'rare' },
       { itemId: 'a19', rarity: 'rare' },
       { itemId: 'magma', rarity: 'rare' },
+      { itemId: 'fireflies', rarity: 'rare' },
       { itemId: 'nebula', rarity: 'epic' },
       { itemId: 'a21', rarity: 'epic' },
       { itemId: 'mirage', rarity: 'legendary' },
@@ -70,17 +71,17 @@ export const CASES: Record<string, CaseDef> = {
       { itemId: 'volcano', rarity: 'epic' },
       { itemId: 'a21', rarity: 'epic' },
       { itemId: 'nebula', rarity: 'epic' },
+      { itemId: 'matrix', rarity: 'epic' },
       { itemId: 'mirage', rarity: 'legendary' },
       { itemId: 'a23', rarity: 'legendary' },
     ],
   },
   legendary: {
     id: 'legendary',
-    cost: 500,
+    cost: 0, // TODO: temporarily free for testing the new blackhole frame — restore to 500
     oneTime: false,
     rewards: [
       { itemId: 'midnight', rarity: 'common' },
-      { itemId: 'a18', rarity: 'common' },
       { itemId: 'pathfinder', rarity: 'common' },
       { itemId: 'aurora', rarity: 'uncommon' },
       { itemId: 'a19', rarity: 'uncommon' },
@@ -94,6 +95,8 @@ export const CASES: Record<string, CaseDef> = {
       { itemId: 'mirage', rarity: 'legendary' },
       { itemId: 'a23', rarity: 'legendary' },
       { itemId: 'a14', rarity: 'legendary' },
+      { itemId: 'vortex', rarity: 'legendary' },
+      { itemId: 'blackhole', rarity: 'legendary' },
     ],
   },
 };

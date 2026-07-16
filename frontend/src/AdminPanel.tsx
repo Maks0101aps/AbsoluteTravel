@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   adminListPlaces,
   adminPlaceCounts,
@@ -11,10 +11,15 @@ import {
   type AdminPlace,
   type AdminAccount,
   type AdminSession,
+  type AuthUser,
+  type ProfileCustomization,
 } from './api';
 import { CATEGORY_META, DIFFICULTY_META, type PlaceCategory } from './data/places';
 import AddPlaceForm from './AddPlaceForm';
 import EditPlaceModal from './EditPlaceModal';
+import ProfileSetup from './ProfileSetup';
+import { AVATARS, COLORS, BACKGROUNDS, FRAMES, BADGES, EFFECTS } from './data/profileOptions';
+import { MAX_LEVEL } from './data/leveling';
 import { Icon } from './icons';
 
 const CREAM = '#F4F1E8';
@@ -46,19 +51,101 @@ interface AdminMenuProps {
 // Full-page admin menu. Login happens through the shared participant login
 // form; this is only ever rendered once an admin session exists.
 function AdminMenu({ session, onLogout, accent = DEFAULT_ACCENT }: AdminMenuProps) {
+  const [view, setView] = useState<'dashboard' | 'profile'>('dashboard');
+
   return (
     <div style={{ fontFamily: "'Manrope', sans-serif", background: BG, color: CREAM, minHeight: '100vh' }}>
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 40px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <nav style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 40px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap' }}>
         <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '40px', width: 'auto', display: 'block' }} />
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', color: accent, background: `${accent}18`, border: `1px solid ${accent}44`, borderRadius: '999px', padding: '6px 13px' }}>
-          <Icon name="lock" size={14} strokeWidth={2} />
-          ПАНЕЛЬ АДМІНІСТРАТОРА
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            onClick={() => setView((v) => (v === 'profile' ? 'dashboard' : 'profile'))}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.04em', color: view === 'profile' ? '#071F16' : accent, background: view === 'profile' ? accent : `${accent}18`, border: `1px solid ${accent}44`, borderRadius: '999px', padding: '8px 15px', cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}
+          >
+            <Icon name={view === 'profile' ? 'arrowLeft' : 'user'} size={14} strokeWidth={2} />
+            {view === 'profile' ? 'До панелі' : 'Кастомізувати профіль'}
+          </button>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', color: accent, background: `${accent}18`, border: `1px solid ${accent}44`, borderRadius: '999px', padding: '6px 13px' }}>
+            <Icon name="lock" size={14} strokeWidth={2} />
+            ПАНЕЛЬ АДМІНІСТРАТОРА
+          </span>
+        </div>
       </nav>
-      <main style={{ maxWidth: '1140px', margin: '0 auto', padding: '40px 24px 80px' }}>
-        <AdminDashboard accent={accent} session={session} onLogout={onLogout} />
-      </main>
+      {view === 'profile' ? (
+        <AdminProfileEditor admin={session.admin} onDone={() => setView('dashboard')} />
+      ) : (
+        <main style={{ maxWidth: '1140px', margin: '0 auto', padding: '40px 24px 80px' }}>
+          <AdminDashboard accent={accent} session={session} onLogout={onLogout} />
+        </main>
+      )}
     </div>
+  );
+}
+
+// --- Admin profile customization --------------------------------------------
+// Admin accounts aren't rows in the User table (no coins/level/loot-cases),
+// so instead of gating cosmetics behind that economy, every admin simply has
+// every cosmetic unlocked. Reuses the same ProfileSetup editor regular users
+// get — it has no backend side effects of its own (it just hands the built
+// ProfileCustomization to onComplete), so it's safe to drive with a synthetic
+// "always unlocked" user. The customization itself lives in localStorage,
+// scoped by admin id — kept out of the AdminSession object on purpose, since
+// that gets overwritten with a fresh copy from the server on every session
+// re-validation (see Root.tsx), which would silently wipe it otherwise.
+
+const ALL_COSMETIC_IDS = [...AVATARS, ...COLORS, ...BACKGROUNDS, ...FRAMES, ...BADGES, ...EFFECTS].map((o) => o.id);
+
+function adminProfileKey(adminId: number) {
+  return `absolute_travel_admin_profile_${adminId}`;
+}
+
+function loadAdminProfile(adminId: number): ProfileCustomization | undefined {
+  try {
+    const raw = localStorage.getItem(adminProfileKey(adminId));
+    return raw ? (JSON.parse(raw) as ProfileCustomization) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function saveAdminProfile(adminId: number, profile: ProfileCustomization) {
+  try {
+    localStorage.setItem(adminProfileKey(adminId), JSON.stringify(profile));
+  } catch {
+    // ignore storage errors (e.g. private mode)
+  }
+}
+
+function AdminProfileEditor({ admin, onDone }: { admin: AdminAccount; onDone: () => void }) {
+  const syntheticUser: AuthUser = useMemo(
+    () => ({
+      id: admin.id,
+      username: admin.login,
+      email: '',
+      city: null,
+      region: null,
+      name: admin.name,
+      avatar: '/assets/avatar_default.svg',
+      level: MAX_LEVEL,
+      xp: 999999,
+      coins: 999999,
+      unlockedItems: ALL_COSMETIC_IDS,
+      rank: 'admin',
+      currentDestination: null,
+      profile: loadAdminProfile(admin.id),
+    }),
+    [admin],
+  );
+
+  return (
+    <ProfileSetup
+      user={syntheticUser}
+      onComplete={(profile) => {
+        saveAdminProfile(admin.id, profile);
+        onDone();
+      }}
+      onSkip={onDone}
+    />
   );
 }
 
