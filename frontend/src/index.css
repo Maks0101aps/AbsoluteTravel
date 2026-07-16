@@ -552,3 +552,161 @@ a:hover {
   40% { transform: scale(1.18); color: #9BD8B4; }
   100% { transform: scale(1); }
 }
+
+/* ---- Preview flourishes for cosmetics ---- */
+.preview-sparkle {
+  position: absolute;
+  color: #F0C64B;
+  font-size: 10px;
+  text-shadow: 0 0 4px #F0C64B;
+  animation: atPreviewSparkle 2s ease-in-out infinite alternate;
+}
+@keyframes atPreviewSparkle {
+  0% { opacity: 0.2; transform: scale(0.7) rotate(0deg); }
+  100% { opacity: 1; transform: scale(1.1) rotate(45deg); }
+}
+
+.preview-firefly {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #7bdaa2;
+  box-shadow: 0 0 6px 2px #7bdaa2;
+  animation: atPreviewFirefly 2.5s ease-in-out infinite alternate;
+}
+@keyframes atPreviewFirefly {
+  0% { opacity: 0.1; transform: translate(0, 0) scale(0.8); }
+  100% { opacity: 0.9; transform: translate(8px, -10px) scale(1.1); }
+}
+
+.preview-matrix-stream {
+  position: absolute;
+  top: -20px;
+  width: 1px;
+  height: 30px;
+  background: linear-gradient(180deg, transparent, #4b84e0);
+  animation: atPreviewMatrix 2s linear infinite;
+}
+@keyframes atPreviewMatrix {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 0.8; }
+  80% { opacity: 0.8; }
+  100% { transform: translateY(140px); opacity: 0; }
+}
+
+.preview-vortex-ring {
+  box-shadow: inset 0 0 12px rgba(211, 44, 230, 0.4);
+}
+
+/* ---- Active card profile effects ---- */
+.effect-firefly-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: #7bdaa2;
+  box-shadow: 0 0 8px 3px #7bdaa2;
+  animation: atFireflyFloat linear infinite alternate;
+}
+@keyframes atFireflyFloat {
+  0% { transform: translate(0, 0) scale(0.8); opacity: 0.15; }
+  50% { opacity: 0.95; }
+  100% { transform: translate(25px, -35px) scale(1.1); opacity: 0.15; }
+}
+
+.effect-sparkle-particle {
+  position: absolute;
+  color: #F0C64B;
+  text-shadow: 0 0 6px #F0C64B;
+  font-size: 12px;
+  animation: atSparkleTwinkle 2.2s ease-in-out infinite alternate;
+}
+@keyframes atSparkleTwinkle {
+  0% { opacity: 0.15; transform: scale(0.6) rotate(0deg); }
+  100% { opacity: 1; transform: scale(1.2) rotate(90deg); }
+}
+
+.effect-matrix-drop {
+  position: absolute;
+  top: -40px;
+  width: 2px;
+  height: 45px;
+  background: linear-gradient(180deg, transparent, #4b84e0);
+  animation: atMatrixDrop linear infinite;
+}
+@keyframes atMatrixDrop {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 0.95; }
+  90% { opacity: 0.95; }
+  100% { transform: translateY(320px); opacity: 0; }
+}
+
+.effect-vortex-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #d32ce6;
+  box-shadow: 0 0 6px 2px #d32ce6;
+  top: 50%;
+  left: 50%;
+  animation: atVortexSuck 6s linear infinite;
+}
+@keyframes atVortexSuck {
+  0% {
+    transform: rotate(var(--start-angle)) translate(var(--start-radius)) scale(1.2);
+    opacity: 0.9;
+  }
+  100% {
+    transform: rotate(calc(var(--start-angle) + 720deg)) translate(0px) scale(0.1);
+    opacity: 0;
+  }
+}
+
+/* ---- Animated Avatar Frames (Rings) ---- */
+.avatar-frame-glow {
+  animation: atFrameGlow 2s ease-in-out infinite alternate;
+}
+@keyframes atFrameGlow {
+  0% { transform: scale(1); filter: brightness(1); }
+  100% { transform: scale(1.02); filter: brightness(1.15) saturate(1.1); }
+}
+
+.avatar-frame-gold {
+  animation: atFrameGold 3.5s ease-in-out infinite alternate;
+}
+@keyframes atFrameGold {
+  0% { box-shadow: 0 0 0 3px rgba(231,195,75,0.35), 0 0 12px rgba(231,195,75,0.5); filter: contrast(1); }
+  100% { box-shadow: 0 0 0 5px rgba(231,195,75,0.55), 0 0 24px rgba(231,195,75,0.85); filter: contrast(1.15) brightness(1.1); }
+}
+
+.avatar-frame-gem {
+  animation: atFrameGem 5s linear infinite;
+}
+@keyframes atFrameGem {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.avatar-frame-frost {
+  animation: atFrameFrost 2.5s ease-in-out infinite alternate;
+}
+@keyframes atFrameFrost {
+  0% { box-shadow: 0 0 0 3px rgba(143,212,232,0.35), 0 0 12px rgba(143,212,232,0.5); }
+  100% { box-shadow: 0 0 0 6px rgba(143,212,232,0.6), 0 0 26px rgba(143,212,232,0.85); filter: brightness(1.2); }
+}
+
+.avatar-frame-magma {
+  animation: atFrameMagma 1.5s ease-in-out infinite alternate;
+}
+@keyframes atFrameMagma {
+  0% { transform: scale(1); box-shadow: 0 0 0 3px rgba(240,113,63,0.4), 0 0 16px rgba(240,113,63,0.6); }
+  100% { transform: scale(1.01); box-shadow: 0 0 0 5px rgba(255,60,0,0.65), 0 0 28px rgba(255,60,0,0.95); filter: brightness(1.25) saturate(1.3); }
+}
+
+.avatar-frame-prism {
+  animation: atFramePrism 6s linear infinite;
+}
+@keyframes atFramePrism {
+  0% { filter: hue-rotate(0deg) saturate(1.2); }
+  100% { filter: hue-rotate(360deg) saturate(1.2); }
+}

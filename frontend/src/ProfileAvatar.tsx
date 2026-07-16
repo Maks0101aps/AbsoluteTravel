@@ -38,7 +38,16 @@ function frameStyle(frameId: string | undefined, color: string): React.CSSProper
 // Renders the chosen avatar (uploaded image or emoji-on-gradient) with the selected frame.
 function ProfileAvatar({ avatarId, customAvatar, frameId, color, size = 96 }: ProfileAvatarProps) {
   const avatar = AVATARS.find((a) => a.id === avatarId) ?? AVATARS[0];
-  const isBlackHole = FRAMES.find((f) => f.id === frameId)?.ring === 'blackhole';
+  const frame = FRAMES.find((f) => f.id === frameId);
+  const isBlackHole = frame?.ring === 'blackhole';
+
+  let frameClass = '';
+  if (frame?.ring === 'glow') frameClass = 'avatar-frame-glow';
+  else if (frame?.ring === 'gold') frameClass = 'avatar-frame-gold';
+  else if (frame?.ring === 'gem') frameClass = 'avatar-frame-gem';
+  else if (frame?.ring === 'frost') frameClass = 'avatar-frame-frost';
+  else if (frame?.ring === 'magma') frameClass = 'avatar-frame-magma';
+  else if (frame?.ring === 'prism') frameClass = 'avatar-frame-prism';
 
   const common: React.CSSProperties = {
     width: size,
@@ -53,11 +62,11 @@ function ProfileAvatar({ avatarId, customAvatar, frameId, color, size = 96 }: Pr
   };
 
   const avatarEl = customAvatar ? (
-    <img src={customAvatar} alt="avatar" style={{ ...common, objectFit: 'cover' }} />
+    <img src={customAvatar} className={frameClass} alt="avatar" style={{ ...common, objectFit: 'cover' }} />
   ) : avatar.imageUrl ? (
-    <img src={avatar.imageUrl} alt={avatar.id} style={{ ...common, objectFit: 'cover' }} />
+    <img src={avatar.imageUrl} className={frameClass} alt={avatar.id} style={{ ...common, objectFit: 'cover' }} />
   ) : (
-    <div style={{ ...common, background: avatar.gradient }}>
+    <div className={frameClass} style={{ ...common, background: avatar.gradient }}>
       <Icon name={avatar.icon} size={size * 0.46} stroke="rgba(244,241,232,0.95)" strokeWidth={1.7} />
     </div>
   );
