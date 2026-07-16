@@ -16,6 +16,7 @@ import {
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
 const GOLD = '#F0C64B';
+import { ProfileCardEffect } from './itemVisuals';
 
 export type EquipKey = 'avatar' | 'background' | 'frame' | 'color' | 'badges' | 'effect';
 
@@ -165,8 +166,8 @@ function ProfileShop({ coins, level, owned, buying, error, selections, openedCas
           equipped: selections.effectId === ef.id,
           preview: (
             <div style={{ position: 'relative', height: '100%', overflow: 'hidden', background: 'linear-gradient(135deg,#0B3B29,#071F16)' }}>
-              <div style={{ position: 'absolute', inset: 0, ['--glow-color' as any]: `${selections.color}88`, animation: ef.id === 'none' ? undefined : 'softGlow 3.5s ease-in-out infinite' }} />
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selections.color }}>
+              <ProfileCardEffect effectId={ef.id} color={selections.color} />
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: selections.color, zIndex: 2 }}>
                 <Icon name="sparkle" size={30} stroke={selections.color} strokeWidth={1.6} />
               </div>
             </div>

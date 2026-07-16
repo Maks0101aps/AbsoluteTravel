@@ -31,6 +31,7 @@ export interface CaseDef {
   accent: string; // themed color for the case card / lid
   gradient: string; // case artwork background
   rewards: CaseReward[];
+  imageUrl?: string;
 }
 
 export const CASES: CaseDef[] = [
@@ -42,6 +43,7 @@ export const CASES: CaseDef[] = [
     oneTime: false,
     accent: '#3FA66B',
     gradient: 'linear-gradient(145deg,#0F5136,#0A3325 55%,#071F16)',
+    imageUrl: '/assets/case_starter.avif',
     rewards: [
       { slot: 'background', id: 'ocean', rarity: 'common' },
       { slot: 'avatar', id: 'a15', rarity: 'common' },
@@ -53,6 +55,7 @@ export const CASES: CaseDef[] = [
       { slot: 'background', id: 'aurora', rarity: 'rare' },
       { slot: 'avatar', id: 'a19', rarity: 'rare' },
       { slot: 'frame', id: 'magma', rarity: 'rare' },
+      { slot: 'effect', id: 'fireflies', rarity: 'rare' },
       { slot: 'background', id: 'nebula', rarity: 'epic' },
       { slot: 'avatar', id: 'a21', rarity: 'epic' },
       { slot: 'background', id: 'mirage', rarity: 'legendary' },
@@ -67,6 +70,7 @@ export const CASES: CaseDef[] = [
     oneTime: false,
     accent: '#4B84E0',
     gradient: 'linear-gradient(145deg,#123A6E,#0C2547 55%,#07162E)',
+    imageUrl: '/assets/case_wanderer.avif',
     rewards: [
       { slot: 'background', id: 'ocean', rarity: 'common' },
       { slot: 'avatar', id: 'a15', rarity: 'common' },
@@ -82,6 +86,7 @@ export const CASES: CaseDef[] = [
       { slot: 'background', id: 'volcano', rarity: 'epic' },
       { slot: 'avatar', id: 'a21', rarity: 'epic' },
       { slot: 'background', id: 'nebula', rarity: 'epic' },
+      { slot: 'effect', id: 'matrix', rarity: 'epic' },
       { slot: 'background', id: 'mirage', rarity: 'legendary' },
       { slot: 'avatar', id: 'a23', rarity: 'legendary' },
     ],
@@ -90,13 +95,13 @@ export const CASES: CaseDef[] = [
     id: 'legendary',
     name: 'Легендарний кейс',
     tagline: 'Найрідкісніші прикраси. Високий ризик — висока нагорода.',
-    cost: 500,
+    cost: 0, // TODO: temporarily free for testing the new blackhole frame — restore to 500
     oneTime: false,
     accent: '#F0C64B',
     gradient: 'linear-gradient(145deg,#5E4410,#3A2A08 55%,#1E1604)',
+    imageUrl: '/assets/case_legendary.avif',
     rewards: [
       { slot: 'background', id: 'midnight', rarity: 'common' },
-      { slot: 'avatar', id: 'a18', rarity: 'common' },
       { slot: 'badges', id: 'pathfinder', rarity: 'common' },
       { slot: 'background', id: 'aurora', rarity: 'uncommon' },
       { slot: 'avatar', id: 'a19', rarity: 'uncommon' },
@@ -110,6 +115,8 @@ export const CASES: CaseDef[] = [
       { slot: 'background', id: 'mirage', rarity: 'legendary' },
       { slot: 'avatar', id: 'a23', rarity: 'legendary' },
       { slot: 'avatar', id: 'a14', rarity: 'legendary' },
+      { slot: 'effect', id: 'vortex', rarity: 'legendary' },
+      { slot: 'frame', id: 'blackhole', rarity: 'legendary' },
     ],
   },
 ];

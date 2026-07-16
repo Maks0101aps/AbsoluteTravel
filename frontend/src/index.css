@@ -217,3 +217,279 @@ a:hover {
   0%, 55% { transform: translateX(-100%); }
   75%, 100% { transform: translateX(100%); }
 }
+
+/* ===================================================================
+   PROFILE CARD EFFECTS
+   =================================================================== */
+
+.effect-aurora {
+  background: linear-gradient(120deg, rgba(143,212,232,0.15) 0%, rgba(211,44,230,0.15) 50%, rgba(240,198,75,0.12) 100%);
+  background-size: 200% 200%;
+  animation: atAuroraShift 8s ease infinite;
+}
+@keyframes atAuroraShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.effect-sparkle {
+  background-image: 
+    radial-gradient(circle, #F0C64B 8%, transparent 10%),
+    radial-gradient(circle, #F0C64B 8%, transparent 10%);
+  background-size: 44px 44px;
+  background-position: 0 0, 22px 22px;
+  opacity: 0.14;
+  animation: atSparkleDrift 5s linear infinite;
+}
+@keyframes atSparkleDrift {
+  0% { background-position: 0 0, 22px 22px; }
+  100% { background-position: 0 -44px, 22px -22px; }
+}
+
+.effect-fireflies {
+  background-image: 
+    radial-gradient(circle, rgba(123,214,162,0.7) 6%, transparent 8%),
+    radial-gradient(circle, rgba(123,214,162,0.7) 6%, transparent 8%);
+  background-size: 64px 64px;
+  background-position: 12px 12px, 44px 34px;
+  opacity: 0.28;
+  animation: atFirefliesDrift 7s ease-in-out infinite alternate;
+}
+@keyframes atFirefliesDrift {
+  0% { transform: translate(0, 0) scale(1); opacity: 0.2; }
+  50% { opacity: 0.5; }
+  100% { transform: translate(16px, -24px) scale(0.9); opacity: 0.2; }
+}
+
+.effect-matrix {
+  background: linear-gradient(180deg, transparent 0%, rgba(75,132,224,0.16) 45%, transparent 90%);
+  background-size: 100% 88px;
+  animation: atMatrixRain 2.2s linear infinite;
+}
+@keyframes atMatrixRain {
+  0% { background-position-y: 0px; }
+  100% { background-position-y: 88px; }
+}
+
+.effect-vortex {
+  background: radial-gradient(circle, rgba(211,44,230,0.14) 0%, transparent 60%);
+  animation: atVortexPulse 4s ease-in-out infinite alternate;
+}
+@keyframes atVortexPulse {
+  0% { opacity: 0.4; transform: scale(0.95); }
+  100% { opacity: 0.95; transform: scale(1.1); }
+}
+
+/* ===================================================================
+   BLACK HOLE AVATAR FRAME ("Горизонт Подій", legendary loot-case frame)
+   Rendered by BlackHoleFrame.tsx (frame id: "blackhole" in
+   data/profileOptions.ts). Every layer animates transform/opacity only,
+   except the two feTurbulence filters (gravitational lensing + inner-edge
+   space warp), which are cheap because they're masked to thin ring strokes.
+
+   Coordinate system: the SVG uses viewBox="0 0 100 100", so rotation
+   transform-origin is given in raw viewBox units (50px 50px = center) —
+   the standard technique for animating <g> rotation in an SVG that scales
+   via its viewBox rather than fixed pixel dimensions.
+   =================================================================== */
+
+.bhf-ring {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible; /* the outer glow is allowed to bleed past the avatar box */
+}
+
+/* layer 1 (furthest back): soft outer glow, gently pulsing */
+.bhf-glow {
+  position: absolute;
+  inset: -9%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle closest-side,
+      transparent 65%,
+      color-mix(in srgb, #8a5cff 36%, transparent) 79%,
+      color-mix(in srgb, #3f66ff 24%, transparent) 91%,
+      transparent 100%);
+  animation: atBhfPulse 7.5s ease-in-out infinite;
+}
+
+/* layer 5 (front): bright rotating accretion ring, a conic-gradient
+   masked down to a thin annulus right at the avatar's edge */
+.bhf-accretion {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg,
+    #e6dbff 0deg, #8a5cff 55deg, #3f66ff 160deg, #8a5cff 260deg, #e6dbff 360deg);
+  -webkit-mask-image: radial-gradient(circle closest-side,
+    transparent 0%, transparent 79.5%, #000 80.5%, #000 84%, transparent 85%);
+          mask-image: radial-gradient(circle closest-side,
+    transparent 0%, transparent 79.5%, #000 80.5%, #000 84%, transparent 85%);
+  filter:
+    drop-shadow(0 0 3px rgba(138,92,255,.6))
+    drop-shadow(0 0 7px rgba(63,102,255,.4));
+  animation: atBhfSpin 40s linear infinite;
+}
+
+.bhf-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+.bhf-dust-a  { animation: atBhfSpin      90s  linear infinite; transform-origin: 50px 50px; }
+.bhf-dust-b  { animation: atBhfSpinRev  130s  linear infinite; transform-origin: 50px 50px; }
+.bhf-lens-out{ animation: atBhfSpinRev   70s  linear infinite; transform-origin: 50px 50px; }
+.bhf-lens-in { animation: atBhfSpin      55s  linear infinite; transform-origin: 50px 50px; }
+.bhf-lane-b  { transform: rotate(160deg); transform-origin: 50px 50px; }
+
+.bhf-spark { animation: atBhfFlash 11s ease-in-out infinite; transform-origin: 50px 50px; }
+.bhf-spark:nth-of-type(2) { animation-duration: 14s; animation-delay: -3.2s; }
+.bhf-spark:nth-of-type(3) { animation-duration: 17s; animation-delay: -7.5s; }
+.bhf-spark:nth-of-type(4) { animation-duration: 21s; animation-delay: -12s; }
+
+@keyframes atBhfSpin    { to { transform: rotate(360deg); } }
+@keyframes atBhfSpinRev { to { transform: rotate(-360deg); } }
+@keyframes atBhfPulse {
+  0%, 100% { opacity: .78; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.018); }
+}
+@keyframes atBhfFlash {
+  0%, 100% { opacity: 0; }
+  3%  { opacity: .95; }
+  5%  { opacity: .25; }
+  7%  { opacity: .85; }
+  10% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bhf-glow, .bhf-accretion,
+  .bhf-dust-a, .bhf-dust-b,
+  .bhf-lens-out, .bhf-lens-in,
+  .bhf-spark { animation: none !important; }
+  .bhf-particles, .bhf-lens-out, .bhf-lens-in { display: none !important; }
+}
+
+/* ===================================================================
+   COSMOS PROFILE BACKGROUND FLOURISH
+   Rendered by ProfileCosmosFlourish (itemVisuals.tsx) only when
+   backgroundId === "cosmos". Sits above the background's own dark
+   gradient photo and screen-blends into it: a twinkling star field and
+   a rare comet streak. Every animation is transform/opacity, so it's
+   cheap even layered on top of a background photo.
+
+   (Earlier revision also had two large drifting nebula blobs — dropped:
+   at small/medium card sizes their soft edges still read as flat purple
+   circles sitting on top of the avatar and badges, which looked like a
+   bug rather than atmosphere.)
+   =================================================================== */
+
+.bg-cosmos-flourish {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bg-cosmos-star {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 4px 1px rgba(255,255,255,0.8);
+  mix-blend-mode: screen;
+  animation: atCosmosTwinkle 3.4s ease-in-out infinite;
+}
+@keyframes atCosmosTwinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50%      { opacity: 1;    transform: scale(1.15); }
+}
+
+/* one quiet streak every 9s — a fixed-px travel distance so it reads
+   consistently across card widths without needing layout-triggering
+   percentage animation. */
+.bg-cosmos-comet {
+  position: absolute;
+  top: 15%;
+  left: -6%;
+  width: 70px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9) 55%, rgba(180,200,255,1));
+  transform: rotate(18deg);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: atCosmosComet 9s linear infinite;
+  animation-delay: 3s;
+}
+@keyframes atCosmosComet {
+  0%   { transform: translate(0, 0) rotate(18deg); opacity: 0; }
+  2%   { opacity: 1; }
+  20%  { transform: translate(760px, 220px) rotate(18deg); opacity: 0; }
+  100% { transform: translate(760px, 220px) rotate(18deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-cosmos-star, .bg-cosmos-comet { animation: none !important; }
+  .bg-cosmos-star { opacity: 0.7; }
+}
+
+/* ===================================================================
+   SAKURA PROFILE BACKGROUND FLOURISH
+   Rendered by ProfileSakuraFlourish (itemVisuals.tsx) only when
+   backgroundId === "sakura": faint petals — cut to an actual petal
+   silhouette via clip-path, not a blob — drifting down across the card.
+   The photo itself sways like it's in the wind via .bg-wind-sway, applied
+   directly to the background layer in HomePage/ProfileSetup. Transform/
+   opacity only.
+   =================================================================== */
+
+.bg-sakura-flourish {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* single cherry-blossom petal: rounded body tapering to a base point, with
+   a small notch at the outer tip — the shape that actually reads as "sakura
+   petal" rather than a generic dot. Percentages, so it scales with the
+   element's own width/height (6–8px here). */
+.sakura-petal {
+  position: absolute;
+  top: -14px;
+  clip-path: polygon(
+    50% 100%,
+    20% 55%, 5% 25%,
+    25% 0%, 50% 15%, 75% 0%,
+    95% 25%, 80% 55%
+  );
+  background: radial-gradient(circle at 30% 30%, #ffe3ef, #ff9ec7 60%, #f472b6 100%);
+  opacity: 0.45;
+  animation: atSakuraFall linear infinite;
+}
+@keyframes atSakuraFall {
+  0%   { transform: translate(0, -20px) rotate(0deg);        opacity: 0; }
+  8%   { opacity: .5; }
+  30%  { transform: translate(14px, 110px) rotate(80deg);    opacity: .5; }
+  55%  { transform: translate(-10px, 220px) rotate(200deg);  opacity: .45; }
+  80%  { transform: translate(12px, 340px) rotate(300deg);   opacity: .35; }
+  100% { transform: translate(-6px, 430px) rotate(380deg);   opacity: 0; }
+}
+
+/* the "wind" for the sakura background: applied straight to the div that
+   carries the photo (background: background.css) — scaled up slightly so
+   the gentle rotate/translate never reveals an edge inside the rounded card. */
+.bg-wind-sway {
+  animation: atWindSway 11s ease-in-out infinite;
+}
+@keyframes atWindSway {
+  0%, 100% { transform: scale(1.04) rotate(-0.5deg) translate(0, 0); }
+  25%      { transform: scale(1.045) rotate(0.35deg) translate(0.5%, -0.3%); }
+  50%      { transform: scale(1.04) rotate(0.55deg) translate(-0.4%, 0.35%); }
+  75%      { transform: scale(1.045) rotate(-0.35deg) translate(0.3%, 0.25%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sakura-petal, .bg-wind-sway { animation: none !important; }
+  .sakura-petal { display: none !important; }
+}

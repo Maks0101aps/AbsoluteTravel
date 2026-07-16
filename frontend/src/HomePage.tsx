@@ -20,6 +20,7 @@ import ChatPage from './ChatPage';
 import { getSocket, closeSocket } from './socket';
 import { AVATARS, BACKGROUNDS, BADGES, COLORS, EFFECTS, FRAMES } from './data/profileOptions';
 import { Icon, type IconName } from './icons';
+import { ProfileCardEffect, ProfileCosmosFlourish, ProfileSakuraFlourish } from './itemVisuals';
 
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
@@ -371,10 +372,13 @@ function ProfileTab({
     <>
       {/* profile banner */}
       <div style={{ position: 'relative', borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.10)', marginBottom: '30px', boxShadow: '0 24px 60px -20px rgba(0,0,0,0.7)' }}>
-        <div style={{ position: 'absolute', inset: 0, background: background?.css ?? 'linear-gradient(135deg,#0B3B29,#071F16)' }} />
-        {p.effectId === 'glow' && (
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', ['--glow-color' as any]: `${accent}80`, animation: 'softGlow 3.5s ease-in-out infinite' }} />
-        )}
+        <div
+          className={p.backgroundId === 'sakura' ? 'bg-wind-sway' : undefined}
+          style={{ position: 'absolute', inset: 0, background: background?.css ?? 'linear-gradient(135deg,#0B3B29,#071F16)' }}
+        />
+        <ProfileCosmosFlourish backgroundId={p.backgroundId} />
+        <ProfileSakuraFlourish backgroundId={p.backgroundId} />
+        <ProfileCardEffect effectId={p.effectId} color={accent} />
         <div style={{ position: 'relative', padding: '24px 30px 30px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
           <XpBar xp={user.xp} accent={accent} />
           <div style={{ display: 'flex', alignItems: 'center', gap: '22px', flexWrap: 'wrap' }}>
