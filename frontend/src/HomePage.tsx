@@ -317,28 +317,27 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
+                title={t.label}
                 style={{
+                  position: 'relative',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '5px',
+                  justifyContent: 'center',
                   flexShrink: 0,
-                  whiteSpace: 'nowrap',
+                  width: '38px',
+                  height: '38px',
                   background: isActive ? `${accent}1F` : 'transparent',
                   border: `1px solid ${isActive ? `${accent}66` : 'transparent'}`,
                   color: isActive ? accent : 'rgba(244,241,232,0.65)',
-                  borderRadius: '9px',
-                  padding: '7px 9px',
-                  fontSize: '12.5px',
-                  fontWeight: 700,
+                  borderRadius: '50%',
+                  padding: 0,
                   cursor: 'pointer',
-                  fontFamily: "'Manrope', sans-serif",
                   transition: 'all 0.2s ease',
                 }}
               >
-                <Icon name={t.icon} size={14} strokeWidth={1.9} />
-                {t.label}
+                <Icon name={t.icon} size={17} strokeWidth={1.9} />
                 {badgeOf(t.id) > 0 && (
-                  <span style={{ background: accent, color: BG, fontSize: '10px', fontWeight: 800, borderRadius: '999px', padding: '1px 6px', marginLeft: '1px' }}>
+                  <span style={{ position: 'absolute', top: '-3px', right: '-3px', background: accent, color: BG, fontSize: '9.5px', fontWeight: 800, borderRadius: '999px', padding: '1px 5px', lineHeight: 1.4 }}>
                     {badgeOf(t.id)}
                   </span>
                 )}
@@ -352,23 +351,20 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '5px',
+                justifyContent: 'center',
                 flexShrink: 0,
-                whiteSpace: 'nowrap',
+                width: '38px',
+                height: '38px',
                 background: 'rgba(240,198,75,0.12)',
                 border: '1px solid rgba(240,198,75,0.35)',
                 color: '#F0C64B',
-                borderRadius: '9px',
-                padding: '7px 9px',
-                fontSize: '12.5px',
-                fontWeight: 700,
+                borderRadius: '50%',
+                padding: 0,
                 cursor: 'pointer',
-                fontFamily: "'Manrope', sans-serif",
                 transition: 'all 0.2s ease',
               }}
             >
-              <Icon name="shoppingBag" size={14} strokeWidth={1.9} stroke="#F0C64B" />
-              Магазин
+              <Icon name="shoppingBag" size={17} strokeWidth={1.9} stroke="#F0C64B" />
             </button>
           )}
         </div>
