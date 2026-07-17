@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PLACES, CATEGORY_META, DIFFICULTY_META, type Place, type PlaceCategory } from './data/places';
-import { getPlaces, type VerifyCheckmarkResult, type VisitCellResult, type ProfileCustomization } from './api';
+import { getPlaces, type VerifyCheckmarkResult, type VisitCellResult, type ProfileCustomization, getFriendLabels, reactToFriendLabel, reportFriendLabel, deleteFriendLabel, type FriendLabel } from './api';
 import AddPlaceForm from './AddPlaceForm';
+import AddLabelForm from './AddLabelForm';
+
 import VerifyVisitModal from './VerifyVisitModal';
 import LeafletMap, { type LiveMarker } from './LeafletMap';
 import { useLiveGps, type FriendDot } from './useLiveGps';
@@ -110,6 +112,13 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
   const [verifyPlace, setVerifyPlace] = useState<Place | null>(null);
   const [selectedFriend, setSelectedFriend] = useState<FriendDot | null>(null);
 
+  // Local friend labels states
+  const [friendLabels, setFriendLabels] = useState<FriendLabel[]>([]);
+  const [activeLabelId, setActiveLabelId] = useState<number | null>(null);
+  const [hoverLabelId, setHoverLabelId] = useState<number | null>(null);
+  const [showLabelForm, setShowLabelForm] = useState(false);
+  const [showSelectionModal, setShowSelectionModal] = useState(false);
+
   // Live GPS: own pulsing dot + friends' dots (server broadcasts every 10s).
   const { selfPosition, friendDots, sharing, geoError, setSharing } = useLiveGps(userId);
 
@@ -177,10 +186,22 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
       });
   };
 
+  const loadLabels = () => {
+    if (userId == null) return;
+    getFriendLabels(userId)
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setFriendLabels(data);
+        }
+      })
+      .catch(() => {});
+  };
+
   useEffect(() => {
     loadPlaces();
+    loadLabels();
     setActiveId((cur) => cur ?? PLACES[0]?.id ?? null);
-  }, []);
+  }, [userId]);
 
   // As soon as we know where the user is (and have places to compare against),
   // highlight the nearest one instead of leaving the arbitrary first-in-list
@@ -208,6 +229,11 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
     return places.find((p) => p.id === id);
   }, [hoverId, activeId, places]);
 
+  const shownLabel: FriendLabel | undefined = useMemo(() => {
+    const id = hoverLabelId ?? activeLabelId;
+    return friendLabels.find((l) => l.id === id);
+  }, [hoverLabelId, activeLabelId, friendLabels]);
+
   return (
     <div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -220,7 +246,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
           </p>
         </div>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => setShowSelectionModal(true)}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -265,16 +291,25 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
             places={visiblePlaces}
             activeId={activeId}
             hoverId={hoverId}
-            onSelect={(id) => setActiveId(id)}
+            onSelect={(id) => {
+              setActiveId(id);
+              setActiveLabelId(null);
+            }}
             onHover={(id) => setHoverId(id)}
             liveMarkers={userId != null ? liveMarkers : undefined}
             focusPosition={userId != null ? selfPosition : undefined}
             exploredCells={userId != null ? visitedCells : undefined}
             revealedCell={lastRevealed}
-            // Guests have nothing unlocked, so fogging them would just hand them
-            // a black rectangle instead of the map they came to browse.
             fog={userId != null}
             height="clamp(320px, 60vh, 560px)"
+            friendLabels={friendLabels}
+            activeLabelId={activeLabelId}
+            hoverLabelId={hoverLabelId}
+            onSelectLabel={(id) => {
+              setActiveLabelId(id);
+              setActiveId(null);
+            }}
+            onHoverLabel={(id) => setHoverLabelId(id)}
           />
 
           {/* territory progress + floating "+XP" popups (logged-in users only) */}
@@ -426,7 +461,44 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
               overflowY: 'auto',
             }}
           >
-            {shown ? (
+            {shownLabel ? (
+              <LabelDetailView
+                label={shownLabel}
+                userId={userId}
+                accent={accent}
+                onDelete={async (id) => {
+                  if (userId == null) return;
+                  await deleteFriendLabel(id, userId);
+                  setActiveLabelId(null);
+                  setFriendLabels((cur) => cur.filter((l) => l.id !== id));
+                }}
+                onReact={async (id, type) => {
+                  if (userId == null) return;
+                  const res = await reactToFriendLabel(id, userId, type);
+                  setFriendLabels((cur) =>
+                    cur.map((l) =>
+                      l.id === id
+                        ? {
+                            ...l,
+                            likesCount: res.likesCount,
+                            dislikesCount: res.dislikesCount,
+                            myReaction: res.myReaction,
+                          }
+                        : l
+                    )
+                  );
+                }}
+                onReport={async (id, reason) => {
+                  if (userId == null) return { action: 'kept', reason: 'Будь ласка, увійдіть' };
+                  const res = await reportFriendLabel(id, userId, reason);
+                  if (res.action === 'deleted') {
+                    setFriendLabels((cur) => cur.filter((l) => l.id !== id));
+                    setActiveLabelId(null);
+                  }
+                  return res;
+                }}
+              />
+            ) : shown ? (
               <>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   <CategoryBadge category={shown.category} />
@@ -583,6 +655,150 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
         />
       )}
 
+      {showLabelForm && userId != null && (
+        <AddLabelForm
+          accent={accent}
+          userId={userId}
+          onClose={() => setShowLabelForm(false)}
+          onCreated={(newLabel) => {
+            setFriendLabels((cur) => [newLabel, ...cur]);
+            setActiveLabelId(newLabel.id);
+            setActiveId(null);
+          }}
+        />
+      )}
+
+      {showSelectionModal && (
+        <div
+          onClick={() => setShowSelectionModal(false)}
+          className="at-sheet-shell"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 2000,
+            background: 'rgba(4,16,11,0.72)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '500px',
+              background: '#071F16',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '20px',
+              padding: '28px',
+              fontFamily: "'Manrope', sans-serif",
+              color: CREAM,
+              boxShadow: '0 30px 80px -24px rgba(0,0,0,0.8)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '22px', margin: 0 }}>
+                Що ви хочете додати?
+              </h3>
+              <button
+                onClick={() => setShowSelectionModal(false)}
+                aria-label="Закрити"
+                style={{
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.14)',
+                  color: CREAM,
+                  borderRadius: '10px',
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flex: '0 0 auto',
+                }}
+              >
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* Option 1: Public Place */}
+              <button
+                onClick={() => {
+                  setShowSelectionModal(false);
+                  setShowForm(true);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  color: CREAM,
+                  fontFamily: "'Manrope', sans-serif",
+                  transition: 'all 0.2s ease',
+                  width: '100%',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = accent)}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)')}
+              >
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: `${accent}20`, color: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
+                  <Icon name="map" size={22} strokeWidth={2} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '15px', fontWeight: 700, marginBottom: '2px' }}>Публічне місце</div>
+                  <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.6)' }}>Цікава локація для всіх мандрівників України (модерується ШІ).</div>
+                </div>
+              </button>
+
+              {/* Option 2: Friend Label */}
+              <button
+                onClick={() => {
+                  if (userId == null) return;
+                  setShowSelectionModal(false);
+                  setShowLabelForm(true);
+                }}
+                disabled={userId == null}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  textAlign: 'left',
+                  cursor: userId == null ? 'not-allowed' : 'pointer',
+                  color: CREAM,
+                  fontFamily: "'Manrope', sans-serif",
+                  transition: 'all 0.2s ease',
+                  opacity: userId == null ? 0.5 : 1,
+                  width: '100%',
+                }}
+                onMouseEnter={(e) => userId != null && (e.currentTarget.style.borderColor = '#ffffff')}
+                onMouseLeave={(e) => userId != null && (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)')}
+              >
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto' }}>
+                  <Icon name="flag" size={22} strokeWidth={2} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '15px', fontWeight: 700, marginBottom: '2px' }}>Мітка для друзів</div>
+                  <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.6)' }}>
+                    {userId == null ? 'Увійдіть в систему, щоб створювати мітки' : 'Локальна мітка з вашими параметрами для себе та друзів.'}
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {verifyPlace && userId != null && (
         <VerifyVisitModal
           place={verifyPlace}
@@ -706,3 +922,330 @@ function PhotoStrip({ photos, name }: { photos: string[]; name: string }) {
 
 
 export default ExploreMap;
+
+// --- Sub-components for local labels ---------------------------------------
+
+interface LabelDetailViewProps {
+  label: FriendLabel;
+  userId?: number;
+  accent: string;
+  onDelete: (id: number) => Promise<void>;
+  onReact: (id: number, type: 'LIKE' | 'DISLIKE' | null) => Promise<void>;
+  onReport: (id: number, reason: string) => Promise<{ action: 'deleted' | 'kept'; reason: string }>;
+}
+
+function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }: LabelDetailViewProps) {
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reporting, setReporting] = useState(false);
+  const [reportFeedback, setReportFeedback] = useState<{ action: string; reason: string } | null>(null);
+
+  // Time remaining
+  let expiresStr = '';
+  if (label.isTemporary && label.expiresAt) {
+    const diff = new Date(label.expiresAt).getTime() - Date.now();
+    if (diff > 0) {
+      const hours = Math.floor(diff / (3600 * 1000));
+      const mins = Math.floor((diff % (3600 * 1000)) / (60 * 1000));
+      expiresStr = `Залишилось: ${hours} год ${mins} хв`;
+    } else {
+      expiresStr = 'Термін закінчився';
+    }
+  }
+
+  let params: Record<string, string> = {};
+  try {
+    params = JSON.parse(label.customParams || '{}');
+  } catch {}
+
+  const handleReportSubmit = async () => {
+    if (!reportReason.trim()) return;
+    setReporting(true);
+    try {
+      const res = await onReport(label.id, reportReason.trim());
+      setReportFeedback(res);
+    } catch (err: any) {
+      setReportFeedback({ action: 'kept', reason: err?.message || 'Помилка скарги' });
+    } finally {
+      setReporting(false);
+    }
+  };
+
+  const isOwner = userId != null && label.userId === userId;
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px',
+            fontSize: '11px',
+            fontWeight: 700,
+            color: label.friendsOnly ? '#ffffff' : '#FCEB92',
+            background: label.friendsOnly ? 'rgba(255,255,255,0.1)' : 'rgba(252,235,146,0.1)',
+            border: `1px solid ${label.friendsOnly ? 'rgba(255,255,255,0.3)' : 'rgba(252,235,146,0.3)'}`,
+            borderRadius: '999px',
+            padding: '3px 9px',
+          }}
+        >
+          <Icon name="flag" size={12} strokeWidth={2} />
+          {label.friendsOnly ? 'Тільки для друзів' : 'Публічна'}
+        </span>
+
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px',
+            fontSize: '11px',
+            fontWeight: 700,
+            color: 'rgba(244,241,232,0.6)',
+            background: 'rgba(244,241,232,0.05)',
+            border: '1px solid rgba(244,241,232,0.15)',
+            borderRadius: '999px',
+            padding: '3px 9px',
+          }}
+        >
+          {label.isTemporary ? `Тимчасова · ${expiresStr}` : 'Постійна мітка'}
+        </span>
+      </div>
+
+      <div style={{ fontFamily: "'Lora', serif", fontSize: '22px', fontWeight: 500, margin: '0 0 4px', color: '#ffffff' }}>
+        {label.name}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'rgba(244,241,232,0.5)', marginBottom: '14px' }}>
+        <img
+          src={label.user.avatar || '/assets/avatar_default.svg'}
+          alt=""
+          style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }}
+        />
+        <span>Додав: {label.user.name || label.user.username}</span>
+      </div>
+
+      {label.photo && (
+        <div style={{ marginBottom: '14px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', aspectRatio: '16 / 10', background: '#04100B' }}>
+          <img src={label.photo} alt={label.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        </div>
+      )}
+
+      <p style={{ fontSize: '13.5px', lineHeight: 1.65, color: 'rgba(244,241,232,0.78)', margin: '0 0 16px' }}>
+        {label.description}
+      </p>
+
+      {/* custom params */}
+      {Object.keys(params).length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '0 0 16px', padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+          {Object.entries(params).map(([k, v]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px' }}>
+              <span style={{ color: 'rgba(244,241,232,0.5)', fontWeight: 600 }}>{k}</span>
+              <span style={{ color: CREAM, fontWeight: 700 }}>{v}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* coordinates */}
+      <div style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.4)', marginBottom: '16px' }}>
+        Координати: {label.lat.toFixed(5)}, {label.lng.toFixed(5)}
+      </div>
+
+      {/* Likes / Dislikes / Actions row */}
+      {userId != null && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '14px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            {/* Like */}
+            <button
+              onClick={() => onReact(label.id, label.myReaction === 'LIKE' ? null : 'LIKE')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: label.myReaction === 'LIKE' ? 'rgba(63, 166, 107, 0.15)' : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${label.myReaction === 'LIKE' ? accent : 'rgba(255,255,255,0.12)'}`,
+                color: label.myReaction === 'LIKE' ? accent : 'rgba(244,241,232,0.7)',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                fontSize: '12.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: "'Manrope', sans-serif",
+              }}
+            >
+              <Icon name="sun" size={14} strokeWidth={2} />
+              <span>{label.likesCount}</span>
+            </button>
+
+            {/* Dislike */}
+            <button
+              onClick={() => onReact(label.id, label.myReaction === 'DISLIKE' ? null : 'DISLIKE')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: label.myReaction === 'DISLIKE' ? 'rgba(224, 90, 90, 0.15)' : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${label.myReaction === 'DISLIKE' ? '#E05A5A' : 'rgba(255,255,255,0.12)'}`,
+                color: label.myReaction === 'DISLIKE' ? '#E05A5A' : 'rgba(244,241,232,0.7)',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                fontSize: '12.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: "'Manrope', sans-serif",
+              }}
+            >
+              <Icon name="moon" size={14} strokeWidth={2} />
+              <span>{label.dislikesCount}</span>
+            </button>
+
+            <div style={{ flex: 1 }} />
+
+            {/* Delete button (owner only) */}
+            {isOwner && (
+              <button
+                onClick={() => onDelete(label.id)}
+                style={{
+                  background: 'rgba(224, 90, 90, 0.15)',
+                  border: '1px solid rgba(224, 90, 90, 0.4)',
+                  color: '#E05A5A',
+                  borderRadius: '8px',
+                  padding: '6px 12px',
+                  fontSize: '12.5px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
+                Видалити
+              </button>
+            )}
+
+            {/* Report toggle button (non-owner only) */}
+            {!isOwner && !showReportForm && !reportFeedback && (
+              <button
+                onClick={() => setShowReportForm(true)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: 'rgba(244,241,232,0.6)',
+                  borderRadius: '8px',
+                  padding: '6px 12px',
+                  fontSize: '12.5px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
+                Поскаржитись
+              </button>
+            )}
+          </div>
+
+          {/* Inline Report Form */}
+          {showReportForm && !reportFeedback && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '12px' }}>
+              <label style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(244,241,232,0.6)' }}>Причина скарги:</label>
+              <textarea
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                placeholder="Вкажіть, чому ця мітка є неприйнятною..."
+                rows={2}
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  background: 'rgba(0,0,0,0.2)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '8px',
+                  padding: '8px 10px',
+                  color: CREAM,
+                  fontSize: '13px',
+                  fontFamily: "'Manrope', sans-serif",
+                  outline: 'none',
+                  resize: 'none',
+                }}
+              />
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => {
+                    setShowReportForm(false);
+                    setReportReason('');
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'rgba(244,241,232,0.5)',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Скасувати
+                </button>
+                <button
+                  onClick={handleReportSubmit}
+                  disabled={reporting || !reportReason.trim()}
+                  style={{
+                    background: accent,
+                    border: 'none',
+                    borderRadius: '6px',
+                    color: '#071F16',
+                    padding: '5px 12px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: reporting || !reportReason.trim() ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {reporting ? 'ШІ перевіряє...' : 'Надіслати скаргу'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Report Feedback (AI Moderator response) */}
+          {reportFeedback && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              background: reportFeedback.action === 'deleted' ? 'rgba(224,90,90,0.1)' : 'rgba(63,166,107,0.1)',
+              border: `1px solid ${reportFeedback.action === 'deleted' ? 'rgba(224,90,90,0.3)' : 'rgba(63,166,107,0.3)'}`,
+              borderRadius: '10px',
+              padding: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 800, color: reportFeedback.action === 'deleted' ? '#E05A5A' : '#3FA66B' }}>
+                <Icon name={reportFeedback.action === 'deleted' ? 'close' : 'check'} size={15} strokeWidth={2} />
+                <span>{reportFeedback.action === 'deleted' ? 'Мітку видалено ШІ-модератором' : 'Скаргу відхилено ШІ-модератором'}</span>
+              </div>
+              <p style={{ fontSize: '12.5px', lineHeight: 1.5, color: 'rgba(244,241,232,0.85)', margin: 0 }}>
+                {reportFeedback.reason}
+              </p>
+              <button
+                onClick={() => {
+                  setReportFeedback(null);
+                  setShowReportForm(false);
+                  setReportReason('');
+                }}
+                style={{
+                  alignSelf: 'flex-end',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  color: CREAM,
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  marginTop: '4px'
+                }}
+              >
+                Зрозуміло
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

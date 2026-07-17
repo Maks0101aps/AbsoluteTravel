@@ -466,6 +466,95 @@ export class AiService {
       verifiedByAi: false,
     };
   }
+
+  /**
+   * Moderate a report filed against a friend label.
+   * Decides whether the label should be deleted ('delete') or kept ('keep').
+   */
+  async moderateLabelReport(input: {
+    name: string;
+    description: string;
+    photo: string | null;
+    customParams: string;
+    reporterReason: string;
+  }): Promise<{ decision: 'delete' | 'keep'; reason: string }> {
+    const key = this.apiKey;
+    if (!key) {
+      return {
+        decision: 'keep',
+        reason: 'ШІ-модерацію скарг не налаштовано (немає GEMINI_API_KEY). Мітку залишено.',
+      };
+    }
+
+    const parts: Array<{ text: string } | { inline_data: { mime_type: string; data: string } }> = [];
+
+    parts.push({
+      text:
+        `Перевір скаргу на локальну мітку в нашому додатку.\n` +
+        `Назва мітки: ${input.name}\n` +
+        `Опис мітки: ${input.description}\n` +
+        `Додаткові параметри: ${input.customParams}\n` +
+        `Причина скарги від користувача: "${input.reporterReason}"\n\n` +
+        (input.photo
+          ? `Також до мітки додано фото. Оціни, чи є на ньому порушення або невідповідність.`
+          : `Фото до мітки не додано.`),
+    });
+
+    if (input.photo) {
+      const parsed = parseDataUrl(input.photo);
+      if (parsed) {
+        parts.push({ inline_data: { mime_type: parsed.mimeType, data: parsed.base64 } });
+      }
+    }
+
+    const systemPrompt = `Ти — модератор скарг на локальні мітки у туристичному додатку Absolute Travel.
+Твоє завдання — проаналізувати мітку (її назву, опис, додаткові параметри, фото) та скаргу на неї від іншого користувача.
+Виріши, чи містить ця мітка неприйнятний вміст: спам, образи, нецензурну лексику, рекламу, порнографію, незаконні заклики, або явно знущальний/шкідливий характер у контексті скарги.
+Якщо мітка є неприйнятною або дійсно порушує правила спільноти (відповідно до причини скарги), прийми рішення її видалити ("delete").
+Якщо мітка є нормальною і скарга безпідставна, прийми рішення її залишити ("keep").
+
+Відповідай ЛИШЕ валідним JSON без додаткового тексту навколо, у форматі:
+{"decision":"delete"|"keep","reason":"коротке пояснення рішення українською мовою (1-2 речення)"}`;
+
+    const body = {
+      system_instruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ role: 'user', parts }],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 300,
+        responseMimeType: 'application/json',
+      },
+    };
+
+    const url = `${GEMINI_ENDPOINT}/${this.model}:generateContent`;
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const data: any = await res.json();
+      const raw = data?.candidates?.[0]?.content?.parts
+        ?.map((p: any) => p?.text ?? '')
+        .join('')
+        .trim();
+
+      const parsed = parseReportJson(raw);
+      if (!parsed) {
+        return { decision: 'keep', reason: 'ШІ повернув неоднозначну відповідь. Скаргу відхилено.' };
+      }
+      return parsed;
+    } catch (err) {
+      this.logger.error('Gemini label report moderation failed', err as Error);
+      return { decision: 'keep', reason: 'Не вдалося зв’язатися з ШІ-модератором. Скаргу відхилено.' };
+    }
+  }
 }
 
 // Split a `data:<mime>;base64,<data>` URL into its parts. Returns null if the
@@ -522,3 +611,25 @@ function parseVisitJson(raw: string): Omit<VisitVerificationResult, 'verifiedByA
   const reason = String(parsed?.reason ?? '').trim() || 'Без додаткового пояснення.';
   return { verified, reason };
 }
+
+// Best-effort parse of the label report moderation JSON verdict.
+function parseReportJson(raw: string): { decision: 'delete' | 'keep'; reason: string } | null {
+  if (!raw) return null;
+  const start = raw.indexOf('{');
+  const end = raw.lastIndexOf('}');
+  if (start === -1 || end === -1 || end < start) return null;
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(raw.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+
+  const decisionRaw = String(parsed?.decision ?? '').toLowerCase();
+  const decision: 'delete' | 'keep' = decisionRaw === 'delete' ? 'delete' : 'keep';
+  const reason = String(parsed?.reason ?? '').trim() || 'Без додаткового пояснення.';
+
+  return { decision, reason };
+}
+

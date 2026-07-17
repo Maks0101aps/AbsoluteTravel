@@ -43,6 +43,8 @@ model User {
   receivedFriendRequests Friend[]  @relation("FriendReceiver")
   sentMessages           Message[] @relation("MessageSender")
   receivedMessages       Message[] @relation("MessageReceiver")
+  friendLabels           FriendLabel[]
+  labelReactions         LabelReaction[]
 }
 
 // A friendship edge. One row per pair: sender is who initiated the request.
@@ -239,4 +241,36 @@ model WallPost {
 
   @@index([userId, createdAt])
 }
+
+model FriendLabel {
+  id           Int             @id @default(autoincrement())
+  userId       Int
+  name         String
+  description  String
+  lat          Float
+  lng          Float
+  photo        String?         // base64 Data URL, optional
+  friendsOnly  Boolean         @default(true)
+  isTemporary  Boolean         @default(false)
+  expiresAt    DateTime?       // 24 hours from creation if temporary
+  customParams String          @default("{}") // JSON string of custom key-value pairs
+  createdAt    DateTime        @default(now())
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions    LabelReaction[]
+}
+
+model LabelReaction {
+  id        Int         @id @default(autoincrement())
+  labelId   Int
+  userId    Int
+  type      String      // 'LIKE' | 'DISLIKE'
+  createdAt DateTime    @default(now())
+
+  label     FriendLabel @relation(fields: [labelId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([labelId, userId])
+}
+
 
