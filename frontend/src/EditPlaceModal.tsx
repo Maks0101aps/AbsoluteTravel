@@ -56,6 +56,7 @@ function EditPlaceModal({ place, token, accent = '#3FA66B', onClose, onSaved }: 
   return (
     <div
       onClick={onClose}
+      className="at-sheet-shell"
       style={{
         position: 'fixed',
         inset: 0,
@@ -72,6 +73,7 @@ function EditPlaceModal({ place, token, accent = '#3FA66B', onClose, onSaved }: 
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        className="at-sheet-panel"
         style={{
           width: '100%',
           maxWidth: '640px',

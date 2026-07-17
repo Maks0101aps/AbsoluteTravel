@@ -182,6 +182,7 @@ function ProfileShop({ coins, level, owned, buying, error, selections, openedCas
   return (
     <div
       onClick={onClose}
+      className="at-shop-shell"
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
         background: 'rgba(4,14,10,0.74)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
@@ -191,6 +192,7 @@ function ProfileShop({ coins, level, owned, buying, error, selections, openedCas
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        className="at-shop-panel"
         style={{
           width: '100%', maxWidth: '960px', maxHeight: '88vh',
           display: 'flex', flexDirection: 'column',

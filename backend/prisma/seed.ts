@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { gridDisk, latLngToCell } from 'h3-js';
+import { EXPLORE_RESOLUTION } from '../src/exploration/exploration.service';
 
 const prisma = new PrismaClient();
 
@@ -786,6 +788,21 @@ async function main() {
       currentDestination: 'Бакота',
     },
   });
+
+  // Give the demo accounts explored territory around their home city, so the
+  // leaderboard's walking metric lines up with the XP they were seeded with.
+  const EXPLORED: { userId: number; lat: number; lng: number; rings: number }[] = [
+    { userId: oleksiy.id, lat: 49.8397, lng: 24.0297, rings: 4 }, // Львів
+    { userId: dmytro.id, lat: 48.9226, lng: 24.7111, rings: 3 }, // Івано-Франківськ
+    { userId: mariya.id, lat: 48.6208, lng: 22.2879, rings: 3 }, // Ужгород
+    { userId: iryna.id, lat: 48.6845, lng: 26.5854, rings: 2 }, // Кам’янець-Подільський
+  ];
+  for (const spot of EXPLORED) {
+    const cells = gridDisk(latLngToCell(spot.lat, spot.lng, EXPLORE_RESOLUTION), spot.rings);
+    await prisma.visitedCell.createMany({
+      data: cells.map((cellId) => ({ userId: spot.userId, cellId })),
+    });
+  }
 
   // Create Destinations
   await prisma.destination.createMany({
