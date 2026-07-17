@@ -7,6 +7,8 @@ import { cellPolygon, cellCenter } from './exploration/h3';
 import { UA_BORDER } from './data/ukraineBorder';
 import { polygonToCells } from 'h3-js';
 import { Icon } from './icons';
+import type { FriendLabel } from './api';
+
 
 // Explored-territory hexes. Soft green, translucent — they tint the map you've
 // walked without hiding it.
@@ -256,6 +258,13 @@ interface LeafletMapProps {
   // and would just see a black rectangle.
   fog?: boolean;
   height?: string;
+
+  // Local labels props
+  friendLabels?: FriendLabel[];
+  activeLabelId?: number | null;
+  hoverLabelId?: number | null;
+  onSelectLabel?: (id: number) => void;
+  onHoverLabel?: (id: number | null) => void;
 }
 
 interface Cluster {
@@ -393,6 +402,11 @@ function LeafletMap({
   revealedCell,
   fog = false,
   height = '460px',
+  friendLabels,
+  activeLabelId,
+  hoverLabelId,
+  onSelectLabel,
+  onHoverLabel,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -402,6 +416,7 @@ function LeafletMap({
   const hasFocusedRef = useRef(!!focusPosition);
   const markersRef = useRef<Map<string | number, L.Marker>>(new Map());
   const liveMarkersRef = useRef<Map<string | number, L.Marker>>(new Map());
+  const labelMarkersRef = useRef<Map<number, L.Marker>>(new Map());
   const hexLayersRef = useRef<Map<string, L.Polygon>>(new Map());
   const fogLayersRef = useRef<L.Polygon[]>([]);
   const fogRendererRef = useRef<L.SVG | null>(null);
@@ -417,8 +432,8 @@ function LeafletMap({
 
   // Keep the latest callbacks/values in refs so the map-init effect (which only
   // runs once) can reach fresh state without re-creating the map instance.
-  const stateRef = useRef({ places, activeId, hoverId, onSelect, onHover, pickable, onPick, accent });
-  stateRef.current = { places, activeId, hoverId, onSelect, onHover, pickable, onPick, accent };
+  const stateRef = useRef({ places, activeId, hoverId, onSelect, onHover, pickable, onPick, accent, onSelectLabel, onHoverLabel });
+  stateRef.current = { places, activeId, hoverId, onSelect, onHover, pickable, onPick, accent, onSelectLabel, onHoverLabel };
 
   // --- initialize the map once ---------------------------------------------
   useEffect(() => {
@@ -835,6 +850,63 @@ function LeafletMap({
       marker.bindTooltip(escapeHtml(m.label), { direction: 'top', offset: [0, -18] });
     });
   }, [map, liveMarkers]);
+
+  // --- sync local friend labels ------------------------------------------------
+  useEffect(() => {
+    if (!map) return;
+
+    const existing = labelMarkersRef.current;
+    const labels = friendLabels ?? [];
+    const nextIds = new Set(labels.map((l) => l.id));
+
+    // Remove deleted label markers
+    for (const [id, marker] of existing) {
+      if (!nextIds.has(id)) {
+        marker.remove();
+        existing.delete(id);
+      }
+    }
+
+    // Helper to generate custom style for label markers
+    function labelMarkerIcon(friendsOnly: boolean, active: boolean) {
+      const size = active ? 22 : 16;
+      const color = friendsOnly ? '#ffffff' : '#FCEB92'; // white for friends, light yellow for public
+      const ring = active ? `box-shadow: 0 0 0 5px ${friendsOnly ? 'rgba(255,255,255,0.4)' : 'rgba(252,235,146,0.4)'};` : '';
+      return L.divIcon({
+        className: '',
+        html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid #071F16;box-shadow:0 2px 6px rgba(0,0,0,0.45);${ring}"></div>`,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+      });
+    }
+
+    labels.forEach((label) => {
+      const isActive = label.id === activeLabelId || label.id === hoverLabelId;
+      let marker = existing.get(label.id);
+      if (!marker) {
+        marker = L.marker([label.lat, label.lng], {
+          icon: labelMarkerIcon(label.friendsOnly, isActive),
+          zIndexOffset: 500, // Show above normal POI but below live markers
+        });
+        marker.on('click', () => stateRef.current.onSelectLabel?.(label.id));
+        marker.on('mouseover', () => stateRef.current.onHoverLabel?.(label.id));
+        marker.on('mouseout', () => stateRef.current.onHoverLabel?.(null));
+        marker.addTo(map);
+        existing.set(label.id, marker);
+      } else {
+        marker.setIcon(labelMarkerIcon(label.friendsOnly, isActive));
+        marker.setLatLng([label.lat, label.lng]);
+      }
+
+      const creator = escapeHtml(label.user.name || label.user.username);
+      marker.unbindTooltip();
+      marker.bindTooltip(
+        `<strong>${escapeHtml(label.name)}</strong><br/>` +
+        `<span style="font-size:11px;opacity:0.85">${label.friendsOnly ? 'Тільки для друзів' : 'Публічна'} · Додав ${creator}</span>`,
+        { direction: 'top', offset: [0, -10] }
+      );
+    });
+  }, [map, friendLabels, activeLabelId, hoverLabelId]);
 
   // --- sync the single draggable pick pin -------------------------------------
   useEffect(() => {

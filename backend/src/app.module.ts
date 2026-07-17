@@ -24,6 +24,9 @@ import { ExplorationController } from './exploration/exploration.controller';
 import { ExplorationService } from './exploration/exploration.service';
 import { WallModule } from './wall/wall.module';
 import { UsersModule } from './users/users.module';
+import { FriendLabelsController } from './friend-labels/friend-labels.controller';
+import { FriendLabelsService } from './friend-labels/friend-labels.service';
+
 
 @Module({
   imports: [
@@ -45,6 +48,7 @@ import { UsersModule } from './users/users.module';
     AdminController,
     CheckmarksController,
     ExplorationController,
+    FriendLabelsController,
   ],
   providers: [
     AppService,
@@ -55,6 +59,7 @@ import { UsersModule } from './users/users.module';
     AdminService,
     CheckmarksService,
     ExplorationService,
+    FriendLabelsService,
   ],
 })
 export class AppModule {}

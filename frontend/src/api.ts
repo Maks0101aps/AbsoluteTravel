@@ -618,3 +618,74 @@ export function getUserProfile(userId: number, viewerId: number) {
   return call<PublicProfile>('GET', `/api/users/${userId}/profile?viewerId=${viewerId}`);
 }
 
+// --- Friend local labels ---------------------------------------------------
+
+export interface FriendLabel {
+  id: number;
+  userId: number;
+  name: string;
+  description: string;
+  lat: number;
+  lng: number;
+  photo: string | null;
+  friendsOnly: boolean;
+  isTemporary: boolean;
+  expiresAt: string | null;
+  customParams: string; // JSON string representing Record<string, string>
+  createdAt: string;
+  user: {
+    id: number;
+    username: string;
+    name: string;
+    avatar: string;
+  };
+  likesCount: number;
+  dislikesCount: number;
+  myReaction: 'LIKE' | 'DISLIKE' | null;
+}
+
+export interface CreateLabelPayload {
+  userId: number;
+  name: string;
+  description: string;
+  lat: number;
+  lng: number;
+  photo?: string;
+  friendsOnly?: boolean;
+  isTemporary?: boolean;
+  customParams?: Record<string, string>;
+}
+
+export interface ReactLabelResult {
+  id: number;
+  likesCount: number;
+  dislikesCount: number;
+  myReaction: 'LIKE' | 'DISLIKE' | null;
+}
+
+export interface ReportLabelResult {
+  action: 'deleted' | 'kept';
+  reason: string;
+}
+
+export function getFriendLabels(userId: number) {
+  return call<FriendLabel[]>('GET', `/api/friend-labels?userId=${userId}`);
+}
+
+export function createFriendLabel(payload: CreateLabelPayload) {
+  return call<FriendLabel>('POST', '/api/friend-labels', payload);
+}
+
+export function deleteFriendLabel(id: number, userId: number) {
+  return call<{ ok: boolean; id: number }>('DELETE', `/api/friend-labels/${id}?userId=${userId}`);
+}
+
+export function reactToFriendLabel(id: number, userId: number, type: 'LIKE' | 'DISLIKE' | null) {
+  return call<ReactLabelResult>('POST', `/api/friend-labels/${id}/react`, { userId, type });
+}
+
+export function reportFriendLabel(id: number, userId: number, reason: string) {
+  return call<ReportLabelResult>('POST', `/api/friend-labels/${id}/report`, { userId, reason });
+}
+
+
