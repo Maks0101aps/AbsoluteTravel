@@ -27,6 +27,13 @@ export async function fileToCompressedDataUrl(file: File): Promise<string> {
   if (!ctx) throw new Error('Не вдалося обробити зображення');
   ctx.drawImage(img, 0, 0, width, height);
 
+  // AVIF first — noticeably smaller than JPEG at the same visual quality. Not
+  // every engine can *encode* it via canvas yet (support is decode-only in
+  // some browsers), and per spec an unsupported toDataURL type silently comes
+  // back as PNG instead of throwing — so verify the mime prefix actually
+  // stuck before trusting it, and fall back to JPEG otherwise.
+  const avif = canvas.toDataURL('image/avif', QUALITY);
+  if (avif.startsWith('data:image/avif')) return avif;
   return canvas.toDataURL('image/jpeg', QUALITY);
 }
 
