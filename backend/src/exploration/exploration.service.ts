@@ -15,6 +15,7 @@ const REGION_RESOLUTION = 3;
 
 // XP economy for automatic territory exploration (see the product spec).
 const NEW_CELL_XP = 10;
+const NEW_REGION_XP = 100;
 
 /** Prisma's "unique constraint failed" — here, the VisitedCell(userId, cellId) pair. */
 function isUniqueViolation(e: unknown): boolean {
@@ -110,8 +111,24 @@ export class ExplorationService {
       };
     }
 
-    const totalXpAwarded = newCells.length * NEW_CELL_XP;
-    const newRegion = false;
+    // Check regions for new cells. A region is new if no already-visited cell
+    // shares the region, and it was not already counted new in this transaction.
+    const activeRegions = new Set<string>();
+    let totalXpAwarded = 0;
+    let newRegion = false;
+
+    for (const cellId of newCells) {
+      const region = cellToParent(cellId, REGION_RESOLUTION);
+      const isRegionAlreadyVisited = await this.hasCellInRegion(userId, region);
+      const isRegionNewInThisRequest = !isRegionAlreadyVisited && !activeRegions.has(region);
+
+      if (isRegionNewInThisRequest) {
+        activeRegions.add(region);
+        newRegion = true;
+      }
+
+      totalXpAwarded += NEW_CELL_XP + (isRegionNewInThisRequest ? NEW_REGION_XP : 0);
+    }
 
     let awarded: { newXp: number; newLevel: number; leveledUp: boolean };
     try {
@@ -201,6 +218,15 @@ export class ExplorationService {
     }
     const [totalCells, totalRegions] = await this.countProgress(userId);
     return { totalCells, totalRegions };
+  }
+
+  /** Does the user have any visited cell whose res-3 parent equals `region`? */
+  private async hasCellInRegion(userId: number, region: string): Promise<boolean> {
+    // We only store the fine cell id, so pull the ids and fold to parents.
+    // A user's cell count stays small, so this in-memory check is cheap and
+    // avoids denormalising a region column.
+    const cells = await this.cells(userId);
+    return cells.some((c) => (isValidCell(c) ? cellToParent(c, REGION_RESOLUTION) === region : false));
   }
 
   /** [distinct cells, distinct res-3 regions] for a user. */
