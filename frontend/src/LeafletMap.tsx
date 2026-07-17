@@ -150,10 +150,10 @@ function liveIcon(m: LiveMarker) {
   const ring = m.pulse
     ? `<div style="position:absolute;inset:-7px;border-radius:50%;background:${m.color}55;animation:atLivePulse 2s ease-out infinite;"></div>`
     : '';
-  
+
   let inner = '';
   const avatarOpt = m.avatar ? AVATARS.find((a) => a.id === m.avatar) : undefined;
-  
+
   if (m.id === 'self') {
     const stroke = "rgba(244,241,232,0.95)";
     const strokeWidth = 1.9;
@@ -179,7 +179,7 @@ function liveIcon(m: LiveMarker) {
   } else {
     inner = `<div style="width:100%;height:100%;border-radius:50%;background:${m.color};"></div>`;
   }
-  
+
   const grey = m.dimmed ? 'filter:grayscale(1);opacity:0.55;' : '';
   return L.divIcon({
     className: '',
@@ -255,7 +255,7 @@ interface Cluster {
 
 function getClusters(places: Place[], map: L.Map, clusterRadiusPixels = 40): (Place | Cluster)[] {
   const result: (Place | Cluster)[] = [];
-  
+
   // Group places by difficulty
   const byDifficulty: Record<number, Place[]> = { 1: [], 2: [], 3: [], 4: [] };
   places.forEach((p) => {
@@ -497,7 +497,7 @@ function LeafletMap({
                 stateRef.current.onPick(Number(latitude.toFixed(5)), Number(longitude.toFixed(5)));
               }
             },
-            () => {},
+            () => { },
             { enableHighAccuracy: true, timeout: 8000 },
           );
         });
