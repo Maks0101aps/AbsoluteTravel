@@ -312,17 +312,23 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
           <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '32px', width: 'auto', display: 'block' }} />
         </button>
 
-        {/* group 2: nav tabs + shop */}
+        {/* group 2: nav tabs + shop — absolutely centered on the nav itself,
+            so it sits dead-center regardless of how wide the logo vs. the
+            coins+profile cluster on either side end up being (a flex
+            justify-content:center child would only center within its own
+            leftover flex space, which shifts off-center whenever the two
+            sides aren't equal width). */}
         <div
           className="at-home-nav-tabs"
           style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
             display: 'flex',
             alignItems: 'center',
             gap: '3px',
             flexWrap: 'nowrap',
-            flex: '1 1 auto',
-            minWidth: 0,
-            justifyContent: 'center',
             background: 'transparent',
             border: 'none',
             borderRadius: '18px',
@@ -387,32 +393,38 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
           )}
         </div>
 
-        {/* group 3: coins */}
-        <div title="Монети" style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#F0C64B', background: 'transparent', border: 'none', borderRadius: '999px', padding: '10px 16px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}>
-          <Icon name="coin" size={15} strokeWidth={1.9} />
-          {user.coins ?? 0}
-        </div>
-
-        {/* group 4: profile + logout */}
-        <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '10px', background: 'transparent', border: 'none', borderRadius: '18px', padding: '8px 12px' }}>
-          <div className="at-home-userinfo" style={{ textAlign: 'right', lineHeight: 1.3 }}>
-            <div style={{ fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap' }}>{user.name}</div>
-            <div style={{ fontSize: '10.5px', color: 'rgba(244,241,232,0.5)', whiteSpace: 'nowrap' }}>Рівень {user.level}</div>
+        {/* right cluster: coins (group 3) + profile/logout (group 4) — kept as
+            a single flex child so the nav's flex row only ever has two items
+            (logo, this cluster) and justify-content:space-between pins them
+            to the edges cleanly, independent of the absolutely-centered tabs. */}
+        <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          {/* group 3: coins */}
+          <div title="Монети" style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#F0C64B', background: 'transparent', border: 'none', borderRadius: '999px', padding: '10px 16px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}>
+            <Icon name="coin" size={15} strokeWidth={1.9} />
+            {user.coins ?? 0}
           </div>
-          <button
-            onClick={() => setTab('profile')}
-            title="Мій профіль"
-            style={{ background: 'transparent', border: 'none', padding: 0, lineHeight: 0, cursor: 'pointer', flexShrink: 0, borderRadius: '50%', outline: tab === 'profile' ? `2px solid ${accent}` : '2px solid transparent', outlineOffset: '2px', transition: 'outline-color 0.2s ease' }}
-          >
-            {p ? (
-              <ProfileAvatar avatarId={p.avatarId} customAvatar={p.customAvatar} frameId={p.frameId} color={accent} size={36} />
-            ) : (
-              <img src={user.avatar} alt={user.name} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: `1.5px solid ${accent}` }} onError={(e) => (e.currentTarget.style.display = 'none')} />
-            )}
-          </button>
-          <button onClick={onLogout} style={{ background: 'transparent', color: 'rgba(244,241,232,0.7)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '10px', padding: '8px 13px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            Вийти
-          </button>
+
+          {/* group 4: profile + logout */}
+          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '10px', background: 'transparent', border: 'none', borderRadius: '18px', padding: '8px 12px' }}>
+            <div className="at-home-userinfo" style={{ textAlign: 'right', lineHeight: 1.3 }}>
+              <div style={{ fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap' }}>{user.name}</div>
+              <div style={{ fontSize: '10.5px', color: 'rgba(244,241,232,0.5)', whiteSpace: 'nowrap' }}>Рівень {user.level}</div>
+            </div>
+            <button
+              onClick={() => setTab('profile')}
+              title="Мій профіль"
+              style={{ background: 'transparent', border: 'none', padding: 0, lineHeight: 0, cursor: 'pointer', flexShrink: 0, borderRadius: '50%', outline: tab === 'profile' ? `2px solid ${accent}` : '2px solid transparent', outlineOffset: '2px', transition: 'outline-color 0.2s ease' }}
+            >
+              {p ? (
+                <ProfileAvatar avatarId={p.avatarId} customAvatar={p.customAvatar} frameId={p.frameId} color={accent} size={36} />
+              ) : (
+                <img src={user.avatar} alt={user.name} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: `1.5px solid ${accent}` }} onError={(e) => (e.currentTarget.style.display = 'none')} />
+              )}
+            </button>
+            <button onClick={onLogout} style={{ background: 'transparent', color: 'rgba(244,241,232,0.7)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '10px', padding: '8px 13px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              Вийти
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -457,7 +469,20 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
         <ProfileHero user={user} accent={accent} onEditProfile={onEditProfile} />
       )}
 
-      <main className={`at-home-main ${tab === 'chat' ? 'at-chat-main-tab' : ''}`} style={{ position: 'relative', zIndex: 1, maxWidth, margin: '0 auto', padding: '40px 24px 80px' }}>
+      {/* position+z-index here are only needed on the profile tab, to sit above
+          the fixed full-bleed backdrop above — anywhere else they'd trap any
+          modal rendered inside <main> (AddPlaceForm, VerifyVisitModal, ...) in
+          a stacking context capped below the nav's z-index:50, so the header
+          area would paint on top and swallow scroll/click meant for the modal. */}
+      <main
+        className={`at-home-main ${tab === 'chat' ? 'at-chat-main-tab' : ''}`}
+        style={{
+          ...(tab === 'profile' ? { position: 'relative' as const, zIndex: 1 } : {}),
+          maxWidth,
+          margin: '0 auto',
+          padding: '40px 24px 80px',
+        }}
+      >
         {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} />}
         {tab === 'map' && (
           <ExploreMap
