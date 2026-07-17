@@ -216,7 +216,6 @@ function ProfileShop({ coins, level, owned, buying, error, selections, openedCas
         <div style={{ position: 'relative', padding: '24px 26px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', flex: '0 0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
             <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.22em', color: GOLD, marginBottom: '6px' }}>МАГАЗИН</div>
               <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(22px,3vw,30px)', margin: 0 }}>Крамниця мандрівника</h2>
               <p style={{ fontSize: '13px', color: 'rgba(244,241,232,0.55)', margin: '6px 0 0', maxWidth: '440px' }}>
                 Обмінюй зароблені монети на аватари, фони та інші прикраси профілю.

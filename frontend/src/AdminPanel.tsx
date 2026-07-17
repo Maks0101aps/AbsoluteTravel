@@ -156,7 +156,6 @@ function AdminDashboard({ accent, session, onLogout }: { accent: string; session
     <div style={{ fontFamily: "'Manrope', sans-serif", color: CREAM }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '20px' }}>
         <div>
-          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '10px' }}>АДМІН-ПАНЕЛЬ</div>
           <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 3vw, 32px)', margin: 0 }}>
             {section === 'moderation' ? 'Модерація місць' : 'Адміністратори'}
           </h2>

@@ -134,9 +134,6 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
           <div>
-            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.2em', color: accent, marginBottom: '8px' }}>
-              ВЕРИФІКАЦІЯ ВІДВІДУВАННЯ
-            </div>
             <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '23px', margin: 0 }}>
               {place.name}
             </h2>

@@ -255,7 +255,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
         <div className="at-hero-inner" style={{ position: 'relative', maxWidth: '1240px', width: '100%', margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: '56px', alignItems: 'center' }}>
           {/* left copy */}
           <div className="at-hero-copy" style={{ flex: '1 1 420px', minWidth: '320px', animation: 'fadeUp 0.7s ease both' }}>
-            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B', marginBottom: '22px' }}>EXPLORE UKRAINE</div>
             <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(38px, 4.6vw, 58px)', lineHeight: 1.14, margin: '0 0 26px', color: '#F4F1E8' }}>
               Відкрий Україну.<br />Разом із друзями.
             </h1>
@@ -380,7 +379,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
 
       {/* ============ FEATURES ============ */}
       <section id="features" className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '40px 40px 30px' }}>
-        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B', marginBottom: '14px' }}>МОЖЛИВОСТІ</div>
         <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(28px, 3.2vw, 40px)', margin: '0 0 40px', color: '#F4F1E8' }}>Україна, яку ти ще не бачив</h2>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
@@ -390,7 +388,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', color: '#3FA66B', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>01</div>
-                  <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.18em', color: 'rgba(244,241,232,0.5)' }}>DISCOVER</div>
                 </div>
                 <div style={{ fontFamily: "'Lora', serif", fontSize: '21px', fontWeight: 500 }}>Знаходь цікаві місця</div>
               </div>
@@ -409,7 +406,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', color: '#3FA66B', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>02</div>
-                  <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.18em', color: 'rgba(244,241,232,0.5)' }}>EXPLORE</div>
                 </div>
                 <div style={{ fontFamily: "'Lora', serif", fontSize: '21px', fontWeight: 500 }}>Підтверджуй свої відкриття</div>
               </div>
@@ -437,7 +433,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', color: '#3FA66B', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>03</div>
-                  <div style={{ fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.18em', color: 'rgba(244,241,232,0.5)' }}>CONNECT</div>
                 </div>
                 <div style={{ fontFamily: "'Lora', serif", fontSize: '21px', fontWeight: 500 }}>Досліджуй разом</div>
               </div>
@@ -462,7 +457,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 55% 65% at 60% 45%, rgba(63,166,107,0.08), transparent 70%)' }}></div>
           {/* text col */}
           <div style={{ position: 'relative', flex: '0 1 280px', minWidth: '240px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B', marginBottom: '18px' }}>ТВОЯ КАРТА</div>
             <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(26px, 2.8vw, 36px)', lineHeight: 1.2, margin: '0 0 20px' }}>Твоя карта відкриттів</h2>
             <p style={{ fontSize: '14px', lineHeight: 1.7, color: 'rgba(244,241,232,0.62)', margin: '0 0 auto' }}>Кожне місце залишає слід. Заповнюй карту України своїми пригодами.</p>
             
@@ -529,7 +523,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
         <div className="at-panel" style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '36px 40px', display: 'flex', flexWrap: 'wrap', gap: '36px', alignItems: 'center' }}>
           {/* text */}
           <div style={{ flex: '1 1 260px', minWidth: '240px' }}>
-            <div style={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B', marginBottom: '16px' }}>ПРОГРЕС</div>
             <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 2.4vw, 32px)', lineHeight: 1.3, margin: '0' }}>Кожне відкриття наближає тебе до нового рівня.</h2>
           </div>
           {/* level card */}
@@ -571,7 +564,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       <section className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '20px 40px 40px' }}>
         <div className="at-panel" style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '32px 36px', display: 'flex', flexWrap: 'wrap', gap: '28px', alignItems: 'stretch' }}>
           <div style={{ flex: '0 1 220px', minWidth: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px' }}>
-            <div style={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.22em', color: '#3FA66B' }}>ДРУЗІ</div>
             <div style={{ fontFamily: "'Lora', serif", fontSize: '23px', fontWeight: 500, lineHeight: 1.35 }}>Досліджуйте разом ще цікавіше</div>
           </div>
           <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '14px' }}>
@@ -597,7 +589,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, #071F16 0%, rgba(7,31,22,0.85) 60%, rgba(7,31,22,0.2) 100%)', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 50% 60% at 50% 100%, rgba(63,166,107,0.15), transparent 70%)', pointerEvents: 'none' }}></div>
         <div style={{ position: 'relative', maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
-          <div style={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.24em', color: '#3FA66B', textTransform: 'uppercase' }}>готовий до пригод!</div>
           <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(32px, 3.6vw, 46px)', lineHeight: 1.25, margin: 0, color: '#F4F1E8' }}>Твоя наступна пригода<br />вже поруч.</h2>
           <button onClick={onStart} style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#3FA66B', color: '#071F16', fontFamily: "'Manrope', sans-serif", fontSize: '14px', fontWeight: 700, padding: '15px 30px', borderRadius: '12px', border: 'none', cursor: 'pointer', marginTop: '8px' }}>
             Почати подорож

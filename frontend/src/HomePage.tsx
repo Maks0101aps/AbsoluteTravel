@@ -35,7 +35,6 @@ const TABS: { id: Tab; label: string; icon: IconName }[] = [
   { id: 'friends', label: 'Друзі', icon: 'users' },
   { id: 'leaderboard', label: 'Рейтинг', icon: 'trophy' },
   { id: 'chat', label: 'Чат', icon: 'messageSquare' },
-  { id: 'advisor', label: 'ШІ-порадник', icon: 'compass' },
 ];
 
 interface HomePageProps {
@@ -366,7 +365,6 @@ function ProfileTab({
   if (!p) {
     return (
       <>
-        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '16px' }}>ЛАСКАВО ПРОСИМО</div>
         <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(30px, 4vw, 42px)', margin: '0 0 14px' }}>Вітаємо, {user.name}!</h1>
         <p style={{ fontSize: '15.5px', lineHeight: 1.7, color: 'rgba(244,241,232,0.68)', maxWidth: '520px', margin: '0 0 32px' }}>
           Ти пропустив налаштування профілю. Персоналізуй його будь-коли.
@@ -419,7 +417,7 @@ function ProfileTab({
 
       <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: '0 0 12px' }}>Готово, {p.displayName}!</h2>
       <p style={{ fontSize: '15px', lineHeight: 1.7, color: 'rgba(244,241,232,0.65)', maxWidth: '520px', margin: 0 }}>
-        Відкрий вкладку «Мапа мандрівок», щоб дослідити цікаві місця України, або запитай поради у «ШІ-порадника».
+        Відкрий вкладку «Мапа мандрівок», щоб дослідити цікаві місця України, або перейди в розділ «Чат», щоб запитати поради у «ШІ-порадника».
       </p>
     </>
   );
