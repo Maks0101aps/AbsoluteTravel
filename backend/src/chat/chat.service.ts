@@ -28,44 +28,24 @@ export class ChatService {
   }
 
   private async requireFriendship(userId: number, friendId: number) {
-    // Bypassed: Allow messages between any users as requested.
+    if (!(await this.friends.areFriends(userId, friendId))) {
+      throw new ForbiddenException('Листування доступне лише між друзями');
+    }
   }
 
-  /** Retrieve all active chat conversations and friends for the user. */
+  /**
+   * The chat sidebar: the people this user can actually message, i.e. their
+   * accepted friends. Threads with non-friends are unreachable (history and
+   * send both require friendship), so listing anyone else would only offer
+   * conversations that 403 on open.
+   */
   async conversations(rawUserId: unknown) {
     const userId = this.parseId(rawUserId, 'userId');
-
-    // Find all message participants (either sender or receiver)
-    const messages = await this.prisma.message.findMany({
-      where: {
-        OR: [
-          { senderId: userId },
-          { receiverId: userId },
-        ],
-      },
-      select: {
-        senderId: true,
-        receiverId: true,
-      },
-      orderBy: { id: 'desc' },
-    });
-
-    const partnerIds = new Set<number>();
-    for (const m of messages) {
-      if (m.senderId !== userId) partnerIds.add(m.senderId);
-      if (m.receiverId !== userId) partnerIds.add(m.receiverId);
-    }
-
-    // Also get all friends so we can show them in the list as well
     const friendIds = await this.friends.friendIds(userId);
-    for (const fid of friendIds) {
-      partnerIds.add(fid);
-    }
+    if (friendIds.length === 0) return [];
 
     const users = await this.prisma.user.findMany({
-      where: {
-        id: { in: Array.from(partnerIds) },
-      },
+      where: { id: { in: friendIds } },
       select: {
         id: true,
         username: true,
@@ -78,22 +58,11 @@ export class ChatService {
       },
     });
 
-    return users.map((u) => {
-      const isFriend = friendIds.includes(u.id);
-      return {
-        id: u.id,
-        username: u.username,
-        name: u.name,
-        avatar: u.avatar,
-        level: u.level,
-        xp: u.xp,
-        region: u.region,
-        city: u.city,
-        online: this.presence.isOnline(u.id),
-        lastSeenAt: this.presence.lastSeenAt(u.id)?.toISOString() ?? null,
-        isFriend,
-      };
-    });
+    return users.map((u) => ({
+      ...u,
+      online: this.presence.isOnline(u.id),
+      lastSeenAt: this.presence.lastSeenAt(u.id)?.toISOString() ?? null,
+    }));
   }
 
   /** Message history with a friend, newest page by default, keyset pagination. */
