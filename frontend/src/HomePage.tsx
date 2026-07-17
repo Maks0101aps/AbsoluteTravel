@@ -272,7 +272,8 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
         </div>
       )}
 
-      {/* navbar */}
+      {/* navbar — four separate rounded pill groups floating on the page
+          background, no shared header strip/bar behind them. */}
       <nav
         className="at-home-nav"
         style={{
@@ -282,17 +283,34 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '10px',
-          padding: '12px 24px',
-          background: BG,
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          gap: '12px',
+          padding: '14px 24px',
+          background: 'transparent',
           flexWrap: 'nowrap',
         }}
       >
-        <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '36px', width: 'auto', display: 'block', flexShrink: 0 }} />
+        {/* group 1: logo */}
+        <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '9px 18px' }}>
+          <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '32px', width: 'auto', display: 'block' }} />
+        </div>
 
-        {/* navigation tabs — tightened padding/gaps so everything fits on one line */}
-        <div className="at-home-nav-tabs" style={{ display: 'flex', alignItems: 'center', gap: '3px', flexWrap: 'nowrap', flex: '1 1 auto', minWidth: 0, justifyContent: 'center' }}>
+        {/* group 2: nav tabs + shop */}
+        <div
+          className="at-home-nav-tabs"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '3px',
+            flexWrap: 'nowrap',
+            flex: '1 1 auto',
+            minWidth: 0,
+            justifyContent: 'center',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '18px',
+            padding: '7px 10px',
+          }}
+        >
           {TABS.map((t) => {
             const isActive = tab === t.id;
             return (
@@ -355,11 +373,14 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <div title="Монети" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#F0C64B', background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.3)', borderRadius: '999px', padding: '6px 10px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}>
-            <Icon name="coin" size={15} strokeWidth={1.9} />
-            {user.coins ?? 0}
-          </div>
+        {/* group 3: coins */}
+        <div title="Монети" style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#F0C64B', background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.3)', borderRadius: '999px', padding: '10px 16px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}>
+          <Icon name="coin" size={15} strokeWidth={1.9} />
+          {user.coins ?? 0}
+        </div>
+
+        {/* group 4: profile + logout */}
+        <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '8px 12px' }}>
           <div className="at-home-userinfo" style={{ textAlign: 'right', lineHeight: 1.3 }}>
             <div style={{ fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap' }}>{user.name}</div>
             <div style={{ fontSize: '10.5px', color: 'rgba(244,241,232,0.5)', whiteSpace: 'nowrap' }}>Рівень {user.level}</div>
