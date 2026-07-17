@@ -11,7 +11,9 @@ const DEMO_PASSWORD_HASH = bcrypt.hashSync('demo1234', 10);
 // Curated starter places for the explore map. Coordinates are real WGS84
 // (lat/lng); the frontend projects them onto the stylised Ukraine silhouette.
 // Seeded as approved + admin so the map is populated out of the box.
-const SEED_PLACES: {
+// Exported so `scripts/reseedPlaces.ts` can re-insert just these curated rows
+// without running the rest of this (destructive, deletes every table) seed.
+export const SEED_PLACES: {
   name: string;
   region: string;
   category: string;
@@ -864,11 +866,18 @@ async function main() {
   console.log('Database seeded successfully!');
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// Guarded: this file also exports SEED_PLACES for scripts/reseedPlaces.ts to
+// reuse. Without this check, merely *importing* the file for that constant
+// would trigger the full destructive seed (deletes every table) as a module
+// side-effect — exactly what happened once already. Only run main() when this
+// file is executed directly (`npm run seed` / `ts-node prisma/seed.ts`).
+if (require.main === module) {
+  main()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
