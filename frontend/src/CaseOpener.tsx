@@ -127,7 +127,7 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
             onClick={onBack}
             style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(244,241,232,0.85)', borderRadius: '10px', padding: '8px 13px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}
           >
-            <Icon name="arrowLeft" size={15} strokeWidth={2} /> Магазин
+            <Icon name="arrowLeft" size={15} strokeWidth={2} /> Назад
           </button>
           <div style={{ textAlign: 'center', flex: 1 }}>
             <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(18px,2.4vw,24px)', margin: '2px 0 0' }}>Скриня мандрівника</h2>
