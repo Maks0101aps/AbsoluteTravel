@@ -109,7 +109,7 @@ function Root() {
     setView('home');
 
     if (userId !== null) {
-      updateProfile(userId, { name: profile.displayName, avatar }).catch((err) => {
+      updateProfile(userId, { name: profile.displayName, avatar, profile }).catch((err) => {
         console.error('Failed to save profile changes to backend:', err);
       });
     }

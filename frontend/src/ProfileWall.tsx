@@ -5,14 +5,20 @@ import { Icon, type IconName } from './icons';
 const CREAM = '#F4F1E8';
 
 interface ProfileWallProps {
+  /** Whose wall to show. */
   userId: number;
+  /** Who is looking. Defaults to the owner (the self-view on the profile tab). */
+  viewerId?: number;
   accent: string;
 }
 
 // A traveler's activity feed: verified place visits (with an optional photo
 // the user chose to share) plus automatic entries for newly unlocked
-// exploration cells/regions. Self-view only for now — see WallController.
-function ProfileWall({ userId, accent }: ProfileWallProps) {
+// exploration cells/regions. Readable by the owner and their friends — the
+// server rejects anyone else (see WallService).
+function ProfileWall({ userId, viewerId, accent }: ProfileWallProps) {
+  const requesterId = viewerId ?? userId;
+  const isSelf = requesterId === userId;
   const [posts, setPosts] = useState<WallPost[]>([]);
   const [cursor, setCursor] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +29,7 @@ function ProfileWall({ userId, accent }: ProfileWallProps) {
     let cancelled = false;
     setLoading(true);
     setError('');
-    fetchWall(userId, userId)
+    fetchWall(userId, requesterId)
       .then((page) => {
         if (cancelled) return;
         setPosts(page.posts);
@@ -38,13 +44,13 @@ function ProfileWall({ userId, accent }: ProfileWallProps) {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, requesterId]);
 
   const loadMore = async () => {
     if (cursor == null) return;
     setLoadingMore(true);
     try {
-      const page = await fetchWall(userId, userId, cursor);
+      const page = await fetchWall(userId, requesterId, cursor);
       setPosts((prev) => [...prev, ...page.posts]);
       setCursor(page.nextCursor);
     } catch (e: any) {
@@ -74,7 +80,9 @@ function ProfileWall({ userId, accent }: ProfileWallProps) {
 
       {!loading && !error && posts.length === 0 && (
         <div style={{ textAlign: 'center', padding: '40px 20px', color: 'rgba(244,241,232,0.55)', fontSize: '14px', lineHeight: 1.6 }}>
-          Тут поки порожньо. Досліджуй мапу, і твої нові місця з'являться тут!
+          {isSelf
+            ? "Тут поки порожньо. Досліджуй мапу, і твої нові місця з'являться тут!"
+            : 'Цей мандрівник ще не поділився жодною подорожжю.'}
         </div>
       )}
 

@@ -28,6 +28,8 @@ interface ChatPageProps {
   // Open this friend's thread immediately (e.g. from "Написати" buttons).
   initialFriendId?: number | 'advisor' | null;
   hideSidebar?: boolean;
+  // Open a traveler's profile (tapping the thread header).
+  onOpenProfile?: (userId: number) => void;
 }
 
 interface QuickTopic {
@@ -230,7 +232,7 @@ function VoiceMessagePlayer({ text, mine }: { text: string; mine: boolean }) {
   );
 }
 
-function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hideSidebar = false }: ChatPageProps) {
+function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hideSidebar = false, onOpenProfile }: ChatPageProps) {
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [unread, setUnread] = useState<Record<string, number>>({});
   const [activeId, setActiveId] = useState<number | 'advisor' | null>(initialFriendId);
@@ -826,14 +828,34 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                   {backButton}
-                  {activeFriend && <UserAvatar user={activeFriend} size={38} />}
                   {activeFriend && (
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: '14.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeFriend.name}</div>
-                      <div style={{ fontSize: '11.5px', color: activeFriend.online ? accent : 'rgba(244,241,232,0.45)' }}>
-                        {activeFriend.online ? 'онлайн' : 'був(ла) нещодавно'} · Рівень {activeFriend.level}
+                    // The header doubles as the way into this friend's profile;
+                    // the sidebar rows are already spoken for (they switch threads).
+                    <button
+                      onClick={() => onOpenProfile?.(activeFriend.id)}
+                      title={`Профіль ${activeFriend.name}`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        minWidth: 0,
+                        background: 'transparent',
+                        border: 'none',
+                        padding: 0,
+                        color: 'inherit',
+                        textAlign: 'left',
+                        cursor: onOpenProfile ? 'pointer' : 'default',
+                        fontFamily: "'Manrope', sans-serif",
+                      }}
+                    >
+                      <UserAvatar user={activeFriend} size={38} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: '14.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeFriend.name}</div>
+                        <div style={{ fontSize: '11.5px', color: activeFriend.online ? accent : 'rgba(244,241,232,0.45)' }}>
+                          {activeFriend.online ? 'онлайн' : 'був(ла) нещодавно'} · Рівень {activeFriend.level}
+                        </div>
                       </div>
-                    </div>
+                    </button>
                   )}
                 </div>
               )}

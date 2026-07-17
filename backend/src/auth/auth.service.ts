@@ -22,7 +22,7 @@ export class AuthService {
   constructor(private prisma: PrismaService) {}
 
   private sanitize(user: any) {
-    const { password, unlockedItems, ...rest } = user;
+    const { password, unlockedItems, profile, ...rest } = user;
     let items: string[] = [];
     try {
       const parsed = JSON.parse(unlockedItems ?? '[]');
@@ -30,7 +30,17 @@ export class AuthService {
     } catch {
       // leave empty on malformed data
     }
-    return { ...rest, unlockedItems: items };
+    // profile is null for users who never finished the wizard; the client then
+    // routes them into it (see Root.tsx).
+    let customization: unknown = undefined;
+    if (profile) {
+      try {
+        customization = JSON.parse(profile);
+      } catch {
+        // malformed blob: treat as "no profile yet" rather than failing login
+      }
+    }
+    return { ...rest, unlockedItems: items, profile: customization };
   }
 
   async register(dto: RegisterDto) {
