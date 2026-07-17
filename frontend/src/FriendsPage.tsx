@@ -186,9 +186,6 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps
 
   return (
     <div style={{ fontFamily: "'Manrope', sans-serif", color: CREAM }}>
-      <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '10px' }}>
-        ДРУЗІ
-      </div>
       <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 3vw, 34px)', margin: '0 0 8px' }}>
         Твоє коло мандрівників
       </h2>

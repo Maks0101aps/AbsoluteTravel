@@ -130,7 +130,6 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
             <Icon name="arrowLeft" size={15} strokeWidth={2} /> Магазин
           </button>
           <div style={{ textAlign: 'center', flex: 1 }}>
-            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.22em', color: GOLD }}>КЕЙСИ</div>
             <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(18px,2.4vw,24px)', margin: '2px 0 0' }}>Скриня мандрівника</h2>
           </div>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '14px', fontWeight: 800, color: GOLD, background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.35)', padding: '8px 14px', borderRadius: '999px' }}>

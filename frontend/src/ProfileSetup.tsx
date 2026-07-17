@@ -205,9 +205,6 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
   return (
     <div style={{ fontFamily: "'Manrope', sans-serif", background: BG, color: CREAM, minHeight: '100vh', padding: '48px 20px 72px' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color, marginBottom: '12px', transition: 'color 0.2s' }}>
-          РЕДАКТОР ПРОФІЛЮ
-        </div>
         <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(26px,3.4vw,38px)', margin: '0 0 6px' }}>
           {init ? 'Твій профіль' : 'Створи свій профіль'}
         </h1>

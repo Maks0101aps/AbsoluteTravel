@@ -63,9 +63,6 @@ const FOG_RENDER_PADDING = 1;
 // masked off).
 const MASK_PANE = 'at-mask';
 const MASK_PANE_Z = 360;
-
-const LABEL_PANE = 'at-labels';
-const LABEL_PANE_Z = 365;
 // Must stay clearly darker than the deep fog above: at 0.95 the fog resolves to
 // roughly #16291F, and an "outside" anywhere near that makes the country's own
 // silhouette vanish into the void around it.
@@ -440,14 +437,13 @@ function LeafletMap({
       bounds: UA_BOUNDS,
     }).addTo(map);
 
-    // Dedicated panes so the fog, grid lines, the border mask, and text labels always land between the
+    // Dedicated panes so the fog, grid lines, and the border mask always land between the
     // tiles and everything we draw on top of them (hexes, place markers, live
     // dots). They must let clicks through to the map/markers underneath.
     for (const [name, z] of [
       [FOG_PANE, FOG_PANE_Z],
       [GRID_PANE, GRID_PANE_Z],
       [MASK_PANE, MASK_PANE_Z],
-      [LABEL_PANE, LABEL_PANE_Z],
     ] as const) {
       map.createPane(name);
       const pane = map.getPane(name);
@@ -456,14 +452,6 @@ function LeafletMap({
         pane.style.pointerEvents = 'none';
       }
     }
-
-    // Transparent labels layer sitting above the fog and mask so settlement names stay visible
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-      pane: LABEL_PANE,
-      attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
-      maxZoom: 19,
-      bounds: UA_BOUNDS,
-    }).addTo(map);
 
     // Leaflet only draws vectors across the viewport plus `padding` (default a
     // mere 10%). The map is born inside a grid cell and resized by the

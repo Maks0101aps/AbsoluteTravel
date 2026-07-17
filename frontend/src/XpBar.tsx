@@ -11,7 +11,6 @@ interface XpBarProps {
 // Ways to earn XP, shown in the level info popover.
 const XP_SOURCES: { label: string; xp: string }[] = [
   { label: 'Відвідати нову клітинку карти', xp: '+10 XP' },
-  { label: 'Відкрити новий регіон', xp: '+100 XP' },
   { label: 'Підтвердити відвідування місця — Легко', xp: '+20 XP' },
   { label: 'Підтвердити відвідування місця — Середньо', xp: '+50 XP' },
   { label: 'Підтвердити відвідування місця — Складно', xp: '+100 XP' },

@@ -220,9 +220,6 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
     <div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '20px' }}>
         <div>
-          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '10px' }}>
-            МАПА МАНДРІВОК
-          </div>
           <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 3vw, 34px)', margin: '0 0 8px' }}>
             Куди поїхати в Україні
           </h2>
@@ -251,34 +248,6 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
           <Icon name="plus" size={17} strokeWidth={2} />
           Додати місце
         </button>
-      </div>
-
-      {/* category filter chips */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
-        <FilterChip active={filter === 'all'} onClick={() => setFilter('all')} color={accent} label="Усі місця" />
-        {CATEGORY_ORDER.map((cat) => (
-          <FilterChip
-            key={cat}
-            active={filter === cat}
-            onClick={() => setFilter(cat)}
-            color={CATEGORY_META[cat].color}
-            label={CATEGORY_META[cat].label}
-          />
-        ))}
-      </div>
-
-      {/* difficulty filter chips */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }}>
-        <FilterChip active={difficultyFilter === 'all'} onClick={() => setDifficultyFilter('all')} color={accent} label="Будь-яка складність" />
-        {DIFFICULTY_ORDER.map((d) => (
-          <FilterChip
-            key={d}
-            active={difficultyFilter === d}
-            onClick={() => setDifficultyFilter(d)}
-            color={DIFFICULTY_META[d].color}
-            label={DIFFICULTY_META[d].label}
-          />
-        ))}
       </div>
 
       {/* Fixed-width grid (not flex-grow) so the map/panel split never shifts
@@ -592,46 +561,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
             </div>
           )}
 
-          {/* quick list */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '260px', overflowY: 'auto' }}>
-            {visiblePlaces.map((place) => {
-              const meta = CATEGORY_META[place.category];
-              const isActive = place.id === activeId;
-              return (
-                <button
-                  key={place.id}
-                  onClick={() => setActiveId(place.id)}
-                  onMouseEnter={() => setHoverId(place.id)}
-                  onMouseLeave={() => setHoverId((cur) => (cur === place.id ? null : cur))}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    textAlign: 'left',
-                    background: isActive ? 'rgba(255,255,255,0.06)' : 'transparent',
-                    border: '1px solid',
-                    borderColor: isActive ? `${meta.color}55` : 'rgba(255,255,255,0.07)',
-                    borderRadius: '10px',
-                    padding: '9px 12px',
-                    color: CREAM,
-                    cursor: 'pointer',
-                    fontFamily: "'Manrope', sans-serif",
-                  }}
-                >
-                  <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: meta.color, flex: '0 0 auto' }} />
-                  <span style={{ fontSize: '13px', fontWeight: 600, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {place.name}
-                  </span>
-                  {openedPlaceIds?.has(place.id) && (
-                    <span title="Відкрито" style={{ display: 'inline-flex', alignItems: 'center', color: '#3FA66B', flex: '0 0 auto' }}>
-                      <Icon name="check" size={14} strokeWidth={2.6} />
-                    </span>
-                  )}
-                  <span style={{ fontSize: '11px', color: 'rgba(244,241,232,0.45)', flex: '0 0 auto' }}>{meta.label}</span>
-                </button>
-              );
-            })}
-          </div>
+
         </div>
       </div>
 
