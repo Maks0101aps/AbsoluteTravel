@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   getChatHistory,
-  getFriends,
+  getChatConversations,
   getUnreadCounts,
   markChatRead,
   sendChatMessage,
@@ -28,6 +28,8 @@ interface ChatPageProps {
   // Open this friend's thread immediately (e.g. from "Написати" buttons).
   initialFriendId?: number | 'advisor' | null;
   hideSidebar?: boolean;
+  // Open a traveler's profile (tapping the thread header).
+  onOpenProfile?: (userId: number) => void;
 }
 
 interface QuickTopic {
@@ -230,7 +232,7 @@ function VoiceMessagePlayer({ text, mine }: { text: string; mine: boolean }) {
   );
 }
 
-function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hideSidebar = false }: ChatPageProps) {
+function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hideSidebar = false, onOpenProfile }: ChatPageProps) {
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [unread, setUnread] = useState<Record<string, number>>({});
   const [activeId, setActiveId] = useState<number | 'advisor' | null>(initialFriendId);
@@ -291,13 +293,45 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
   const buttonRectRef = useRef<DOMRect | null>(null);
   const shouldSendRef = useRef<boolean>(true);
 
+  const [temporaryFriend, setTemporaryFriend] = useState<any | null>(null);
+
   const activeFriend = useMemo(() => {
     if (activeId === 'advisor') return null;
-    return friends.find((f) => f.id === activeId) ?? null;
-  }, [friends, activeId]);
+    return friends.find((f) => f.id === activeId) ?? temporaryFriend ?? null;
+  }, [friends, activeId, temporaryFriend]);
+
+  useEffect(() => {
+    if (!activeId || activeId === 'advisor') {
+      setTemporaryFriend(null);
+      return;
+    }
+    const found = friends.find((f) => f.id === activeId);
+    if (found) {
+      setTemporaryFriend(null);
+    } else {
+      import('./api').then(({ getUserProfile }) => {
+        getUserProfile(Number(activeId), userId)
+          .then((p) => {
+            setTemporaryFriend({
+              id: p.id,
+              username: p.username,
+              name: p.name,
+              avatar: p.avatar,
+              level: p.level,
+              xp: p.xp,
+              region: p.region,
+              city: p.city,
+              online: p.online,
+              lastSeenAt: p.lastSeenAt,
+            });
+          })
+          .catch(() => {});
+      });
+    }
+  }, [activeId, friends, userId]);
 
   const loadFriends = useCallback(() => {
-    getFriends(userId).then(setFriends).catch(() => {});
+    getChatConversations(userId).then(setFriends).catch(() => {});
     getUnreadCounts(userId).then(setUnread).catch(() => {});
   }, [userId]);
 
@@ -734,7 +768,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
               <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(244,241,232,0.45)' }}>
-                ДРУЗІ {totalUnread > 0 && <span style={{ color: accent }}>· {totalUnread} нових</span>}
+                ЧАТИ {totalUnread > 0 && <span style={{ color: accent }}>· {totalUnread} нових</span>}
               </span>
               {!wsConnected && (
                 <span title="офлайн-режим · оновлення кожні 5 с" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#E0A54E', background: 'rgba(224,165,78,0.15)', border: '1px solid rgba(224,165,78,0.4)', borderRadius: '999px', padding: '2px 8px' }}>
@@ -745,7 +779,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
             <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
               {friends.length === 0 && (
                 <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.5)', padding: '8px' }}>
-                  Немає друзів для листування. Додай їх у вкладці «Друзі».
+                  Немає активних чатів. Знайди мандрівників у вкладці «Друзі» чи «Рейтинг» та напиши їм!
                 </div>
               )}
               {friends.map((f) => {
@@ -826,14 +860,34 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                   {backButton}
-                  {activeFriend && <UserAvatar user={activeFriend} size={38} />}
                   {activeFriend && (
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: '14.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeFriend.name}</div>
-                      <div style={{ fontSize: '11.5px', color: activeFriend.online ? accent : 'rgba(244,241,232,0.45)' }}>
-                        {activeFriend.online ? 'онлайн' : 'був(ла) нещодавно'} · Рівень {activeFriend.level}
+                    // The header doubles as the way into this friend's profile;
+                    // the sidebar rows are already spoken for (they switch threads).
+                    <button
+                      onClick={() => onOpenProfile?.(activeFriend.id)}
+                      title={`Профіль ${activeFriend.name}`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        minWidth: 0,
+                        background: 'transparent',
+                        border: 'none',
+                        padding: 0,
+                        color: 'inherit',
+                        textAlign: 'left',
+                        cursor: onOpenProfile ? 'pointer' : 'default',
+                        fontFamily: "'Manrope', sans-serif",
+                      }}
+                    >
+                      <UserAvatar user={activeFriend} size={38} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: '14.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeFriend.name}</div>
+                        <div style={{ fontSize: '11.5px', color: activeFriend.online ? accent : 'rgba(244,241,232,0.45)' }}>
+                          {activeFriend.online ? 'онлайн' : 'був(ла) нещодавно'} · Рівень {activeFriend.level}
+                        </div>
                       </div>
-                    </div>
+                    </button>
                   )}
                 </div>
               )}

@@ -19,6 +19,11 @@ model User {
   region             String?
   name               String
   avatar             String            @default("/assets/avatar_default.svg")
+  // Profile customization (bio, frame, background, badges, accent colour) as a
+  // JSON blob — the same ProfileCustomization shape the profile wizard builds.
+  // Stored server-side so other travelers can view this profile; null until the
+  // user finishes (or edits) the wizard.
+  profile            String?
   level              Int               @default(1)
   xp                 Int               @default(0)
   coins              Int               @default(0)
@@ -207,10 +212,10 @@ model VisitedCell {
 
 // A wall post is an entry in a traveler's activity feed: a verified place
 // visit (opt-in, may include the checkmark photo), a newly unlocked
-// exploration cell, or a newly opened region. Visible only to the post's
-// own owner today (see WallController) — nothing here enforces that at the
-// schema level, so a "view a friend's wall" feature is a service-layer
-// change later, not a migration.
+// exploration cell, or a newly opened region. Visible to the post's owner
+// and their accepted friends (enforced in WallService, not at the schema
+// level) — posts can carry visit photos, so they stay friends-only even
+// though the profile itself is public.
 model WallPost {
   id          Int      @id @default(autoincrement())
   userId      Int

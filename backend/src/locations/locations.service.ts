@@ -138,28 +138,6 @@ export class LocationsService {
     return { userId: user.id, visible: user.locationVisible };
   }
 
-  async updateProfile(rawUserId: unknown, rawName: unknown, rawAvatar: unknown) {
-    const userId = this.parseId(rawUserId, 'userId');
-    const name = String(rawName ?? '').trim();
-    const avatar = String(rawAvatar ?? '').trim();
-    if (!name) {
-      throw new BadRequestException('Ім’я не може бути порожнім');
-    }
-    // Same stale-session guard as setVisibility above: without it a client
-    // carrying a user id that no longer exists gets a raw Prisma P2025 500
-    // instead of a clean 404.
-    const exists = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true },
-    });
-    if (!exists) throw new NotFoundException('Користувача не знайдено');
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: { name, avatar },
-    });
-    return { ok: true, userId: user.id };
-  }
-
   /**
    * Push fresh friend locations to every connected user. Called on a 10s
    * interval by the gateway, and opportunistically after location updates.

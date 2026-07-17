@@ -33,6 +33,38 @@ export class ChatService {
     }
   }
 
+  /**
+   * The chat sidebar: the people this user can actually message, i.e. their
+   * accepted friends. Threads with non-friends are unreachable (history and
+   * send both require friendship), so listing anyone else would only offer
+   * conversations that 403 on open.
+   */
+  async conversations(rawUserId: unknown) {
+    const userId = this.parseId(rawUserId, 'userId');
+    const friendIds = await this.friends.friendIds(userId);
+    if (friendIds.length === 0) return [];
+
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: friendIds } },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        avatar: true,
+        level: true,
+        xp: true,
+        region: true,
+        city: true,
+      },
+    });
+
+    return users.map((u) => ({
+      ...u,
+      online: this.presence.isOnline(u.id),
+      lastSeenAt: this.presence.lastSeenAt(u.id)?.toISOString() ?? null,
+    }));
+  }
+
   /** Message history with a friend, newest page by default, keyset pagination. */
   async history(rawUserId: unknown, rawFriendId: unknown, rawLimit?: unknown, rawBefore?: unknown) {
     const userId = this.parseId(rawUserId, 'userId');

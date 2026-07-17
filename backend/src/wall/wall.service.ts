@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { FriendsService } from '../friends/friends.service';
 
 export interface WallPostDto {
   id: number;
@@ -16,22 +17,28 @@ const PAGE_SIZE = 20;
 
 @Injectable()
 export class WallService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly friends: FriendsService,
+  ) {}
 
   /**
-   * A user's own wall, newest first, cursor-paginated by id (descending —
+   * A user's wall, newest first, cursor-paginated by id (descending —
    * `cursor` is the last id already seen by the client).
    *
-   * Self-only for now: `requesterId` must equal `userId`. This is a
-   * product-scope decision, not a security boundary — this app has no
-   * session/auth layer at all, every endpoint trusts a client-supplied
-   * userId (see friends/checkmarks/exploration controllers). Loosening this
-   * to a friends-list check later only touches this one guard clause.
+   * Visible to the owner and their accepted friends. Wall posts carry visit
+   * photos, so this stays friends-only even though the profile itself is
+   * public (see UsersService.publicProfile). Like every other check in this
+   * app it is a product-scope rule, not a security boundary — there is no
+   * session layer, every endpoint trusts a client-supplied userId (see
+   * friends/checkmarks/exploration controllers).
    */
   async listForUser(userId: number, requesterId: number, cursor?: number) {
     if (!userId || Number.isNaN(userId)) throw new BadRequestException('Не вказано користувача');
     if (!requesterId || Number.isNaN(requesterId)) throw new BadRequestException('Не вказано користувача');
-    if (requesterId !== userId) throw new ForbiddenException('Стіна доступна лише власнику');
+    if (requesterId !== userId && !(await this.friends.areFriends(requesterId, userId))) {
+      throw new ForbiddenException('Стіна доступна лише друзям');
+    }
 
     const rows = await this.prisma.wallPost.findMany({
       where: { userId },
