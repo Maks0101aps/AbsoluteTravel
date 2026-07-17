@@ -722,6 +722,15 @@ a:hover {
    the sticky home navbar. `clip` trims the overflow without that side effect. */
 body { overflow-x: clip; max-width: 100%; }
 img, svg, video, canvas { max-width: 100%; }
+/* ...except Leaflet's own SVG renderers (fog of war, grid lines, border mask,
+   explored-territory hexes): each lives inside an absolutely-positioned pane
+   div with no intrinsic width, so `max-width: 100%` above resolves against a
+   0px containing block and collapses every one of those layers to zero width
+   — they stop rendering with no console error, since nothing is actually
+   wrong except their computed size. Leaflet sizes and positions its own SVGs
+   itself (width/height attributes + a transform), so they don't need — and
+   must not have — this reset. */
+.leaflet-container svg { max-width: none; }
 
 @media (max-width: 860px) {
   /* iOS Safari zooms the whole page when a focused field is under 16px.
