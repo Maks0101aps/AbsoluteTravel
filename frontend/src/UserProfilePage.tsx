@@ -107,6 +107,14 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
       return removeFriend(data.friendshipId, viewerId);
     });
 
+  // Same endpoint as handleCancel, but this one drops an existing friendship —
+  // confirm first, matching how FriendsPage guards unfriending.
+  const handleUnfriend = () => {
+    const who = data?.profile?.displayName ?? data?.name ?? '';
+    if (!window.confirm(`Видалити ${who} з друзів?`)) return;
+    return handleCancel();
+  };
+
   return (
     <div
       role="dialog"
@@ -234,6 +242,7 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
                     onAdd={handleAddFriend}
                     onAccept={handleAccept}
                     onCancel={handleCancel}
+                    onUnfriend={handleUnfriend}
                   />
                 </div>
 
@@ -277,6 +286,7 @@ function ProfileAction({
   onAdd,
   onAccept,
   onCancel,
+  onUnfriend,
 }: {
   data: PublicProfile;
   accent: string;
@@ -285,6 +295,7 @@ function ProfileAction({
   onAdd: () => void;
   onAccept: () => void;
   onCancel: () => void;
+  onUnfriend: () => void;
 }) {
   const primary = (label: string, icon: Parameters<typeof Icon>[0]['name'], onClick: () => void) => (
     <button
@@ -335,19 +346,27 @@ function ProfileAction({
 
   if (data.relation === 'self') return null;
 
+  // "Написати" appears only once the friendship is accepted — the server
+  // rejects chat between non-friends (see ChatService.requireFriendship), so
+  // showing it earlier would be a button that 403s. Every other state offers
+  // the step that leads there instead.
   return (
     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flex: '0 0 auto' }}>
-      {primary('Написати', 'messageSquare', onMessage)}
+      {data.relation === 'friends' && (
+        <>
+          {primary('Написати', 'messageSquare', onMessage)}
+          {secondary('Видалити з друзів', onUnfriend)}
+        </>
+      )}
       {(data.relation === 'none' || data.relation === 'declined') &&
-        secondary('Додати в друзі', onAdd)}
+        primary('Додати в друзі', 'plus', onAdd)}
       {data.relation === 'incoming' && (
         <>
-          {secondary('Прийняти запит', onAccept)}
+          {primary('Прийняти запит', 'check', onAccept)}
           {secondary('Відхилити', onCancel)}
         </>
       )}
       {data.relation === 'outgoing' && secondary('Скасувати запит', onCancel)}
-      {data.relation === 'friends' && secondary('Видалити з друзів', onCancel)}
     </div>
   );
 }
