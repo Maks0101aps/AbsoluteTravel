@@ -3,7 +3,7 @@ import { WallService } from './wall.service';
 
 // Identification follows the app-wide convention (see friends.controller.ts):
 // the client passes its own userId explicitly, here as `requesterId`.
-// Genuinely self-only until a friends-visibility rule is added.
+// Readable by the owner and their friends (see WallService).
 @Controller('api/wall')
 export class WallController {
   constructor(private readonly wallService: WallService) {}

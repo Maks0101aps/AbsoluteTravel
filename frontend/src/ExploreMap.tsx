@@ -38,6 +38,8 @@ interface ExploreMapProps {
   onExplored?: (result: VisitCellResult) => void;
   // Open the chat tab with this friend (from the live-map mini profile card).
   onMessageFriend?: (friendId: number) => void;
+  // Open a traveler's profile (tapping the friend card on the map).
+  onOpenProfile?: (userId: number) => void;
 }
 
 function CategoryBadge({ category }: { category: PlaceCategory }) {
@@ -97,7 +99,7 @@ function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): nu
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
-function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, openedPlaceIds, onVerified, onExplored, onMessageFriend }: ExploreMapProps) {
+function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, openedPlaceIds, onVerified, onExplored, onMessageFriend, onOpenProfile }: ExploreMapProps) {
   const [places, setPlaces] = useState<Place[]>(PLACES);
   const [activeId, setActiveId] = useState<string | number | null>(null);
   const [hoverId, setHoverId] = useState<string | number | null>(null);
@@ -364,16 +366,33 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                 maxWidth: '320px',
               }}
             >
-              <UserAvatar user={selectedFriend.friend} size={46} />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: CREAM }}>{selectedFriend.friend.name}</div>
-                <div style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.55)' }}>
-                  Рівень {selectedFriend.friend.level} · {selectedFriend.friend.xp} XP
+              <button
+                onClick={() => onOpenProfile?.(selectedFriend.friend.id)}
+                title={`Профіль ${selectedFriend.friend.name}`}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  minWidth: 0,
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  textAlign: 'left',
+                  cursor: onOpenProfile ? 'pointer' : 'default',
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
+                <UserAvatar user={selectedFriend.friend} size={46} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: CREAM }}>{selectedFriend.friend.name}</div>
+                  <div style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.55)' }}>
+                    Рівень {selectedFriend.friend.level} · {selectedFriend.friend.xp} XP
+                  </div>
+                  <div style={{ fontSize: '11px', color: selectedFriend.stale ? '#E0A54E' : accent }}>
+                    {selectedFriend.stale ? 'Давно не оновлювалось' : `Оновлено ${new Date(selectedFriend.updatedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}`}
+                  </div>
                 </div>
-                <div style={{ fontSize: '11px', color: selectedFriend.stale ? '#E0A54E' : accent }}>
-                  {selectedFriend.stale ? 'Давно не оновлювалось' : `Оновлено ${new Date(selectedFriend.updatedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}`}
-                </div>
-              </div>
+              </button>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '0 0 auto' }}>
                 <button
                   onClick={() => onMessageFriend?.(selectedFriend.friend.id)}

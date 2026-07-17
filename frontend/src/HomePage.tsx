@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  getFriendRequests,
   getUnreadCounts,
   getUserCheckmarks,
   purchaseItem,
@@ -23,12 +24,13 @@ import { AVATARS, BACKGROUNDS, BADGES, COLORS, EFFECTS, FRAMES } from './data/pr
 import { Icon, type IconName } from './icons';
 import { ProfileCardEffect, ProfileCosmosFlourish, ProfileSakuraFlourish } from './itemVisuals';
 import ProfileWall from './ProfileWall';
+import UserProfilePage from './UserProfilePage';
 
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
 const DEFAULT_ACCENT = '#3FA66B';
 
-type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'advisor' | 'profile';
+type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'profile';
 
 // The profile view is opened by clicking the avatar (top-right), not a tab.
 // `short` is what the phone tab bar shows — the full labels don't fit six-across.
@@ -37,7 +39,6 @@ const TABS: { id: Tab; label: string; short: string; icon: IconName }[] = [
   { id: 'friends', label: 'Друзі', short: 'Друзі', icon: 'users' },
   { id: 'leaderboard', label: 'Рейтинг', short: 'Рейтинг', icon: 'trophy' },
   { id: 'chat', label: 'Чат', short: 'Чат', icon: 'messageSquare' },
-  { id: 'advisor', label: 'ШІ-порадник', short: 'Порадник', icon: 'compass' },
 ];
 
 interface HomePageProps {
@@ -57,6 +58,14 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
   // Preselected friend when jumping into chat from "Написати" buttons.
   const [chatFriendId, setChatFriendId] = useState<number | null>(null);
   const [totalUnread, setTotalUnread] = useState(0);
+  // Pending incoming friend requests. Counted here rather than in FriendsPage
+  // because that page is only mounted while its tab is open — the badge has to
+  // show up no matter where the user is.
+  const [pendingRequests, setPendingRequests] = useState(0);
+  // Another traveler's profile, shown as an overlay above the current tab.
+  // Tapping yourself lands on your own profile tab instead of the overlay,
+  // which is the editable view.
+  const [viewingUserId, setViewingUserId] = useState<number | null>(null);
 
   // --- shop (self-contained overlay: opening/closing is a local toggle, no
   // navigation and no profile editor involved) ---
@@ -100,7 +109,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
     }
     const avatar = next.customAvatar || next.avatarId;
     onUserUpdate?.({ profile: next, name: next.displayName, avatar });
-    updateProfile(user.id, { name: next.displayName, avatar }).catch(() => {});
+    updateProfile(user.id, { name: next.displayName, avatar, profile: next }).catch(() => {});
   };
 
   const equipKeyOf = (itemId: string): EquipKey | null => {
@@ -134,10 +143,20 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
 
   const openChatWith = (friendId: number) => {
     setChatFriendId(friendId);
+    setViewingUserId(null);
     setTab('chat');
   };
 
-  // Connect the realtime socket for the session; keep the chat unread badge fresh.
+  const openProfileOf = (targetId: number) => {
+    if (targetId === user.id) {
+      setTab('profile');
+      return;
+    }
+    setViewingUserId(targetId);
+  };
+
+  // Connect the realtime socket for the session; keep the chat unread and
+  // friend-request badges fresh.
   useEffect(() => {
     let disposed = false;
     let cleanup = () => {};
@@ -148,12 +167,33 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
         })
         .catch(() => {});
     };
+    // Refetched rather than incremented on the socket event: `friends:request`
+    // is only delivered while online (PresenceService drops it otherwise), so
+    // the count on mount is what covers requests that arrived while away.
+    const refreshRequests = () => {
+      getFriendRequests(user.id)
+        .then((reqs) => {
+          if (!disposed) setPendingRequests(reqs.length);
+        })
+        .catch(() => {});
+    };
     refreshUnread();
+    refreshRequests();
     getSocket(user.id).then((socket) => {
       if (disposed) return;
       const onMessage = () => refreshUnread();
+      const onFriendChange = () => refreshRequests();
       socket.on('chat:message', onMessage);
-      cleanup = () => socket.off('chat:message', onMessage);
+      // A request arriving, or being accepted/withdrawn elsewhere, all move the count.
+      socket.on('friends:request', onFriendChange);
+      socket.on('friends:accepted', onFriendChange);
+      socket.on('friends:removed', onFriendChange);
+      cleanup = () => {
+        socket.off('chat:message', onMessage);
+        socket.off('friends:request', onFriendChange);
+        socket.off('friends:accepted', onFriendChange);
+        socket.off('friends:removed', onFriendChange);
+      };
     });
     return () => {
       disposed = true;
@@ -198,6 +238,12 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
     onUserUpdate?.({ xp: result.newXp, level: result.newLevel });
   };
 
+  // Unread messages and pending friend requests both surface as a tab count.
+  const badgeOf = (id: Tab) => {
+    if (id === 'chat') return totalUnread;
+    if (id === 'friends') return pendingRequests;
+    return 0;
+  };
   const maxWidth = tab === 'profile' ? '1400px' : '1140px';
 
   return (
@@ -273,9 +319,9 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
               >
                 <Icon name={t.icon} size={14} strokeWidth={1.9} />
                 {t.label}
-                {t.id === 'chat' && totalUnread > 0 && (
+                {badgeOf(t.id) > 0 && (
                   <span style={{ background: accent, color: BG, fontSize: '10px', fontWeight: 800, borderRadius: '999px', padding: '1px 6px', marginLeft: '1px' }}>
-                    {totalUnread}
+                    {badgeOf(t.id)}
                   </span>
                 )}
               </button>
@@ -348,9 +394,9 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
             >
               <span className="at-tabbar-icon">
                 <Icon name={t.icon} size={19} strokeWidth={1.9} />
-                {t.id === 'chat' && totalUnread > 0 && (
+                {badgeOf(t.id) > 0 && (
                   <span className="at-tabbar-badge" style={{ background: accent, color: BG }}>
-                    {totalUnread > 9 ? '9+' : totalUnread}
+                    {badgeOf(t.id) > 9 ? '9+' : badgeOf(t.id)}
                   </span>
                 )}
               </span>
@@ -388,13 +434,33 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
             onVerified={handleVerified}
             onExplored={handleExplored}
             onMessageFriend={openChatWith}
+            onOpenProfile={openProfileOf}
           />
         )}
-        {tab === 'friends' && <FriendsPage userId={user.id} accent={accent} onMessage={openChatWith} />}
-        {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} />}
-        {tab === 'chat' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId={chatFriendId} />}
-        {tab === 'advisor' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId="advisor" hideSidebar={true} />}
+        {/* onRequestsChange must be a stable reference: it feeds FriendsPage's
+            reload callback, and a fresh lambda each render would re-trigger it
+            in a loop. The useState setter is stable by definition. */}
+        {tab === 'friends' && (
+          <FriendsPage
+            userId={user.id}
+            accent={accent}
+            onMessage={openChatWith}
+            onOpenProfile={openProfileOf}
+            onRequestsChange={setPendingRequests}
+          />
+        )}
+        {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} onOpenProfile={openProfileOf} />}
+        {tab === 'chat' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId={chatFriendId} onOpenProfile={openProfileOf} />}
       </main>
+
+      {viewingUserId !== null && (
+        <UserProfilePage
+          userId={viewingUserId}
+          viewerId={user.id}
+          onClose={() => setViewingUserId(null)}
+          onMessage={openChatWith}
+        />
+      )}
 
       {shopOpen && p && (
         <ProfileShop

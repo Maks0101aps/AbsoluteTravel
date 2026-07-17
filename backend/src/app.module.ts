@@ -23,6 +23,7 @@ import { CheckmarksService } from './checkmarks/checkmarks.service';
 import { ExplorationController } from './exploration/exploration.controller';
 import { ExplorationService } from './exploration/exploration.service';
 import { WallModule } from './wall/wall.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { WallModule } from './wall/wall.module';
     ChatModule,
     LocationsModule,
     WallModule,
+    UsersModule,
   ],
   controllers: [
     AppController,

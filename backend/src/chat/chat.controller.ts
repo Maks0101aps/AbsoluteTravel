@@ -5,6 +5,12 @@ import { ChatService } from './chat.service';
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
+  // Declared before ':friendId' so "conversations" isn't captured as a friend id.
+  @Get('conversations')
+  conversations(@Query('userId') userId: string) {
+    return this.chatService.conversations(userId);
+  }
+
   // Declared before ':friendId' so "unread" isn't captured as a friend id.
   @Get('unread')
   unread(@Query('userId') userId: string) {

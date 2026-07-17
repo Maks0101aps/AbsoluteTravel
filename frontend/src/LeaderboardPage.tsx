@@ -11,6 +11,8 @@ interface LeaderboardPageProps {
   userId: number;
   userRegion: string | null;
   accent?: string;
+  // Open a traveler's profile (tapping a leaderboard row).
+  onOpenProfile?: (userId: number) => void;
 }
 
 type Metric = 'xp' | 'cells' | 'places';
@@ -81,6 +83,7 @@ function PodiumCard({
   max,
   isMe,
   accent,
+  onOpenProfile,
 }: {
   row: XpLeaderboardRow;
   place: number;
@@ -88,6 +91,7 @@ function PodiumCard({
   max: number;
   isMe: boolean;
   accent: string;
+  onOpenProfile?: (userId: number) => void;
 }) {
   const { isMobile } = useViewport();
   const color = PODIUM_COLORS[place];
@@ -98,7 +102,14 @@ function PodiumCard({
   const avatarSize = isMobile ? (place === 0 ? 50 : 40) : place === 0 ? 72 : 56;
 
   return (
-    <div className={`lb-podium-card lb-podium-p${place}`} style={{ animationDelay: `${place * 0.09}s` }}>
+    <div
+      className={`lb-podium-card lb-podium-p${place}`}
+      onClick={onOpenProfile ? () => onOpenProfile(row.userId) : undefined}
+      style={{
+        animationDelay: `${place * 0.09}s`,
+        cursor: onOpenProfile ? 'pointer' : 'default',
+      }}
+    >
       {place === 0 && <div className="lb-crown">👑</div>}
 
       <div className="lb-podium-avatar">
@@ -146,6 +157,7 @@ function Row({
   isMe,
   accent,
   index,
+  onOpenProfile,
 }: {
   row: XpLeaderboardRow;
   metric: Metric;
@@ -153,6 +165,7 @@ function Row({
   isMe: boolean;
   accent: string;
   index: number;
+  onOpenProfile?: (userId: number) => void;
 }) {
   const { isMobile } = useViewport();
   const value = valueOf(row, metric);
@@ -163,10 +176,24 @@ function Row({
   return (
     <div
       className={`lb-row${isMe ? ' lb-row-me' : ''}`}
+      onClick={onOpenProfile ? () => onOpenProfile(row.userId) : undefined}
+      role={onOpenProfile ? 'button' : undefined}
+      tabIndex={onOpenProfile ? 0 : undefined}
+      onKeyDown={
+        onOpenProfile
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onOpenProfile(row.userId);
+              }
+            }
+          : undefined
+      }
       style={{
         background: isMe ? `linear-gradient(100deg, ${accent}26, rgba(11,43,32,0.85))` : undefined,
         borderColor: isMe ? `${accent}80` : undefined,
         animationDelay: `${Math.min(index, 8) * 0.05}s`,
+        cursor: onOpenProfile ? 'pointer' : undefined,
       }}
     >
       {/* the metric bar lives behind the row content, not under it */}
@@ -426,7 +453,7 @@ const STYLES = `
 }
 `;
 
-function LeaderboardPage({ userId, userRegion, accent = '#3FA66B' }: LeaderboardPageProps) {
+function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile }: LeaderboardPageProps) {
   const [tab, setTab] = useState<'global' | 'regional'>('global');
   const [metric, setMetric] = useState<Metric>('xp');
   const [rows, setRows] = useState<XpLeaderboardRow[]>([]);
@@ -569,6 +596,7 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B' }: Leaderboard
               max={max}
               isMe={podium[place].userId === userId}
               accent={accent}
+              onOpenProfile={onOpenProfile}
             />
           ))}
         </div>
@@ -577,7 +605,16 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B' }: Leaderboard
       <div className="lb-list">
         {!loading &&
           rest.map((row, i) => (
-            <Row key={row.userId} row={row} metric={metric} max={max} isMe={row.userId === userId} accent={accent} index={i} />
+            <Row
+              key={row.userId}
+              row={row}
+              metric={metric}
+              max={max}
+              isMe={row.userId === userId}
+              accent={accent}
+              index={i}
+              onOpenProfile={onOpenProfile}
+            />
           ))}
         {!loading && sorted.length === 0 && tab === 'regional' && userRegion && (
           <div className="lb-panel">У цьому регіоні поки немає мандрівників.</div>

@@ -22,6 +22,12 @@ interface FriendsPageProps {
   accent?: string;
   // Jump to the chat tab with this friend's thread open.
   onMessage?: (friendId: number) => void;
+  // Open a traveler's profile (tapping any user card).
+  onOpenProfile?: (userId: number) => void;
+  // Report the incoming-request count so the tab badge stays in sync — the
+  // server notifies the *other* side when we accept/decline, so this page is
+  // the only one that knows the count just changed.
+  onRequestsChange?: (count: number) => void;
 }
 
 function SmallButton({
@@ -60,7 +66,7 @@ function SmallButton({
   );
 }
 
-function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps) {
+function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onRequestsChange }: FriendsPageProps) {
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [query, setQuery] = useState('');
@@ -71,9 +77,19 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const reload = useCallback(() => {
-    getFriends(userId).then(setFriends).catch(() => {});
-    getFriendRequests(userId).then(setRequests).catch(() => {});
-  }, [userId]);
+    // Surface load failures: swallowing them renders an empty list that is
+    // indistinguishable from "no friends / no requests" (a stale userId in
+    // localStorage makes both endpoints 400).
+    getFriends(userId)
+      .then(setFriends)
+      .catch((e) => setError(e?.message ?? 'Не вдалося завантажити друзів'));
+    getFriendRequests(userId)
+      .then((reqs) => {
+        setRequests(reqs);
+        onRequestsChange?.(reqs.length);
+      })
+      .catch((e) => setError(e?.message ?? 'Не вдалося завантажити запити'));
+  }, [userId, onRequestsChange]);
 
   useEffect(() => {
     reload();
@@ -227,6 +243,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps
                 key={f.id}
                 user={f}
                 accent={accent}
+                onClick={onOpenProfile ? () => onOpenProfile(f.id) : undefined}
                 actions={
                   <>
                     <SmallButton label="Написати" color={accent} onClick={() => onMessage?.(f.id)} />
@@ -240,14 +257,22 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps
 
         {/* right: requests + search */}
         <div className="at-col" style={{ flex: '1 1 320px', minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {requests.length > 0 && (
-            <div>
-              <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px' }}>
-                Вхідні запити{' '}
+          {/* Always rendered, even at zero: a section that vanishes when empty
+              gives no way to tell "no requests" from "something broke". */}
+          <div>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px' }}>
+              Вхідні запити{' '}
+              {requests.length > 0 && (
                 <span style={{ color: '#071F16', background: accent, borderRadius: '999px', padding: '1px 8px', fontSize: '12px', fontWeight: 800 }}>
                   {requests.length}
                 </span>
-              </h3>
+              )}
+            </h3>
+            {requests.length === 0 ? (
+              <div style={{ background: PANEL, borderRadius: '14px', border: '1px dashed rgba(255,255,255,0.15)', padding: '18px', fontSize: '13px', color: 'rgba(244,241,232,0.55)', lineHeight: 1.5 }}>
+                Нових запитів немає. Коли хтось захоче додати тебе в друзі — запит з’явиться тут.
+              </div>
+            ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {requests.map((req) => (
                   <UserCard
@@ -255,6 +280,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps
                     user={req.sender}
                     accent={accent}
                     compact
+                    onClick={onOpenProfile ? () => onOpenProfile(req.sender.id) : undefined}
                     actions={
                       <>
                         <SmallButton label="Прийняти" color={accent} onClick={() => handleAccept(req)} />
@@ -264,8 +290,8 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps
                   />
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <div>
             <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px' }}>Знайти мандрівників</h3>
@@ -302,6 +328,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps
                   user={r}
                   accent={accent}
                   compact
+                  onClick={onOpenProfile ? () => onOpenProfile(r.id) : undefined}
                   actions={
                     r.relation === 'friends' ? (
                       <SmallButton label="Написати" color={accent} onClick={() => onMessage?.(r.id)} />
