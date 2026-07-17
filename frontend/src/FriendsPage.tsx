@@ -22,6 +22,8 @@ interface FriendsPageProps {
   accent?: string;
   // Jump to the chat tab with this friend's thread open.
   onMessage?: (friendId: number) => void;
+  // Open a traveler's profile (tapping any user card).
+  onOpenProfile?: (userId: number) => void;
 }
 
 function SmallButton({
@@ -60,7 +62,7 @@ function SmallButton({
   );
 }
 
-function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps) {
+function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile }: FriendsPageProps) {
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [query, setQuery] = useState('');
@@ -227,6 +229,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps
                 key={f.id}
                 user={f}
                 accent={accent}
+                onClick={onOpenProfile ? () => onOpenProfile(f.id) : undefined}
                 actions={
                   <>
                     <SmallButton label="Написати" color={accent} onClick={() => onMessage?.(f.id)} />
@@ -255,6 +258,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps
                     user={req.sender}
                     accent={accent}
                     compact
+                    onClick={onOpenProfile ? () => onOpenProfile(req.sender.id) : undefined}
                     actions={
                       <>
                         <SmallButton label="Прийняти" color={accent} onClick={() => handleAccept(req)} />
@@ -302,6 +306,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps
                   user={r}
                   accent={accent}
                   compact
+                  onClick={onOpenProfile ? () => onOpenProfile(r.id) : undefined}
                   actions={
                     r.relation === 'friends' ? (
                       <SmallButton label="Написати" color={accent} onClick={() => onMessage?.(r.id)} />

@@ -15,7 +15,8 @@ export interface AuthUser {
   unlockedItems: string[];
   rank?: string;
   currentDestination: string | null;
-  // Client-side profile customization (set via the profile wizard, stored locally).
+  // Profile customization (set via the profile wizard). Cached in localStorage
+  // and persisted server-side, so other travelers can view it too.
   profile?: ProfileCustomization;
 }
 
@@ -578,7 +579,38 @@ export function setLocationVisibility(userId: number, visible: boolean) {
   return call<{ userId: number; visible: boolean }>('PUT', '/api/users/me/location-visible', { userId, visible });
 }
 
-export function updateProfile(userId: number, payload: { name: string; avatar: string }) {
+export function updateProfile(
+  userId: number,
+  payload: { name: string; avatar: string; profile?: ProfileCustomization },
+) {
   return call<{ ok: boolean; userId: number }>('POST', '/api/users/profile', { userId, ...payload });
+}
+
+// --- Public profiles -----------------------------------------------------------
+
+/** Another traveler's profile as seen by the viewer. */
+export interface PublicProfile {
+  id: number;
+  username: string;
+  name: string;
+  avatar: string;
+  level: number;
+  xp: number;
+  rank: string;
+  city: string | null;
+  region: string | null;
+  createdAt: string;
+  online: boolean;
+  lastSeenAt: string | null;
+  profile: ProfileCustomization | null;
+  stats: { cells: number; places: number; friends: number };
+  relation: 'self' | FriendRelation;
+  friendshipId: number | null;
+  /** Wall posts carry visit photos, so the feed is friends-only. */
+  canSeeWall: boolean;
+}
+
+export function getUserProfile(userId: number, viewerId: number) {
+  return call<PublicProfile>('GET', `/api/users/${userId}/profile?viewerId=${viewerId}`);
 }
 

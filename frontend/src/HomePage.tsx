@@ -23,6 +23,7 @@ import { AVATARS, BACKGROUNDS, BADGES, COLORS, EFFECTS, FRAMES } from './data/pr
 import { Icon, type IconName } from './icons';
 import { ProfileCardEffect, ProfileCosmosFlourish, ProfileSakuraFlourish } from './itemVisuals';
 import ProfileWall from './ProfileWall';
+import UserProfilePage from './UserProfilePage';
 
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
@@ -57,6 +58,10 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
   // Preselected friend when jumping into chat from "Написати" buttons.
   const [chatFriendId, setChatFriendId] = useState<number | null>(null);
   const [totalUnread, setTotalUnread] = useState(0);
+  // Another traveler's profile, shown as an overlay above the current tab.
+  // Tapping yourself lands on your own profile tab instead of the overlay,
+  // which is the editable view.
+  const [viewingUserId, setViewingUserId] = useState<number | null>(null);
 
   // --- shop (self-contained overlay: opening/closing is a local toggle, no
   // navigation and no profile editor involved) ---
@@ -100,7 +105,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
     }
     const avatar = next.customAvatar || next.avatarId;
     onUserUpdate?.({ profile: next, name: next.displayName, avatar });
-    updateProfile(user.id, { name: next.displayName, avatar }).catch(() => {});
+    updateProfile(user.id, { name: next.displayName, avatar, profile: next }).catch(() => {});
   };
 
   const equipKeyOf = (itemId: string): EquipKey | null => {
@@ -134,7 +139,16 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
 
   const openChatWith = (friendId: number) => {
     setChatFriendId(friendId);
+    setViewingUserId(null);
     setTab('chat');
+  };
+
+  const openProfileOf = (targetId: number) => {
+    if (targetId === user.id) {
+      setTab('profile');
+      return;
+    }
+    setViewingUserId(targetId);
   };
 
   // Connect the realtime socket for the session; keep the chat unread badge fresh.
@@ -388,13 +402,23 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
             onVerified={handleVerified}
             onExplored={handleExplored}
             onMessageFriend={openChatWith}
+            onOpenProfile={openProfileOf}
           />
         )}
-        {tab === 'friends' && <FriendsPage userId={user.id} accent={accent} onMessage={openChatWith} />}
-        {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} />}
-        {tab === 'chat' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId={chatFriendId} />}
+        {tab === 'friends' && <FriendsPage userId={user.id} accent={accent} onMessage={openChatWith} onOpenProfile={openProfileOf} />}
+        {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} onOpenProfile={openProfileOf} />}
+        {tab === 'chat' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId={chatFriendId} onOpenProfile={openProfileOf} />}
         {tab === 'advisor' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId="advisor" hideSidebar={true} />}
       </main>
+
+      {viewingUserId !== null && (
+        <UserProfilePage
+          userId={viewingUserId}
+          viewerId={user.id}
+          onClose={() => setViewingUserId(null)}
+          onMessage={openChatWith}
+        />
+      )}
 
       {shopOpen && p && (
         <ProfileShop
