@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useViewport } from './useViewport';
 
 export interface AnchorRect {
   top: number;
@@ -21,6 +22,7 @@ interface PopoverProps {
 // never clipped by the card's overflow, closes on outside-click and Escape.
 function Popover({ anchor, title, width = 320, accent, onClose, children }: PopoverProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const { isMobile } = useViewport();
   const [pos, setPos] = useState<{ top: number; left: number; placement: 'below' | 'above' }>(() => ({
     top: anchor.bottom + 10,
     left: anchor.left,
@@ -29,7 +31,8 @@ function Popover({ anchor, title, width = 320, accent, onClose, children }: Popo
 
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    // As a bottom sheet the position is fixed by CSS, so there is nothing to solve.
+    if (!el || isMobile) return;
     const h = el.offsetHeight;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -48,7 +51,7 @@ function Popover({ anchor, title, width = 320, accent, onClose, children }: Popo
     }
     top = Math.max(margin, Math.min(top, vh - h - margin));
     setPos({ top, left, placement });
-  }, [anchor, width]);
+  }, [anchor, width, isMobile]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -71,25 +74,58 @@ function Popover({ anchor, title, width = 320, accent, onClose, children }: Popo
     };
   }, [onClose]);
 
+  const sheetStyle: React.CSSProperties = isMobile
+    ? {
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: 'auto',
+        maxHeight: '82dvh',
+        overflowY: 'auto',
+        borderRadius: '20px 20px 0 0',
+        // clear the home indicator on notched phones
+        padding: '14px 16px calc(16px + env(safe-area-inset-bottom))',
+        animation: 'sheetUp 0.24s cubic-bezier(0.2, 0.9, 0.3, 1) both',
+      }
+    : {
+        position: 'fixed',
+        top: pos.top,
+        left: pos.left,
+        width,
+        borderRadius: '16px',
+        padding: '16px',
+        animation: 'popIn 0.18s ease both',
+      };
+
   return (
     <>
+      {isMobile && (
+        <div
+          onClick={onClose}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 200,
+            background: 'rgba(4,15,10,0.6)',
+            animation: 'fadeIn 0.2s ease both',
+          }}
+        />
+      )}
       <div
         ref={ref}
         style={{
-          position: 'fixed',
-          top: pos.top,
-          left: pos.left,
-          width,
           zIndex: 201,
           background: 'rgba(9,28,20,0.98)',
           border: '1px solid rgba(255,255,255,0.12)',
-          borderRadius: '16px',
           boxShadow: '0 24px 60px -12px rgba(0,0,0,0.75)',
-          padding: '16px',
-          animation: 'popIn 0.18s ease both',
           backdropFilter: 'blur(12px)',
+          ...sheetStyle,
         }}
       >
+        {isMobile && (
+          <div style={{ width: '38px', height: '4px', borderRadius: '999px', background: 'rgba(255,255,255,0.22)', margin: '0 auto 12px' }} />
+        )}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <div style={{ fontSize: '12.5px', fontWeight: 700, letterSpacing: '0.04em', color: accent }}>{title}</div>
           <button

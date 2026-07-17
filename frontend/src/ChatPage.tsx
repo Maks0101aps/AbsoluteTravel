@@ -15,6 +15,7 @@ import {
 import { currentSocket, getSocket } from './socket';
 import { UserAvatar } from './UserCard';
 import { Icon, type IconName } from './icons';
+import { useViewport } from './useViewport';
 
 const CREAM = '#F4F1E8';
 const PANEL = '#0B2B20';
@@ -233,6 +234,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [unread, setUnread] = useState<Record<string, number>>({});
   const [activeId, setActiveId] = useState<number | 'advisor' | null>(initialFriendId);
+  const { isNarrow } = useViewport();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [input, setInput] = useState('');
@@ -644,12 +646,44 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
 
   const totalUnread = Object.values(unread).reduce((s, n) => s + n, 0);
 
+  // Only the phone layout has somewhere to go back to; the advisor tab has no list.
+  const backButton =
+    isNarrow && !hideSidebar ? (
+      <button
+        onClick={() => setActiveId(null)}
+        aria-label="Назад до списку чатів"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '36px',
+          height: '36px',
+          flex: '0 0 auto',
+          marginLeft: '-4px',
+          borderRadius: '10px',
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          color: CREAM,
+          fontSize: '18px',
+          lineHeight: 1,
+          cursor: 'pointer',
+        }}
+      >
+        ‹
+      </button>
+    ) : null;
+
+  // On phones the list and the thread can't sit side by side, so they take turns:
+  // the list is the default view and picking someone swaps to their thread.
+  const showSidebar = !hideSidebar && (!isNarrow || activeId === null);
+  const showThread = !isNarrow || activeId !== null || hideSidebar;
+
   return (
     <div style={{ fontFamily: "'Manrope', sans-serif", color: CREAM, height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', flex: 1 }}>
       <div style={{ display: 'flex', gap: '0', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
         {/* sidebar: friends with unread badges */}
-        {!hideSidebar && (
-          <div style={{ flex: '0 0 280px', minWidth: '220px', minHeight: 0, background: PANEL, borderRight: '1px solid rgba(255,255,255,0.09)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        {showSidebar && (
+          <div style={{ flex: isNarrow ? '1 1 auto' : '0 0 280px', minWidth: isNarrow ? 0 : '220px', minHeight: 0, background: PANEL, borderRight: isNarrow ? 'none' : '1px solid rgba(255,255,255,0.09)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             
             {/* Section: ШІ-Порадник */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
@@ -757,6 +791,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
         )}
 
         {/* thread */}
+        {showThread && (
         <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', background: '#081E15' }}>
           {activeId === null ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(244,241,232,0.45)', fontSize: '14px', padding: '20px', textAlign: 'center' }}>
@@ -767,6 +802,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
               {/* thread header */}
               {activeId === 'advisor' ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  {backButton}
                   <div style={{
                     width: '38px',
                     height: '38px',
@@ -780,8 +816,8 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                   }}>
                     <Icon name="compass" size={20} stroke={accent} strokeWidth={1.8} />
                   </div>
-                  <div>
-                    <div style={{ fontSize: '14.5px', fontWeight: 700 }}>Порадник Absolute Travel</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: '14.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Порадник Absolute Travel</div>
                     <div style={{ fontSize: '11.5px', color: advisorAvailable ? accent : 'rgba(244,241,232,0.45)' }}>
                       {advisorAvailable ? 'активний' : 'недоступний'} · ШІ-порадник
                     </div>
@@ -789,10 +825,11 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                 </div>
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '13px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                  {backButton}
                   {activeFriend && <UserAvatar user={activeFriend} size={38} />}
                   {activeFriend && (
-                    <div>
-                      <div style={{ fontSize: '14.5px', fontWeight: 700 }}>{activeFriend.name}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '14.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeFriend.name}</div>
                       <div style={{ fontSize: '11.5px', color: activeFriend.online ? accent : 'rgba(244,241,232,0.45)' }}>
                         {activeFriend.online ? 'онлайн' : 'був(ла) нещодавно'} · Рівень {activeFriend.level}
                       </div>
@@ -1179,6 +1216,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
             </>
           )}
         </div>
+        )}
       </div>
     </div>
   );

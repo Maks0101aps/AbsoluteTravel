@@ -3,7 +3,7 @@ interface BlackHoleFrameProps {
 }
 
 // Free animated "Чорна діра" (Black Hole) avatar frame.
-// Uses the supplied artwork (public/assets/blackhole_frame.png — a swirling
+// Uses the supplied artwork (public/assets/blackhole_frame.avif — a swirling
 // blue/orange event-horizon ring, chroma-keyed to a transparent center and
 // transparent black background) as two counter-rotating copies for parallax
 // depth, plus a pulsing glow layer and twinkling sparks drawn in CSS.
@@ -22,13 +22,13 @@ function BlackHoleFrame({ size }: BlackHoleFrameProps) {
       <div className="bhf-glow" />
       <img
         className="bhf-img bhf-img-a"
-        src="/assets/blackhole_frame.png"
+        src="/assets/blackhole_frame.avif"
         alt=""
         style={{ width: frameSize, height: frameSize }}
       />
       <img
         className="bhf-img bhf-img-b"
-        src="/assets/blackhole_frame.png"
+        src="/assets/blackhole_frame.avif"
         alt=""
         style={{ width: frameSize * 0.86, height: frameSize * 0.86 }}
       />

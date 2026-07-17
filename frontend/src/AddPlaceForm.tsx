@@ -143,6 +143,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
   return (
     <div
       onClick={onClose}
+      className="at-sheet-shell"
       style={{
         position: 'fixed',
         inset: 0,
@@ -159,6 +160,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        className="at-sheet-panel"
         style={{
           width: '100%',
           maxWidth: '640px',

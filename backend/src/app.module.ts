@@ -22,6 +22,7 @@ import { CheckmarksController } from './checkmarks/checkmarks.controller';
 import { CheckmarksService } from './checkmarks/checkmarks.service';
 import { ExplorationController } from './exploration/exploration.controller';
 import { ExplorationService } from './exploration/exploration.service';
+import { WallModule } from './wall/wall.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ExplorationService } from './exploration/exploration.service';
     LeaderboardModule,
     ChatModule,
     LocationsModule,
+    WallModule,
   ],
   controllers: [
     AppController,
