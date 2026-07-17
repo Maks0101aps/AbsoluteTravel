@@ -14,6 +14,8 @@ export interface VerifyCheckmarkDto {
   lat?: number;
   lng?: number;
   photo?: string;
+  // Opt-in: publish this visit (with its photo) to the user's wall feed.
+  shareToWall?: boolean;
 }
 
 // XP reward per difficulty level — mirrors DIFFICULTY_META on the frontend.
@@ -107,7 +109,7 @@ export class CheckmarksService {
     // level then has to be derived from the post-increment value, which is why
     // this is an interactive transaction rather than the batch form.
     const { newLevel, leveledUp } = await this.prisma.$transaction(async (tx) => {
-      await tx.checkmark.create({
+      const checkmark = await tx.checkmark.create({
         data: {
           userId,
           placeId,
@@ -118,6 +120,12 @@ export class CheckmarksService {
           xpAwarded,
         },
       });
+
+      if (dto.shareToWall) {
+        await tx.wallPost.create({
+          data: { userId, type: 'visit', checkmarkId: checkmark.id, placeId, photo, xpAwarded },
+        });
+      }
 
       const updated = await tx.user.update({
         where: { id: userId },

@@ -32,6 +32,7 @@ model User {
   transactions       CoinTransaction[]
   checkmarks         Checkmark[]
   visitedCells       VisitedCell[]
+  wallPosts          WallPost[]
 
   sentFriendRequests     Friend[]  @relation("FriendSender")
   receivedFriendRequests Friend[]  @relation("FriendReceiver")
@@ -178,6 +179,7 @@ model Checkmark {
 
   user  User  @relation(fields: [userId], references: [id])
   place Place @relation(fields: [placeId], references: [id])
+  wallPosts WallPost[]
 
   // A place can be counted for a user only once.
   @@unique([userId, placeId])
@@ -201,5 +203,35 @@ model VisitedCell {
   // A cell counts once per user — unlocking is idempotent.
   @@unique([userId, cellId])
   @@index([userId])
+}
+
+// A wall post is an entry in a traveler's activity feed: a verified place
+// visit (opt-in, may include the checkmark photo), a newly unlocked
+// exploration cell, or a newly opened region. Visible only to the post's
+// own owner today (see WallController) — nothing here enforces that at the
+// schema level, so a "view a friend's wall" feature is a service-layer
+// change later, not a migration.
+model WallPost {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  type        String // 'visit' | 'new_cell' | 'new_region'
+
+  // Populated only when type === 'visit'.
+  checkmarkId Int?
+  placeId     Int?
+  photo       String? // data URL, copied from the Checkmark only if the user opted in
+
+  // Populated only when type === 'new_cell'. For 'new_region' rows this holds
+  // the res-3 region id itself (not a fine cell) — no separate region table,
+  // consistent with how VisitedCell already avoids one.
+  cellId      String?
+
+  xpAwarded   Int
+  createdAt   DateTime @default(now())
+
+  user      User       @relation(fields: [userId], references: [id])
+  checkmark Checkmark? @relation(fields: [checkmarkId], references: [id])
+
+  @@index([userId, createdAt])
 }
 

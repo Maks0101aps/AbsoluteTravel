@@ -109,7 +109,7 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
         fontFamily: "'Manrope', sans-serif",
         background: BG,
         color: CREAM,
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
