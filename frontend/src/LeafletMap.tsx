@@ -74,10 +74,13 @@ const OUTSIDE_FILL = '#040B08';
 // everything else — by design for terrain detail, but a place name needs to
 // stay legible even in fogged territory so the player knows what's out there.
 // A second, transparent tile layer carrying *only* labels, in its own pane
-// above the fog and the border mask, fixes that without touching the fog's
-// own opacity.
+// above the fog (so names stay legible in unexplored territory) but BELOW
+// the border mask — otherwise a neighbouring country's own city labels
+// (Chisinau, Homel, Belgorod…) would paint right over the opaque mask that's
+// supposed to hide it, since a raster label tile isn't clipped to Ukraine's
+// actual (non-rectangular) border the way the mask polygon is.
 const LABEL_PANE = 'at-labels';
-const LABEL_PANE_Z = 365;
+const LABEL_PANE_Z = 358;
 const BORDER_STROKE = 'rgba(155,216,180,0.38)';
 
 const ICON_PATHS: Record<string, string> = {
@@ -439,8 +442,13 @@ function LeafletMap({
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    // Label-free base tiles: the standard OSM raster tiles bake city/street
+    // names right into the image, which would duplicate (and fight for
+    // space with) the dedicated CARTO label layer added below. Same basemap
+    // family as that label layer, just its "nolabels" sibling, so the two
+    // stay visually consistent.
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
       maxZoom: 19,
       // Don't even fetch what the border mask is going to paint over. Past the
       // country's bbox there is nothing the user may see, so a tile there is
