@@ -28,9 +28,72 @@ export class ChatService {
   }
 
   private async requireFriendship(userId: number, friendId: number) {
-    if (!(await this.friends.areFriends(userId, friendId))) {
-      throw new ForbiddenException('Листування доступне лише між друзями');
+    // Bypassed: Allow messages between any users as requested.
+  }
+
+  /** Retrieve all active chat conversations and friends for the user. */
+  async conversations(rawUserId: unknown) {
+    const userId = this.parseId(rawUserId, 'userId');
+
+    // Find all message participants (either sender or receiver)
+    const messages = await this.prisma.message.findMany({
+      where: {
+        OR: [
+          { senderId: userId },
+          { receiverId: userId },
+        ],
+      },
+      select: {
+        senderId: true,
+        receiverId: true,
+      },
+      orderBy: { id: 'desc' },
+    });
+
+    const partnerIds = new Set<number>();
+    for (const m of messages) {
+      if (m.senderId !== userId) partnerIds.add(m.senderId);
+      if (m.receiverId !== userId) partnerIds.add(m.receiverId);
     }
+
+    // Also get all friends so we can show them in the list as well
+    const friendIds = await this.friends.friendIds(userId);
+    for (const fid of friendIds) {
+      partnerIds.add(fid);
+    }
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: { in: Array.from(partnerIds) },
+      },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        avatar: true,
+        level: true,
+        xp: true,
+        region: true,
+        city: true,
+      },
+    });
+
+    return users.map((u) => {
+      const isFriend = friendIds.includes(u.id);
+      return {
+        id: u.id,
+        username: u.username,
+        name: u.name,
+        avatar: u.avatar,
+        level: u.level,
+        xp: u.xp,
+        region: u.region,
+        city: u.city,
+        online: this.presence.isOnline(u.id),
+        lastSeenAt: this.presence.lastSeenAt(u.id)?.toISOString() ?? null,
+        isFriend,
+      };
+    });
   }
 
   /** Message history with a friend, newest page by default, keyset pagination. */

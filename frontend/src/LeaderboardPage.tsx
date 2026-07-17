@@ -83,6 +83,7 @@ function PodiumCard({
   max,
   isMe,
   accent,
+  onOpenProfile,
 }: {
   row: XpLeaderboardRow;
   place: number;
@@ -90,6 +91,7 @@ function PodiumCard({
   max: number;
   isMe: boolean;
   accent: string;
+  onOpenProfile?: (userId: number) => void;
 }) {
   const { isMobile } = useViewport();
   const color = PODIUM_COLORS[place];
@@ -100,7 +102,14 @@ function PodiumCard({
   const avatarSize = isMobile ? (place === 0 ? 50 : 40) : place === 0 ? 72 : 56;
 
   return (
-    <div className={`lb-podium-card lb-podium-p${place}`} style={{ animationDelay: `${place * 0.09}s` }}>
+    <div
+      className={`lb-podium-card lb-podium-p${place}`}
+      onClick={onOpenProfile ? () => onOpenProfile(row.userId) : undefined}
+      style={{
+        animationDelay: `${place * 0.09}s`,
+        cursor: onOpenProfile ? 'pointer' : 'default',
+      }}
+    >
       {place === 0 && <div className="lb-crown">👑</div>}
 
       <div className="lb-podium-avatar">
@@ -587,6 +596,7 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
               max={max}
               isMe={podium[place].userId === userId}
               accent={accent}
+              onOpenProfile={onOpenProfile}
             />
           ))}
         </div>

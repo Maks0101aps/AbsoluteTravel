@@ -337,16 +337,17 @@ function ProfileAction({
 
   return (
     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flex: '0 0 auto' }}>
-      {data.relation === 'friends' && primary('Написати', 'messageSquare', onMessage)}
+      {primary('Написати', 'messageSquare', onMessage)}
       {(data.relation === 'none' || data.relation === 'declined') &&
-        primary('Додати в друзі', 'plus', onAdd)}
+        secondary('Додати в друзі', onAdd)}
       {data.relation === 'incoming' && (
         <>
-          {primary('Прийняти', 'check', onAccept)}
+          {secondary('Прийняти запит', onAccept)}
           {secondary('Відхилити', onCancel)}
         </>
       )}
-      {data.relation === 'outgoing' && secondary('Запит надіслано · Скасувати', onCancel)}
+      {data.relation === 'outgoing' && secondary('Скасувати запит', onCancel)}
+      {data.relation === 'friends' && secondary('Видалити з друзів', onCancel)}
     </div>
   );
 }

@@ -561,6 +561,10 @@ export function getUnreadCounts(userId: number) {
   return call<Record<string, number>>('GET', `/api/chat/unread?userId=${userId}`);
 }
 
+export function getChatConversations(userId: number) {
+  return call<FriendEntry[]>('GET', `/api/chat/conversations?userId=${userId}`);
+}
+
 // --- Live GPS ------------------------------------------------------------------
 
 export interface LiveLocation {
