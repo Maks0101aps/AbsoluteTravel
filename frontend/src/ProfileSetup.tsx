@@ -203,7 +203,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
   ];
 
   return (
-    <div style={{ fontFamily: "'Manrope', sans-serif", background: BG, color: CREAM, minHeight: '100vh', padding: '48px 20px 72px' }}>
+    <div className="at-ps-page" style={{ fontFamily: "'Manrope', sans-serif", background: BG, color: CREAM, minHeight: '100dvh', padding: '48px 20px 72px' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(26px,3.4vw,38px)', margin: '0 0 6px' }}>
           {init ? 'Твій профіль' : 'Створи свій профіль'}
@@ -217,6 +217,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
           <div
             ref={cardRef}
             data-editable
+            className="at-ps-card"
             onClick={(e) => openAt('background', e.currentTarget)}
             style={{
               position: 'relative',
@@ -279,7 +280,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
               </div>
 
               {/* right column */}
-              <div style={{ flex: '1 1 220px', minWidth: '200px' }}>
+              <div className="at-col" style={{ flex: '1 1 220px', minWidth: '200px' }}>
                 {/* level + badges row */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
                   <Editable accent={color} active={active === 'level'} radius={999} pencil={false} onOpen={(el) => openAt('level', el)}>

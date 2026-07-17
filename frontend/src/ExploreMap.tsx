@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { PLACES, CATEGORY_META, CATEGORY_ORDER, DIFFICULTY_META, DIFFICULTY_ORDER, type Place, type PlaceCategory } from './data/places';
+import { PLACES, CATEGORY_META, DIFFICULTY_META, type Place, type PlaceCategory } from './data/places';
 import { getPlaces, type VerifyCheckmarkResult, type VisitCellResult, type ProfileCustomization } from './api';
 import AddPlaceForm from './AddPlaceForm';
 import VerifyVisitModal from './VerifyVisitModal';
@@ -104,8 +104,6 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
   // Only auto-pick the nearest place once per session — after that the user's
   // own clicks own `activeId`.
   const hasAutoSelectedRef = useRef(false);
-  const [filter, setFilter] = useState<PlaceCategory | 'all'>('all');
-  const [difficultyFilter, setDifficultyFilter] = useState<number | 'all'>('all');
   const [showForm, setShowForm] = useState(false);
   const [verifyPlace, setVerifyPlace] = useState<Place | null>(null);
   const [selectedFriend, setSelectedFriend] = useState<FriendDot | null>(null);
@@ -200,15 +198,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
     setActiveId(nearest.id);
   }, [selfPosition, places]);
 
-  const visiblePlaces = useMemo(
-    () =>
-      places.filter(
-        (p) =>
-          (filter === 'all' || p.category === filter) &&
-          (difficultyFilter === 'all' || (p.difficulty ?? 1) === difficultyFilter),
-      ),
-    [filter, difficultyFilter, places],
-  );
+  const visiblePlaces = places;
 
   // The card shows whatever the pointer is hovering, otherwise the last clicked place.
   const shown: Place | undefined = useMemo(() => {
@@ -695,29 +685,5 @@ function PhotoStrip({ photos, name }: { photos: string[]; name: string }) {
   );
 }
 
-function FilterChip({ active, onClick, color, label }: { active: boolean; onClick: () => void; color: string; label: string }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-        background: active ? `${color}22` : 'transparent',
-        border: `1px solid ${active ? `${color}77` : 'rgba(255,255,255,0.12)'}`,
-        color: active ? color : 'rgba(244,241,232,0.7)',
-        borderRadius: '999px',
-        padding: '7px 14px',
-        fontSize: '12.5px',
-        fontWeight: 600,
-        cursor: 'pointer',
-        fontFamily: "'Manrope', sans-serif",
-      }}
-    >
-      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: color }} />
-      {label}
-    </button>
-  );
-}
 
 export default ExploreMap;

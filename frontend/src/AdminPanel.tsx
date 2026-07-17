@@ -54,8 +54,8 @@ function AdminMenu({ session, onLogout, accent = DEFAULT_ACCENT }: AdminMenuProp
   const [view, setView] = useState<'dashboard' | 'profile'>('dashboard');
 
   return (
-    <div style={{ fontFamily: "'Manrope', sans-serif", background: BG, color: CREAM, minHeight: '100vh' }}>
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 40px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap' }}>
+    <div style={{ fontFamily: "'Manrope', sans-serif", background: BG, color: CREAM, minHeight: '100dvh' }}>
+      <nav className="at-admin-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', padding: '14px 40px', background: 'rgba(7,31,22,0.85)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap' }}>
         <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '40px', width: 'auto', display: 'block' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
@@ -74,7 +74,7 @@ function AdminMenu({ session, onLogout, accent = DEFAULT_ACCENT }: AdminMenuProp
       {view === 'profile' ? (
         <AdminProfileEditor admin={session.admin} onDone={() => setView('dashboard')} />
       ) : (
-        <main style={{ maxWidth: '1140px', margin: '0 auto', padding: '40px 24px 80px' }}>
+        <main className="at-admin-main" style={{ maxWidth: '1140px', margin: '0 auto', padding: '40px 24px 80px' }}>
           <AdminDashboard accent={accent} session={session} onLogout={onLogout} />
         </main>
       )}
@@ -370,7 +370,7 @@ function PlaceCard({ place, accent, busy, onApprove, onReject, onDelete, onEdit 
         )}
       </div>
 
-      <div style={{ flex: '1 1 320px', minWidth: '260px' }}>
+      <div className="at-col" style={{ flex: '1 1 320px', minWidth: '260px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
           <span style={{ fontFamily: "'Lora', serif", fontSize: '19px', fontWeight: 500 }}>{place.name}</span>
           <Pill color={status.color} label={status.label} filled />

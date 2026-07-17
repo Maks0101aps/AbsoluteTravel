@@ -212,7 +212,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'flex-start' }}>
         {/* left: friends list */}
-        <div style={{ flex: '1 1 380px', minWidth: '300px' }}>
+        <div className="at-col" style={{ flex: '1 1 380px', minWidth: '300px' }}>
           <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px' }}>
             Мої друзі <span style={{ color: 'rgba(244,241,232,0.4)' }}>({friends.length})</span>
           </h3>
@@ -239,7 +239,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage }: FriendsPageProps
         </div>
 
         {/* right: requests + search */}
-        <div style={{ flex: '1 1 320px', minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="at-col" style={{ flex: '1 1 320px', minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {requests.length > 0 && (
             <div>
               <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px' }}>

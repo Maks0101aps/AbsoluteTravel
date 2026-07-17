@@ -205,8 +205,10 @@ function App({ onStart }: { onStart?: () => void } = {}) {
     scanPorts();
   }, []);
 
+  // overflowX is `clip`, not `hidden`: `hidden` would make this a scroll
+  // container and stop the sticky navbar below from sticking.
   return (
-    <div style={{ fontFamily: "'Manrope', sans-serif", background: '#071F16', color: '#F4F1E8', minHeight: '100vh', overflowX: 'hidden' }}>
+    <div style={{ fontFamily: "'Manrope', sans-serif", background: '#071F16', color: '#F4F1E8', minHeight: '100dvh', overflowX: 'clip' }}>
       
       {/* ============ NAVBAR ============ */}
       <nav className="at-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', padding: '14px 40px', background: 'rgba(7,31,22,0.8)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -247,7 +249,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       </nav>
 
       {/* ============ HERO ============ */}
-      <header id="top" className="at-hero" style={{ position: 'relative', padding: '90px 40px 110px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 70px)' }}>
+      <header id="top" className="at-hero" style={{ position: 'relative', padding: '90px 40px 110px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100dvh - 70px)' }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: "url('/assets/forest_bg.avif')", backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.18, mixBlendMode: 'color-dodge', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(7,31,22,0.2) 0%, rgba(7,31,22,0.85) 60%, #071F16 100%)', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 50% at 25% 35%, rgba(63,166,107,0.15), transparent 70%)', pointerEvents: 'none' }}></div>
@@ -381,7 +383,9 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       <section id="features" className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '40px 40px 30px' }}>
         <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(28px, 3.2vw, 40px)', margin: '0 0 40px', color: '#F4F1E8' }}>Україна, яку ти ще не бачив</h2>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+        {/* min() keeps the track from forcing a 300px column — and a sideways
+            scroll — once the viewport itself is narrower than that */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '20px' }}>
           {/* Feature 01 */}
           <div style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '26px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
