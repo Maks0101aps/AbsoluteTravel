@@ -328,20 +328,31 @@ export function visitCell(userId: number, lat: number, lng: number) {
   return call<VisitCellResult>('POST', '/api/exploration/visit', { userId, lat, lng });
 }
 
-/** All cell ids the user has already unlocked (to paint the map on load). */
-export function getVisitedCells(userId: number) {
-  return call<{ cells: string[] }>('GET', `/api/exploration/cells/${userId}`);
+/**
+ * All cell ids the user has already unlocked (to paint the map on load).
+ * `requesterId` is required to view anyone but yourself — the server only
+ * allows the owner or an accepted friend (see ExplorationService.cells).
+ */
+export function getVisitedCells(userId: number, requesterId?: number) {
+  const qs = requesterId != null ? `?requesterId=${requesterId}` : '';
+  return call<{ cells: string[] }>('GET', `/api/exploration/cells/${userId}${qs}`);
 }
 
-export function getExplorationStats(userId: number) {
-  return call<ExplorationStats>('GET', `/api/exploration/stats/${userId}`);
+export function getExplorationStats(userId: number, requesterId?: number) {
+  const qs = requesterId != null ? `?requesterId=${requesterId}` : '';
+  return call<ExplorationStats>('GET', `/api/exploration/stats/${userId}${qs}`);
 }
 
 // --- Wall (travel activity feed) --------------------------------------------
 
 export interface WallPost {
   id: number;
-  type: 'visit' | 'new_cell' | 'new_region';
+  // 'new_cell' (hexagon unlock) is no longer created server-side — kept in
+  // the union only so old rows already in the DB still type-check.
+  // 'achievement' has no producer yet either; the wall card already knows
+  // how to render it so wiring up an achievements system later is just a
+  // backend `wallPost.create({ type: 'achievement', ... })` call away.
+  type: 'visit' | 'new_cell' | 'new_region' | 'achievement';
   placeId: number | null;
   placeName: string | null;
   cellId: string | null;
@@ -502,6 +513,14 @@ export interface FriendUser {
   city: string | null;
   online: boolean;
   lastSeenAt: string | null;
+  // The friend's actual equipped avatar/frame (from their saved profile
+  // customization), when they've set one — undefined means "use the
+  // default `avatar` image with no frame".
+  avatarId?: string;
+  customAvatar?: string;
+  frameId?: string;
+  color?: string;
+  backgroundId?: string;
 }
 
 export interface FriendEntry extends FriendUser {

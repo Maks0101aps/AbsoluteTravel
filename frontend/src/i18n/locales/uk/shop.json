@@ -12,6 +12,7 @@
       "newPlaceVisited": "Нове місце відвідано",
       "newRegionUnlocked": "Відкрито новий регіон!",
       "newCellUnlocked": "Розблоковано нову клітинку території",
+      "achievementUnlocked": "Досягнення розблоковано!",
       "timeJustNow": "щойно",
       "timeMinutesAgo": "{{count}} хв тому",
       "timeHoursAgo": "{{count}} год тому",

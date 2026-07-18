@@ -124,7 +124,7 @@ function ProfileWall({ userId, viewerId, accent }: ProfileWallProps) {
 }
 
 function WallCard({ post, accent, t }: { post: WallPost; accent: string; t: (key: string, opts?: any) => string }) {
-  const celebratory = post.type === 'new_region';
+  const celebratory = post.type === 'new_region' || post.type === 'achievement';
   return (
     <div
       style={{
@@ -181,12 +181,14 @@ function WallCard({ post, accent, t }: { post: WallPost; accent: string; t: (key
 function iconFor(type: WallPost['type']): IconName {
   if (type === 'visit') return 'check';
   if (type === 'new_region') return 'star';
-  return 'map';
+  if (type === 'achievement') return 'trophy';
+  return 'map'; // legacy 'new_cell' rows from before hexagon posts were removed
 }
 
 function captionFor(post: WallPost, t: (key: string, opts?: any) => string): string {
   if (post.type === 'visit') return post.placeName ?? t('shop.wall.newPlaceVisited');
   if (post.type === 'new_region') return t('shop.wall.newRegionUnlocked');
+  if (post.type === 'achievement') return post.placeName ?? t('shop.wall.achievementUnlocked');
   return t('shop.wall.newCellUnlocked');
 }
 

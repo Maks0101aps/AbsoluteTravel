@@ -294,15 +294,20 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
       <nav
         className="at-home-nav"
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: 0,
+          left: 0,
+          right: 0,
           zIndex: 50,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '12px',
           padding: '14px 24px',
-          background: 'transparent',
+          background: 'rgba(7,31,22,0.86)',
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
           flexWrap: 'nowrap',
         }}
       >
@@ -465,6 +470,11 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
           </div>
         </div>
       </nav>
+
+      {/* Now that the nav above is position:fixed (pinned, doesn't scroll away),
+          it's out of normal flow — this spacer reserves the same height so
+          the fixed backdrop / hero / main content don't start underneath it. */}
+      <div className="at-home-nav-spacer" aria-hidden="true" />
 
       {/* phone tab bar — CSS decides whether it shows, so the nav stays one source of truth */}
       <nav className="at-tabbar" aria-label={t('core.nav.mainNavAria')}>

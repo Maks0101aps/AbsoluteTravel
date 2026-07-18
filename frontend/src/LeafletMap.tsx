@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import i18n from './i18n';
 import { CATEGORY_META, DIFFICULTY_META, type Place } from './data/places';
-import { AVATARS } from './data/profileOptions';
+import { AVATARS, FRAMES } from './data/profileOptions';
 import { cellPolygon, cellCenter } from './exploration/h3';
 import { UA_BORDER } from './data/ukraineBorder';
 import { polygonToCells } from 'h3-js';
@@ -163,9 +163,41 @@ export interface LiveMarker {
   color: string;
   label: string;
   avatar?: string;
+  // The friend's equipped avatar frame (same FRAMES catalogue the profile
+  // page uses) — rendered as the pin's outer ring instead of a flat
+  // `color`-only border, so the map pin matches what they've chosen to show.
+  frameId?: string;
   pulse?: boolean;
   dimmed?: boolean;
-  onClick?: () => void;
+  // Receives the marker's on-screen position (relative to the map container)
+  // at click time, so the caller can pop a card up right next to the avatar
+  // instead of in a fixed corner.
+  onClick?: (point: { x: number; y: number }) => void;
+}
+
+// Border/box-shadow CSS for a divIcon's ring, mirroring ProfileAvatar's
+// frameStyle() — kept as a plain string (not a React style object) since
+// Leaflet markers are raw HTML, not React components. The black-hole frame's
+// animated overlay isn't reproducible here, so it falls back to a glow ring.
+function frameRingCss(frameId: string | undefined, color: string): string {
+  const frame = FRAMES.find((f) => f.id === frameId);
+  switch (frame?.ring) {
+    case 'glow':
+    case 'blackhole':
+      return `border:2px solid ${color};box-shadow:0 3px 10px rgba(0,0,0,0.45),0 0 0 3px ${color}33,0 0 14px ${color}66;`;
+    case 'gold':
+      return `border:3px solid #E7C34B;box-shadow:0 3px 10px rgba(0,0,0,0.45),0 0 0 3px rgba(231,195,75,0.35),0 0 14px rgba(231,195,75,0.5);`;
+    case 'gem':
+      return `border:3px solid #8A7CDF;box-shadow:0 3px 10px rgba(0,0,0,0.45),0 0 0 3px rgba(138,124,223,0.4),0 0 16px rgba(138,124,223,0.6);`;
+    case 'frost':
+      return `border:3px solid #8FD4E8;box-shadow:0 3px 10px rgba(0,0,0,0.45),0 0 0 3px rgba(143,212,232,0.35),0 0 14px rgba(143,212,232,0.55);`;
+    case 'magma':
+      return `border:3px solid #F0713F;box-shadow:0 3px 10px rgba(0,0,0,0.45),0 0 0 3px rgba(240,113,63,0.4),0 0 16px rgba(240,113,63,0.6);`;
+    case 'prism':
+      return `border:3px solid #D32CE6;box-shadow:0 3px 10px rgba(0,0,0,0.45),0 0 0 3px rgba(211,44,230,0.35),0 0 10px rgba(91,184,245,0.6);`;
+    default:
+      return `border:3px solid ${color};box-shadow:0 3px 10px rgba(0,0,0,0.45);`;
+  }
 }
 
 // Avatar URLs and display names come from other users — escape/validate them
@@ -219,9 +251,10 @@ function liveIcon(m: LiveMarker) {
   }
 
   const grey = m.dimmed ? 'filter:grayscale(1);opacity:0.55;' : '';
+  const frameRing = frameRingCss(m.frameId, m.color);
   return L.divIcon({
     className: '',
-    html: `<div style="position:relative;width:${size}px;height:${size}px;${grey}">${ring}<div style="position:relative;width:100%;height:100%;border-radius:50%;border:3px solid ${m.color};box-shadow:0 3px 10px rgba(0,0,0,0.45);overflow:hidden;background:#0B2B20;">${inner}</div></div>`,
+    html: `<div style="position:relative;width:${size}px;height:${size}px;${grey}">${ring}<div style="position:relative;width:100%;height:100%;border-radius:50%;${frameRing}overflow:hidden;background:#0B2B20;">${inner}</div></div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
@@ -502,6 +535,7 @@ function LeafletMap({
       touchZoom: true,
       dragging: true,
       zoomControl: false,
+      attributionControl: false,
     });
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -638,7 +672,10 @@ function LeafletMap({
   // --- imperative fly-to (place picked from outside the map) ------------------
   useEffect(() => {
     if (!map || !flyTo) return;
-    map.flyTo([flyTo.lat, flyTo.lng], flyTo.zoom ?? 12, { duration: 0.9 });
+    // No explicit zoom means "keep whatever the user is currently zoomed
+    // to" — used for following a moving friend, where re-flying to a fixed
+    // zoom every update would fight any manual zoom the user just did.
+    map.flyTo([flyTo.lat, flyTo.lng], flyTo.zoom ?? map.getZoom(), { duration: 0.9 });
   }, [map, flyTo]);
 
   // --- sync place markers -----------------------------------------------------
@@ -908,7 +945,13 @@ function LeafletMap({
         marker.setLatLng([m.lat, m.lng]);
       }
       marker.off('click');
-      if (m.onClick) marker.on('click', m.onClick);
+      if (m.onClick) {
+        const onClick = m.onClick;
+        marker.on('click', () => {
+          const point = map.latLngToContainerPoint(marker!.getLatLng());
+          onClick({ x: point.x, y: point.y });
+        });
+      }
       marker.unbindTooltip();
       // Leaflet renders tooltip strings as HTML — escape the user-derived label.
       marker.bindTooltip(escapeHtml(m.label), { direction: 'top', offset: [0, -18] });

@@ -109,6 +109,7 @@ a:hover {
 
   /* ---- home page ---- */
   .at-home-nav { padding: 12px 18px !important; }
+  :root { --at-header: 60px; }
   .at-home-main { padding: 40px 18px 64px !important; }
 
   /* ---- explore map: stack map + detail panel on narrow screens ---- */
@@ -816,6 +817,15 @@ img, svg, video, canvas { max-width: 100%; }
 
 :root { --at-tabbar: 0px; }
 .at-tabbar { display: none; }
+
+/* ---- fixed top nav spacer ------------------------------------------------
+   .at-home-nav is position:fixed (pinned — doesn't scroll, doesn't get
+   scrolled-over content painting through it). --at-header is its rendered
+   height (padding + logo/button content) so this spacer can reserve the same
+   space in normal flow right below it. Kept in sync with .at-home-nav's
+   padding at each breakpoint below. */
+:root { --at-header: 68px; }
+.at-home-nav-spacer { height: var(--at-header); flex: 0 0 auto; }
 
 @media (max-width: 860px) {
   :root { --at-tabbar: calc(58px + env(safe-area-inset-bottom)); }

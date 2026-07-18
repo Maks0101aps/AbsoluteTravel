@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { latLngToCell, cellToParent, isValidCell, gridDisk, cellToLatLng, greatCircleDistance } from 'h3-js';
 import { PrismaService } from '../prisma.service';
+import { FriendsService } from '../friends/friends.service';
 import { levelFromXp } from '../leveling';
 
 // Resolution the walking layer records cells at. Res 9 ≈ 0.1 km² per hex
@@ -43,7 +44,10 @@ export interface VisitCellResult {
 
 @Injectable()
 export class ExplorationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly friends: FriendsService,
+  ) {}
 
   /**
    * Record that the user is standing in the H3 cell containing (lat, lng).
@@ -133,15 +137,11 @@ export class ExplorationService {
     let awarded: { newXp: number; newLevel: number; leveledUp: boolean };
     try {
       awarded = await this.prisma.$transaction(async (tx) => {
-        // Create VisitedCell records for all new cells, plus a wall-feed
-        // entry per cell — mirrors the XP math above (NEW_CELL_XP per cell).
-        // (The region-bonus concept this used to also post about was removed
-        // upstream — see git history — so there's no 'new_region' post here.)
+        // Create VisitedCell records for all new cells. No wall-feed entry
+        // per cell on purpose — hexagon-unlock spam was cluttering the wall;
+        // the feed only surfaces verified place visits and achievements now.
         for (const cId of newCells) {
           await tx.visitedCell.create({ data: { userId, cellId: cId } });
-          await tx.wallPost.create({
-            data: { userId, type: 'new_cell', cellId: cId, xpAwarded: NEW_CELL_XP },
-          });
         }
 
         const updated = await tx.user.update({
@@ -194,9 +194,15 @@ export class ExplorationService {
   }
 
   /** Every cell id the user has unlocked — the frontend paints these as hexes. */
-  async cells(userId: number): Promise<string[]> {
+  // Friend's exploration map is only viewable by the owner and their
+  // accepted friends — same rule and same "not a real auth boundary, just a
+  // product-scope check" caveat as WallService.listForUser.
+  async cells(userId: number, requesterId?: number): Promise<string[]> {
     if (!userId || Number.isNaN(userId)) {
       throw new BadRequestException('Не вказано користувача');
+    }
+    if (requesterId != null && requesterId !== userId && !(await this.friends.areFriends(requesterId, userId))) {
+      throw new ForbiddenException('Карта доступна лише друзям');
     }
     const rows = await this.prisma.visitedCell.findMany({
       where: { userId },
@@ -206,9 +212,12 @@ export class ExplorationService {
   }
 
   /** Exploration summary for the profile / progress card. */
-  async stats(userId: number) {
+  async stats(userId: number, requesterId?: number) {
     if (!userId || Number.isNaN(userId)) {
       throw new BadRequestException('Не вказано користувача');
+    }
+    if (requesterId != null && requesterId !== userId && !(await this.friends.areFriends(requesterId, userId))) {
+      throw new ForbiddenException('Статистика доступна лише друзям');
     }
     const [totalCells, totalRegions] = await this.countProgress(userId);
     return { totalCells, totalRegions };

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { ExplorationService } from './exploration.service';
 import type { VisitCellDto } from './exploration.service';
 
@@ -13,15 +13,17 @@ export class ExplorationController {
   }
 
   // Every cell id the user has already unlocked (to paint the map on load).
+  // `requesterId` is optional for backward compatibility (self-view), but
+  // required in practice to view anyone else's — see ExplorationService.cells.
   @Get('cells/:userId')
-  async cells(@Param('userId', ParseIntPipe) userId: number) {
-    const cells = await this.exploration.cells(userId);
+  async cells(@Param('userId', ParseIntPipe) userId: number, @Query('requesterId') requesterId?: string) {
+    const cells = await this.exploration.cells(userId, requesterId ? Number(requesterId) : undefined);
     return { cells };
   }
 
   // Aggregate exploration progress (cells + regions) for the profile card.
   @Get('stats/:userId')
-  stats(@Param('userId', ParseIntPipe) userId: number) {
-    return this.exploration.stats(userId);
+  stats(@Param('userId', ParseIntPipe) userId: number, @Query('requesterId') requesterId?: string) {
+    return this.exploration.stats(userId, requesterId ? Number(requesterId) : undefined);
   }
 }

@@ -43,7 +43,11 @@
       "updatedAt": "Updated at {{time}}",
       "message": "Message",
       "close": "Close",
-      "profileOf": "{{name}}'s profile"
+      "profileOf": "{{name}}'s profile",
+      "follow": "Track on map",
+      "following": "Tracking",
+      "followDisabledTitle": "Not updated in a while — nothing to track",
+      "followingChip": "Tracking {{name}} · Stop"
     },
     "xp": {
       "newRegion": " · New region!",

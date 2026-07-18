@@ -12,6 +12,7 @@
       "newPlaceVisited": "New place visited",
       "newRegionUnlocked": "New region unlocked!",
       "newCellUnlocked": "New territory cell unlocked",
+      "achievementUnlocked": "Achievement unlocked!",
       "timeJustNow": "just now",
       "timeMinutesAgo": "{{count}}m ago",
       "timeHoursAgo": "{{count}}h ago",
