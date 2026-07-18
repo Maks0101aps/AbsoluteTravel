@@ -219,6 +219,46 @@ a:hover {
 @keyframes atCaseSpin {
   to { transform: rotate(360deg); }
 }
+/* ---- animated SVG case artwork ---- */
+.at-caseart-float { animation: atCaseArtFloat 4.5s ease-in-out infinite; }
+.at-caseart-glow { animation: atCaseArtGlow 3.6s ease-in-out infinite; }
+.at-caseart-twinkle { animation: atCaseArtTwinkle 2.6s ease-in-out infinite; }
+.at-caseart-shine { animation: atCaseArtShine 4.5s ease-in-out infinite; }
+.at-caseart-spin { animation: atCaseArtSpin 9s ease-in-out infinite; }
+.at-caseart-drift-a { animation: atCaseArtDriftA 9s ease-in-out infinite; }
+.at-caseart-drift-b { animation: atCaseArtDriftB 11s ease-in-out infinite; }
+@keyframes atCaseArtDriftA {
+  0%, 100% { transform: translateX(-2px); }
+  50% { transform: translateX(3px); }
+}
+@keyframes atCaseArtDriftB {
+  0%, 100% { transform: translateX(2px); }
+  50% { transform: translateX(-3px); }
+}
+@keyframes atCaseArtFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes atCaseArtGlow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.07); }
+}
+@keyframes atCaseArtTwinkle {
+  0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(45deg); }
+}
+@keyframes atCaseArtShine {
+  0% { transform: translateX(0); }
+  55%, 100% { transform: translateX(210px); }
+}
+@keyframes atCaseArtSpin {
+  0%, 100% { transform: rotate(-12deg); }
+  50% { transform: rotate(12deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .at-caseart-float, .at-caseart-glow, .at-caseart-twinkle, .at-caseart-shine, .at-caseart-spin, .at-caseart-drift-a, .at-caseart-drift-b { animation: none; }
+}
+
 /* responsive case-selector grid: 3-up on desktop, wraps down on smaller screens */
 .at-case-switcher {
   grid-template-columns: repeat(3, 1fr);
