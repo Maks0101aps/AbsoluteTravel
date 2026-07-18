@@ -366,6 +366,8 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
               }
             }}
             route={navRoute?.points ?? null}
+            routeOnFoot={navRoute?.profile === 'walking'}
+            routeFootSegment={navRoute?.footSegment?.points ?? null}
             routeMarkers={
               navTarget
                 ? [

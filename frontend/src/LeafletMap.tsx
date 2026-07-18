@@ -297,6 +297,14 @@ interface LeafletMapProps {
   // lettered/numbered markers for the start point and any waypoints. The
   // destination itself needs no separate marker — it's already one of `places`.
   route?: [number, number][] | null;
+  // Pedestrian routes are drawn dashed instead of solid — a quick visual cue
+  // that this leg can't be driven (footpaths, mountain trails, car-free
+  // areas) and the "путь пешком" is where a driving route would stop short.
+  routeOnFoot?: boolean;
+  // Last-mile walking leg from where a driving route was snapped to the
+  // nearest road up to the actual destination (pedestrian zones, hilltop
+  // viewpoints, etc.) — always drawn dashed, on top of the main route.
+  routeFootSegment?: [number, number][] | null;
   routeMarkers?: { lat: number; lng: number; label: string }[];
 }
 
@@ -442,6 +450,8 @@ function LeafletMap({
   onSelectLabel,
   onHoverLabel,
   route,
+  routeOnFoot,
+  routeFootSegment,
   routeMarkers,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -999,6 +1009,7 @@ function LeafletMap({
       interactive: false,
       lineCap: 'round',
       lineJoin: 'round',
+      dashArray: routeOnFoot ? '1,12' : undefined,
     }).addTo(map);
     const line = L.polyline(route, {
       pane: ROUTE_PANE,
@@ -1008,11 +1019,38 @@ function LeafletMap({
       interactive: false,
       lineCap: 'round',
       lineJoin: 'round',
+      dashArray: routeOnFoot ? '2,10' : undefined,
     }).addTo(map);
     routeLayersRef.current = [casing, line];
+    let bounds = line.getBounds();
 
-    map.fitBounds(line.getBounds(), { padding: [40, 40] });
-  }, [map, route, accent]);
+    if (routeFootSegment && routeFootSegment.length >= 2) {
+      const footCasing = L.polyline(routeFootSegment, {
+        pane: ROUTE_PANE,
+        color: ROUTE_CASING_COLOR,
+        weight: 7,
+        opacity: 0.55,
+        interactive: false,
+        lineCap: 'round',
+        lineJoin: 'round',
+        dashArray: '1,12',
+      }).addTo(map);
+      const footLine = L.polyline(routeFootSegment, {
+        pane: ROUTE_PANE,
+        color: accent,
+        weight: 4,
+        opacity: 0.95,
+        interactive: false,
+        lineCap: 'round',
+        lineJoin: 'round',
+        dashArray: '2,10',
+      }).addTo(map);
+      routeLayersRef.current.push(footCasing, footLine);
+      bounds = bounds.extend(footLine.getBounds());
+    }
+
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }, [map, route, accent, routeOnFoot, routeFootSegment]);
 
   // --- sync the navigator's start/waypoint markers ----------------------------
   useEffect(() => {
