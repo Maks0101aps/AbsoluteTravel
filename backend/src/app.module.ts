@@ -26,6 +26,8 @@ import { WallModule } from './wall/wall.module';
 import { UsersModule } from './users/users.module';
 import { FriendLabelsController } from './friend-labels/friend-labels.controller';
 import { FriendLabelsService } from './friend-labels/friend-labels.service';
+import { AchievementsController } from './achievements/achievements.controller';
+import { AchievementsService } from './achievements/achievements.service';
 
 
 @Module({
@@ -49,6 +51,7 @@ import { FriendLabelsService } from './friend-labels/friend-labels.service';
     CheckmarksController,
     ExplorationController,
     FriendLabelsController,
+    AchievementsController,
   ],
   providers: [
     AppService,
@@ -60,6 +63,7 @@ import { FriendLabelsService } from './friend-labels/friend-labels.service';
     CheckmarksService,
     ExplorationService,
     FriendLabelsService,
+    AchievementsService,
   ],
 })
 export class AppModule {}

@@ -362,6 +362,55 @@ export function fetchWall(userId: number, requesterId: number, cursor?: number) 
   return call<WallPage>('GET', `/api/wall/${userId}?${q.toString()}`);
 }
 
+// --- Achievements ----------------------------------------------------------
+
+export type AchievementTier = 'bronze' | 'silver' | 'gold';
+
+export interface Achievement {
+  key: string;
+  title: string;
+  description: string;
+  icon: string;
+  // The progress metric this achievement tracks — achievements that share a
+  // metric form a chain (e.g. visit 1 → 3 → 5 → … places) revealed one at a time.
+  metric: string;
+  threshold: number;
+  xp: number;
+  coins: number;
+  weekly?: boolean;
+  tier: AchievementTier;
+  value: number;
+  progress: number;
+  completed: boolean;
+  claimed: boolean;
+  claimable: boolean;
+}
+
+export interface AchievementsList {
+  weekly: Achievement[];
+  regular: Achievement[];
+  weekKey: string;
+  claimableCount: number;
+}
+
+export interface ClaimAchievementResult {
+  awarded: boolean;
+  xpAwarded: number;
+  coinsAwarded: number;
+  coins: number;
+  xp: number;
+  level: number;
+  leveledUp: boolean;
+}
+
+export function getAchievements(userId: number) {
+  return call<AchievementsList>('GET', `/api/achievements/list?userId=${userId}`);
+}
+
+export function claimAchievement(userId: number, key: string) {
+  return call<ClaimAchievementResult>('POST', '/api/achievements/claim', { userId, key });
+}
+
 // --- Admin accounts & auth -------------------------------------------------
 
 export interface AdminAccount {

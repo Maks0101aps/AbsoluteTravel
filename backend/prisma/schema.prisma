@@ -121,6 +121,24 @@ model UserAchievement {
   @@id([userId, achievementId])
 }
 
+// A claimed reward for a code-defined achievement (see achievements.catalog.ts).
+// `achievementKey` is the catalog key; `periodKey` is 'once' for permanent
+// achievements and an ISO-week stamp (e.g. '2026-W29') for weekly ones, so a
+// weekly achievement becomes claimable again each new week. The composite
+// unique makes claiming idempotent per (user, achievement, period).
+model AchievementClaim {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  achievementKey String
+  periodKey      String   @default("once")
+  xpAwarded      Int
+  coinsAwarded   Int
+  claimedAt      DateTime @default(now())
+
+  @@unique([userId, achievementKey, periodKey])
+  @@index([userId])
+}
+
 // Admin account for the moderation panel. There is always exactly one super
 // admin (isSuper) whose login/password come from env and are re-synced on boot;
 // it cannot be deleted. Super admins and regular admins can create more admins.

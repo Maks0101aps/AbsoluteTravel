@@ -5,7 +5,7 @@ export type IconName =
   | 'flame' | 'backpack' | 'feather' | 'shield' | 'moon' | 'sun' | 'crown'
   | 'leaf' | 'boot' | 'camera' | 'flag' | 'trophy'
   | 'user' | 'users' | 'shoppingBag' | 'image' | 'target' | 'star' | 'sparkle'
-  | 'lock' | 'coin' | 'pencil' | 'close' | 'check' | 'plus' | 'arrowLeft' | 'arrowRight' | 'messageSquare' | 'mic' | 'smile' | 'hexagon' | 'gift' | 'globe';
+  | 'lock' | 'coin' | 'pencil' | 'close' | 'check' | 'plus' | 'arrowLeft' | 'arrowRight' | 'messageSquare' | 'mic' | 'smile' | 'hexagon' | 'gift' | 'globe' | 'medal';
 
 const PATHS: Record<IconName, React.ReactNode> = {
   compass: <><circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z" /></>,
@@ -48,6 +48,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
   hexagon: <path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z" />,
   gift: <><rect x="3" y="8" width="18" height="4" rx="1" /><path d="M5 12v9h14v-9" /><path d="M12 8v13" /><path d="M12 8S10.5 3.5 8 4.5 8.5 8 12 8zM12 8s1.5-4.5 4-3.5S15.5 8 12 8z" /></>,
   globe: <><circle cx="12" cy="12" r="9" /><ellipse cx="12" cy="12" rx="4" ry="9" /><path d="M3 12h18" /></>,
+  medal: <><path d="M8.5 2l3.5 6 3.5-6" /><path d="M7 2l3 5.5M17 2l-3 5.5" /><circle cx="12" cy="15" r="6" /><path d="M12 12.5l1 2 2.2.2-1.7 1.5.5 2.1L12 17.2l-2 1.2.5-2.1L8.8 14.7l2.2-.2z" /></>,
 };
 
 interface IconProps {
