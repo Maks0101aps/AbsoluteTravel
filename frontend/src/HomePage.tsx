@@ -24,7 +24,7 @@ import ChatPage from './ChatPage';
 import { getSocket, closeSocket } from './socket';
 import { AVATARS, BACKGROUNDS, BADGES, COLORS, EFFECTS, FRAMES } from './data/profileOptions';
 import { Icon, type IconName } from './icons';
-import { ProfileCosmosFlourish, ProfileSakuraFlourish } from './itemVisuals';
+import { ProfileCardEffect, ProfileCosmosFlourish, ProfileSakuraFlourish } from './itemVisuals';
 import ProfileWall from './ProfileWall';
 import UserProfilePage from './UserProfilePage';
 import WalkIntro from './WalkIntro';
@@ -279,12 +279,12 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
           the (floating) nav, the hero content, and everything scrolled below
           it (welcome copy + wall), and never scrolls away. */}
       {tab === 'profile' && p && (
-        <div
-          className={p.backgroundId === 'sakura' ? 'bg-wind-sway' : undefined}
-          style={{ position: 'fixed', inset: 0, zIndex: 0, background: background?.css ?? 'linear-gradient(135deg,#0B3B29,#071F16)' }}
-        >
-          <ProfileCosmosFlourish backgroundId={p.backgroundId} />
-          <ProfileSakuraFlourish backgroundId={p.backgroundId} />
+        <div className={p.backgroundId === 'sakura' ? 'bg-wind-sway' : undefined}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: background?.css ?? 'linear-gradient(135deg,#0B3B29,#071F16)' }}>
+            <ProfileCardEffect effectId={p.effectId} color={accent} />
+            <ProfileCosmosFlourish backgroundId={p.backgroundId} />
+            <ProfileSakuraFlourish backgroundId={p.backgroundId} />
+          </div>
         </div>
       )}
 
