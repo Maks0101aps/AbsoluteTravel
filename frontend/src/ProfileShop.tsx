@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import ProfileAvatar from './ProfileAvatar';
 import { Icon, type IconName } from './icons';
 import {
@@ -42,20 +43,21 @@ interface ProfileShopProps {
 
 type CategoryKey = 'avatars' | 'backgrounds' | 'frames' | 'colors' | 'badges' | 'effects';
 
-const CATEGORIES: { key: CategoryKey; label: string; icon: IconName; equipKey: EquipKey }[] = [
-  { key: 'avatars', label: 'Аватари', icon: 'user', equipKey: 'avatar' },
-  { key: 'backgrounds', label: 'Фони', icon: 'image', equipKey: 'background' },
-  { key: 'frames', label: 'Рамки', icon: 'target', equipKey: 'frame' },
-  { key: 'colors', label: 'Кольори', icon: 'sparkle', equipKey: 'color' },
-  { key: 'badges', label: 'Значки', icon: 'star', equipKey: 'badges' },
-  { key: 'effects', label: 'Ефекти', icon: 'flame', equipKey: 'effect' },
+const CATEGORIES: { key: CategoryKey; labelKey: string; icon: IconName; equipKey: EquipKey }[] = [
+  { key: 'avatars', labelKey: 'shop.categories.avatars', icon: 'user', equipKey: 'avatar' },
+  { key: 'backgrounds', labelKey: 'shop.categories.backgrounds', icon: 'image', equipKey: 'background' },
+  { key: 'frames', labelKey: 'shop.categories.frames', icon: 'target', equipKey: 'frame' },
+  { key: 'colors', labelKey: 'shop.categories.colors', icon: 'sparkle', equipKey: 'color' },
+  { key: 'badges', labelKey: 'shop.categories.badges', icon: 'star', equipKey: 'badges' },
+  { key: 'effects', labelKey: 'shop.categories.effects', icon: 'flame', equipKey: 'effect' },
 ];
 
-const AVATAR_NAMES: Partial<Record<IconName, string>> = {
-  compass: 'Компас', mountain: 'Вершина', pine: 'Хвоя', tent: 'Намет', map: 'Мапа',
-  signpost: 'Дороговказ', binoculars: 'Розвідник', flame: 'Вогонь', backpack: 'Рюкзак',
-  feather: 'Перо', shield: 'Щит', moon: 'Місяць', sun: 'Сонце', crown: 'Корона',
-  star: 'Зірка', trophy: 'Трофей',
+// Keys into shop.avatarNames — human-readable names for icon-only avatars.
+const AVATAR_NAME_KEYS: Partial<Record<IconName, string>> = {
+  compass: 'compass', mountain: 'mountain', pine: 'pine', tent: 'tent', map: 'map',
+  signpost: 'signpost', binoculars: 'binoculars', flame: 'flame', backpack: 'backpack',
+  feather: 'feather', shield: 'shield', moon: 'moon', sun: 'sun', crown: 'crown',
+  star: 'star', trophy: 'trophy',
 };
 
 interface ShopItem {
@@ -68,6 +70,7 @@ interface ShopItem {
 }
 
 function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, onEquip, onClose }: ProfileShopProps) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<CategoryKey>('avatars');
 
   // lock the page scroll while the shop is open
@@ -94,7 +97,9 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
       case 'avatars':
         return AVATARS.map((a) => ({
           id: a.id,
-          label: AVATAR_NAMES[a.icon] ?? 'Аватар',
+          label: AVATAR_NAME_KEYS[a.icon]
+            ? t(`shop.avatarNames.${AVATAR_NAME_KEYS[a.icon]}`)
+            : t('shop.genericAvatar'),
           lock: a.lock,
           equipId: a.id,
           equipped: selections.avatarId === a.id && !selections.customAvatar,
@@ -107,7 +112,7 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
       case 'backgrounds':
         return BACKGROUNDS.map((b) => ({
           id: b.id,
-          label: b.label,
+          label: t(`shop.items.background.${b.id}.name`, { defaultValue: b.label }),
           lock: b.lock,
           equipId: b.id,
           equipped: selections.backgroundId === b.id,
@@ -116,7 +121,7 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
       case 'frames':
         return FRAMES.map((f) => ({
           id: f.id,
-          label: f.label,
+          label: t(`shop.items.frame.${f.id}.name`, { defaultValue: f.label }),
           lock: f.lock,
           equipId: f.id,
           equipped: selections.frameId === f.id,
@@ -142,7 +147,7 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
       case 'badges':
         return BADGES.map((b) => ({
           id: b.id,
-          label: b.label,
+          label: t(`shop.items.badges.${b.id}.name`, { defaultValue: b.label }),
           lock: b.lock,
           equipId: b.id,
           equipped: selections.badges.includes(b.id),
@@ -155,7 +160,7 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
       case 'effects':
         return EFFECTS.map((ef) => ({
           id: ef.id,
-          label: ef.label,
+          label: t(`shop.items.effect.${ef.id}.name`, { defaultValue: ef.label }),
           lock: ef.lock,
           equipId: ef.id,
           equipped: selections.effectId === ef.id,
@@ -202,9 +207,9 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
         <div style={{ position: 'relative', padding: '24px 26px 20px', borderBottom: '1px solid rgba(255,255,255,0.07)', flex: '0 0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
             <div>
-              <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(22px,3vw,30px)', margin: 0 }}>Крамниця мандрівника</h2>
+              <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(22px,3vw,30px)', margin: 0 }}>{t('shop.header.title')}</h2>
               <p style={{ fontSize: '13px', color: 'rgba(244,241,232,0.55)', margin: '6px 0 0', maxWidth: '440px' }}>
-                Обмінюй зароблені монети на аватари, фони та інші прикраси профілю.
+                {t('shop.header.subtitle')}
               </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '0 0 auto' }}>
@@ -214,7 +219,7 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
               </span>
               <button
                 onClick={onClose}
-                aria-label="Закрити"
+                aria-label={t('common.close')}
                 style={{ width: '38px', height: '38px', borderRadius: '11px', border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.04)', color: CREAM, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <Icon name="close" size={18} strokeWidth={2} />
@@ -241,7 +246,7 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
                   }}
                 >
                   <Icon name={c.icon} size={16} strokeWidth={1.8} stroke={on ? GOLD : 'rgba(244,241,232,0.7)'} />
-                  {c.label}
+                  {t(c.labelKey)}
                 </button>
               );
             })}
@@ -266,6 +271,7 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
                 buying={buying === item.id}
                 onBuy={() => onBuy(item.id)}
                 onEquip={() => onEquip(equipKey, item.equipId)}
+                t={t}
               />
             ))}
           </div>
@@ -276,7 +282,7 @@ function ProfileShop({ coins, level, owned, buying, error, selections, onBuy, on
 }
 
 function ShopCard({
-  item, unlocked, coins, buying, onBuy, onEquip,
+  item, unlocked, coins, buying, onBuy, onEquip, t,
 }: {
   item: ShopItem;
   unlocked: boolean;
@@ -284,6 +290,7 @@ function ShopCard({
   buying: boolean;
   onBuy: () => void;
   onEquip: () => void;
+  t: (key: string, opts?: any) => string;
 }) {
   const [hover, setHover] = useState(false);
   const { lock, equipped } = item;
@@ -332,27 +339,27 @@ function ShopCard({
         <div style={{ marginTop: 'auto' }}>
           {equipped ? (
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 700, color: '#7BD6A2' }}>
-              <Icon name="check" size={14} strokeWidth={2.4} stroke="#7BD6A2" /> Обрано
+              <Icon name="check" size={14} strokeWidth={2.4} stroke="#7BD6A2" /> {t('shop.purchase.selected')}
             </div>
           ) : unlocked ? (
             <button
               onClick={(e) => { e.stopPropagation(); onEquip(); }}
               style={{ width: '100%', padding: '8px', borderRadius: '9px', border: `1px solid ${accent}55`, background: `${accent}18`, color: CREAM, fontFamily: "'Manrope', sans-serif", fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
             >
-              Обрати
+              {t('shop.purchase.select')}
             </button>
           ) : lock.type === 'level' ? (
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 700, color: '#9BD8B4' }}>
-              <Icon name="lock" size={13} strokeWidth={1.9} stroke="#9BD8B4" /> Рівень {lock.level}
+              <Icon name="lock" size={13} strokeWidth={1.9} stroke="#9BD8B4" /> {t('shop.purchase.level', { count: lock.level })}
             </div>
           ) : lock.type === 'case' ? (
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 700, color: '#D9A6E8' }}>
-              <Icon name="gift" size={13} strokeWidth={1.9} stroke="#D9A6E8" /> З кейсу
+              <Icon name="gift" size={13} strokeWidth={1.9} stroke="#D9A6E8" /> {t('shop.purchase.fromCase')}
             </div>
           ) : (
             <button
               disabled={!affordable || buying}
-              title={affordable ? undefined : `Не вистачає ${(lock as any).price - coins} монет`}
+              title={affordable ? undefined : t('shop.purchase.missingCoins', { count: (lock as any).price - coins })}
               onClick={(e) => { e.stopPropagation(); if (affordable && !buying) onBuy(); }}
               style={{
                 width: '100%', padding: '8px', borderRadius: '9px',
@@ -366,7 +373,7 @@ function ShopCard({
               }}
             >
               {buying ? (
-                'Купуємо…'
+                t('shop.purchase.buying')
               ) : (
                 <>
                   <Icon name="coin" size={14} strokeWidth={2} stroke={affordable ? BG : 'rgba(244,241,232,0.45)'} />

@@ -1,0 +1,28 @@
+{
+  "common": {
+    "language": "Język",
+    "close": "Zamknij",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "back": "Wstecz",
+    "next": "Dalej",
+    "yes": "Tak",
+    "no": "Nie",
+    "loading": "Ładowanie…",
+    "error": "Błąd",
+    "confirm": "Potwierdź",
+    "geo": {
+      "unsupported": "Geolokalizacja nie jest obsługiwana w tej przeglądarce",
+      "denied": "Odmówiono dostępu do lokalizacji",
+      "failed": "Nie udało się ustalić lokalizacji"
+    },
+    "errors": {
+      "connectionFailed": "Nie udało się połączyć z serwerem",
+      "requestFailed": "Błąd żądania",
+      "imageReadFailed": "Nie udało się odczytać pliku",
+      "imageLoadFailed": "Nie udało się załadować obrazu",
+      "notAnImage": "To nie jest obraz",
+      "imageProcessFailed": "Nie udało się przetworzyć obrazu"
+    }
+  }
+}

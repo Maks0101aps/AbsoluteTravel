@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   getFriendRequests,
   getUnreadCounts,
@@ -27,6 +28,7 @@ import { ProfileCardEffect, ProfileCosmosFlourish, ProfileSakuraFlourish } from 
 import ProfileWall from './ProfileWall';
 import UserProfilePage from './UserProfilePage';
 import WalkIntro from './WalkIntro';
+import LanguageSwitcher from './LanguageSwitcher';
 
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
@@ -36,12 +38,14 @@ type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'profile' | 'cases';
 
 // The profile view is opened by clicking the avatar (top-right), not a tab.
 // `short` is what the phone tab bar shows — the full labels don't fit six-across.
-const TABS: { id: Tab; label: string; short: string; icon: IconName }[] = [
-  { id: 'map', label: 'Мапа мандрівок', short: 'Мапа', icon: 'map' },
-  { id: 'friends', label: 'Друзі', short: 'Друзі', icon: 'users' },
-  { id: 'leaderboard', label: 'Рейтинг', short: 'Рейтинг', icon: 'trophy' },
-  { id: 'chat', label: 'Чат', short: 'Чат', icon: 'messageSquare' },
-];
+function buildTabs(t: (key: string) => string): { id: Tab; label: string; short: string; icon: IconName }[] {
+  return [
+    { id: 'map', label: t('core.nav.mapTab'), short: t('core.nav.mapTabShort'), icon: 'map' },
+    { id: 'friends', label: t('core.nav.friendsTab'), short: t('core.nav.friendsTab'), icon: 'users' },
+    { id: 'leaderboard', label: t('core.nav.leaderboardTab'), short: t('core.nav.leaderboardTab'), icon: 'trophy' },
+    { id: 'chat', label: t('core.nav.chatTab'), short: t('core.nav.chatTab'), icon: 'messageSquare' },
+  ];
+}
 
 interface HomePageProps {
   user: AuthUser;
@@ -55,6 +59,8 @@ interface HomePageProps {
 }
 
 function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, onCloseWalkIntro }: HomePageProps) {
+  const { t } = useTranslation();
+  const TABS = buildTabs(t);
   const p = user.profile;
   const accent = p?.color ?? DEFAULT_ACCENT;
   const background = BACKGROUNDS.find((b) => b.id === p?.backgroundId);
@@ -144,7 +150,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
         equip(key, colorOpt ? colorOpt.value : itemId);
       }
     } catch (e: any) {
-      setShopError(e?.message ?? 'Не вдалося придбати товар');
+      setShopError(e?.message ?? t('core.errors.purchaseFailed'));
     } finally {
       setBuying(null);
     }
@@ -344,13 +350,13 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
             padding: '7px 10px',
           }}
         >
-          {TABS.map((t) => {
-            const isActive = tab === t.id;
+          {TABS.map((item) => {
+            const isActive = tab === item.id;
             return (
               <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                title={t.label}
+                key={item.id}
+                onClick={() => setTab(item.id)}
+                title={item.label}
                 style={{
                   position: 'relative',
                   display: 'inline-flex',
@@ -368,10 +374,10 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
                   transition: 'all 0.2s ease',
                 }}
               >
-                <Icon name={t.icon} size={17} strokeWidth={1.9} />
-                {badgeOf(t.id) > 0 && (
+                <Icon name={item.icon} size={17} strokeWidth={1.9} />
+                {badgeOf(item.id) > 0 && (
                   <span style={{ position: 'absolute', top: '-3px', right: '-3px', background: accent, color: BG, fontSize: '9.5px', fontWeight: 800, borderRadius: '999px', padding: '1px 5px', lineHeight: 1.4 }}>
-                    {badgeOf(t.id)}
+                    {badgeOf(item.id)}
                   </span>
                 )}
               </button>
@@ -380,7 +386,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
           {p && (
             <button
               onClick={() => setTab('cases')}
-              title="Кейси"
+              title={t('core.nav.casesTab')}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -411,7 +417,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
           {p && (
             <button
               onClick={() => { setShopError(null); setShopOpen(true); }}
-              title="Крамниця"
+              title={t('core.nav.shopTitle')}
               style={{
                 flex: '0 0 auto',
                 display: 'inline-flex',
@@ -441,11 +447,11 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '10px', background: 'transparent', border: 'none', borderRadius: '18px', padding: '8px 12px' }}>
             <div className="at-home-userinfo" style={{ textAlign: 'right', lineHeight: 1.3 }}>
               <div style={{ fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap' }}>{user.name}</div>
-              <div style={{ fontSize: '10.5px', color: 'rgba(244,241,232,0.5)', whiteSpace: 'nowrap' }}>Рівень {user.level}</div>
+              <div style={{ fontSize: '10.5px', color: 'rgba(244,241,232,0.5)', whiteSpace: 'nowrap' }}>{t('core.nav.level', { level: user.level })}</div>
             </div>
             <button
               onClick={() => setTab('profile')}
-              title="Мій профіль"
+              title={t('core.nav.myProfile')}
               style={{ background: 'transparent', border: 'none', padding: 0, lineHeight: 0, cursor: 'pointer', flexShrink: 0, borderRadius: '50%', outline: tab === 'profile' ? `2px solid ${accent}` : '2px solid transparent', outlineOffset: '2px', transition: 'outline-color 0.2s ease' }}
             >
               {p ? (
@@ -459,25 +465,25 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
       </nav>
 
       {/* phone tab bar — CSS decides whether it shows, so the nav stays one source of truth */}
-      <nav className="at-tabbar" aria-label="Основна навігація">
-        {TABS.map((t) => {
-          const isActive = tab === t.id;
+      <nav className="at-tabbar" aria-label={t('core.nav.mainNavAria')}>
+        {TABS.map((item) => {
+          const isActive = tab === item.id;
           return (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
+              key={item.id}
+              onClick={() => setTab(item.id)}
               className={`at-tabbar-btn${isActive ? ' at-tabbar-btn-on' : ''}`}
               style={{ color: isActive ? accent : 'rgba(244,241,232,0.5)' }}
             >
               <span className="at-tabbar-icon">
-                <Icon name={t.icon} size={19} strokeWidth={1.9} />
-                {badgeOf(t.id) > 0 && (
+                <Icon name={item.icon} size={19} strokeWidth={1.9} />
+                {badgeOf(item.id) > 0 && (
                   <span className="at-tabbar-badge" style={{ background: accent, color: BG }}>
-                    {badgeOf(t.id) > 9 ? '9+' : badgeOf(t.id)}
+                    {badgeOf(item.id) > 9 ? '9+' : badgeOf(item.id)}
                   </span>
                 )}
               </span>
-              {t.short}
+              {item.short}
             </button>
           );
         })}
@@ -490,7 +496,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
             <span className="at-tabbar-icon">
               <Icon name="gift" size={19} strokeWidth={1.9} />
             </span>
-            Кейси
+            {t('core.nav.casesTab')}
           </button>
         )}
       </nav>
@@ -627,6 +633,7 @@ function LogoutConfirm({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useTranslation();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCancel();
@@ -686,10 +693,10 @@ function LogoutConfirm({
           <Icon name="signpost" size={20} strokeWidth={1.9} stroke={accent} />
         </div>
         <h3 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '19px', margin: '0 0 8px' }}>
-          Вийти з акаунту?
+          {t('core.logout.title')}
         </h3>
         <p style={{ fontSize: '13.5px', lineHeight: 1.5, color: 'rgba(244,241,232,0.62)', margin: '0 0 22px' }}>
-          Доведеться увійти знову, щоб продовжити подорож.
+          {t('core.logout.message')}
         </p>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
@@ -707,7 +714,7 @@ function LogoutConfirm({
               fontFamily: "'Manrope', sans-serif",
             }}
           >
-            Скасувати
+            {t('core.logout.cancel')}
           </button>
           <button
             onClick={onConfirm}
@@ -724,7 +731,7 @@ function LogoutConfirm({
               fontFamily: "'Manrope', sans-serif",
             }}
           >
-            Так, вийти
+            {t('core.logout.confirm')}
           </button>
         </div>
       </div>
@@ -749,6 +756,7 @@ function ProfileHero({
   onEditProfile: () => void;
   onRequestLogout: () => void;
 }) {
+  const { t } = useTranslation();
   const p = user.profile!;
   return (
     <div style={{ position: 'relative', zIndex: 1 }}>
@@ -759,7 +767,7 @@ function ProfileHero({
           <div style={{ flex: '1 1 240px', minWidth: '220px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
               <span style={{ display: 'inline-block', fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.12em', color: BG, background: accent, padding: '4px 10px', borderRadius: '999px' }}>
-                РІВЕНЬ {user.level}
+                {t('core.profileSetup.levelBadge', { level: user.level }).toUpperCase()}
               </span>
               {BADGES.filter((b) => p.badges?.includes(b.id)).map((b) => (
                 <span key={b.id} title={b.label} style={{ display: 'inline-flex', color: 'rgba(244,241,232,0.85)' }}>
@@ -775,10 +783,10 @@ function ProfileHero({
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignSelf: 'flex-start' }}>
             <button onClick={onEditProfile} style={{ background: 'rgba(255,255,255,0.12)', color: CREAM, border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(6px)' }}>
-              Редагувати
+              {t('core.profile.editProfile')}
             </button>
             <button onClick={onRequestLogout} style={{ background: 'rgba(228,99,95,0.14)', color: '#E4635F', border: '1px solid rgba(228,99,95,0.4)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
-              Вийти
+              {t('core.profile.logoutButton')}
             </button>
           </div>
         </div>
@@ -801,21 +809,22 @@ function ProfileTab({
   accent: string;
   onRequestLogout: () => void;
 }) {
+  const { t } = useTranslation();
   const p = user.profile;
   if (!p) {
     return (
       <>
-        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '16px' }}>ЛАСКАВО ПРОСИМО</div>
-        <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(30px, 4vw, 42px)', margin: '0 0 14px' }}>Вітаємо, {user.name}!</h1>
+        <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.22em', color: accent, marginBottom: '16px' }}>{t('core.profile.welcomeTitle')}</div>
+        <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(30px, 4vw, 42px)', margin: '0 0 14px' }}>{t('core.profile.welcomeGreeting', { name: user.name })}</h1>
         <p style={{ fontSize: '15.5px', lineHeight: 1.7, color: 'rgba(244,241,232,0.68)', maxWidth: '520px', margin: '0 0 32px' }}>
-          Ти пропустив налаштування профілю. Персоналізуй його будь-коли.
+          {t('core.profile.welcomeBody')}
         </p>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button onClick={onEditProfile} style={{ background: accent, color: BG, fontFamily: "'Manrope', sans-serif", fontSize: '14.5px', fontWeight: 700, border: 'none', borderRadius: '12px', padding: '15px 30px', cursor: 'pointer' }}>
-            Налаштувати профіль
+            {t('core.profile.setupProfile')}
           </button>
           <button onClick={onRequestLogout} style={{ background: 'rgba(228,99,95,0.14)', color: '#E4635F', fontFamily: "'Manrope', sans-serif", fontSize: '14px', fontWeight: 700, border: '1px solid rgba(228,99,95,0.4)', borderRadius: '12px', padding: '15px 24px', cursor: 'pointer' }}>
-            Вийти
+            {t('core.profile.logoutButton')}
           </button>
         </div>
       </>
@@ -824,10 +833,12 @@ function ProfileTab({
 
   return (
     <>
-      <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: '0 0 12px' }}>Готово, {p.displayName}!</h2>
+      <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: '0 0 12px' }}>{t('core.profile.readyGreeting', { displayName: p.displayName })}</h2>
       <p style={{ fontSize: '15px', lineHeight: 1.7, color: 'rgba(244,241,232,0.65)', maxWidth: '520px', margin: '0 0 32px' }}>
-        Відкрий вкладку «Мапа мандрівок», щоб дослідити цікаві місця України, або запитай поради у «ШІ-порадника».
+        {t('core.profile.readyBody')}
       </p>
+
+      <LanguageSwitcher accent={accent} />
 
       <ProfileWall userId={user.id} accent={accent} />
     </>

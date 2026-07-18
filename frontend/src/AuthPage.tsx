@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UKRAINE_REGIONS } from './data/ukraine';
 import { loginUser, registerUser, adminLogin, type AuthUser, type AdminSession } from './api';
 
@@ -40,6 +41,7 @@ const labelStyle: React.CSSProperties = {
 const fieldWrap: React.CSSProperties = { marginBottom: '16px' };
 
 function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<'register' | 'login'>('register');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -52,10 +54,17 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
   const [region, setRegion] = useState('');
   const [city, setCity] = useState('');
 
-  const cities = useMemo(
-    () => UKRAINE_REGIONS.find((r) => r.region === region)?.cities ?? [],
+  const selectedRegion = useMemo(
+    () => UKRAINE_REGIONS.find((r) => r.region === region),
     [region],
   );
+  const cities = selectedRegion?.cities ?? [];
+  // Localized city labels, paired by index with the canonical Ukrainian city
+  // names in `cities` (the value actually submitted/stored).
+  const localizedCities: string[] = selectedRegion
+    ? (t(`regions.${selectedRegion.slug}.cities`, { returnObjects: true }) as string[])
+    : [];
+  const cityLabel = (ukCity: string, idx: number) => localizedCities[idx] ?? ukCity;
 
   const switchMode = (next: 'register' | 'login') => {
     setMode(next);
@@ -67,13 +76,13 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
     setError('');
 
     if (mode === 'register') {
-      if (username.trim().length < 3) return setError('Ім’я користувача має містити щонайменше 3 символи');
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError('Введіть коректну електронну пошту');
-      if (password.length < 8) return setError('Пароль має містити щонайменше 8 символів');
-      if (!region) return setError('Оберіть область');
-      if (!city) return setError('Оберіть місто');
+      if (username.trim().length < 3) return setError(t('core.auth.errorUsernameLength'));
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError(t('core.auth.errorEmailInvalid'));
+      if (password.length < 8) return setError(t('core.auth.errorPasswordLength'));
+      if (!region) return setError(t('core.auth.errorSelectRegion'));
+      if (!city) return setError(t('core.auth.errorSelectCity'));
     } else {
-      if (!email || !password) return setError('Введіть пошту та пароль');
+      if (!email || !password) return setError(t('core.auth.errorEmailPasswordRequired'));
     }
 
     setLoading(true);
@@ -98,7 +107,7 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
       const user = await loginUser({ email: email.trim(), password });
       onAuth(user, false);
     } catch (err: any) {
-      setError(err?.message || 'Сталася помилка. Спробуйте ще раз.');
+      setError(err?.message || t('core.auth.errorGeneric'));
     } finally {
       setLoading(false);
     }
@@ -142,18 +151,18 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
           style={{ background: 'none', border: 'none', color: 'rgba(244,241,232,0.55)', cursor: 'pointer', fontSize: '13px', padding: 0, marginBottom: '22px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5" /><path d="M11 18l-6-6 6-6" /></svg>
-          На головну
+          {t('core.auth.backHome')}
         </button>
 
         <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '40px', width: 'auto', display: 'block', marginBottom: '20px' }} />
 
         <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '27px', margin: '0 0 6px' }}>
-          {mode === 'register' ? 'Створи акаунт' : 'З поверненням'}
+          {mode === 'register' ? t('core.auth.registerTitle') : t('core.auth.loginTitle')}
         </h1>
         <p style={{ fontSize: '14px', color: 'rgba(244,241,232,0.6)', margin: '0 0 24px' }}>
           {mode === 'register'
-            ? 'Почни своє дослідження України разом із друзями.'
-            : 'Увійди, щоб продовжити дослідження.'}
+            ? t('core.auth.registerSubtitle')
+            : t('core.auth.loginSubtitle')}
         </p>
 
         {/* mode toggle */}
@@ -176,7 +185,7 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
                 color: mode === m ? BG : 'rgba(244,241,232,0.7)',
               }}
             >
-              {m === 'register' ? 'Реєстрація' : 'Вхід'}
+              {m === 'register' ? t('core.auth.registerToggle') : t('core.auth.loginToggle')}
             </button>
           ))}
         </div>
@@ -184,13 +193,13 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
         <form onSubmit={handleSubmit} noValidate>
           {mode === 'register' && (
             <div style={fieldWrap}>
-              <label style={labelStyle}>Ім’я користувача</label>
+              <label style={labelStyle}>{t('core.auth.usernameLabel')}</label>
               <input
                 style={inputStyle}
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Напр. mandrivnyk"
+                placeholder={t('core.auth.usernamePlaceholder')}
                 autoComplete="username"
                 onFocus={(e) => (e.currentTarget.style.borderColor = GREEN)}
                 onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)')}
@@ -199,13 +208,13 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
           )}
 
           <div style={fieldWrap}>
-            <label style={labelStyle}>{mode === 'register' ? 'Електронна пошта' : 'Пошта або логін'}</label>
+            <label style={labelStyle}>{mode === 'register' ? t('core.auth.emailLabel') : t('core.auth.emailOrLoginLabel')}</label>
             <input
               style={inputStyle}
               type={mode === 'register' ? 'email' : 'text'}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={mode === 'register' ? 'you@example.com' : 'Пошта або логін'}
+              placeholder={mode === 'register' ? 'you@example.com' : t('core.auth.emailOrLoginPlaceholder')}
               autoComplete="username"
               onFocus={(e) => (e.currentTarget.style.borderColor = GREEN)}
               onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)')}
@@ -213,7 +222,7 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
           </div>
 
           <div style={fieldWrap}>
-            <label style={labelStyle}>Пароль {mode === 'register' && <span style={{ color: 'rgba(244,241,232,0.4)', fontWeight: 500 }}>(мінімум 8 символів)</span>}</label>
+            <label style={labelStyle}>{t('core.auth.passwordLabel')} {mode === 'register' && <span style={{ color: 'rgba(244,241,232,0.4)', fontWeight: 500 }}>{t('core.auth.passwordHint')}</span>}</label>
             <input
               style={inputStyle}
               type="password"
@@ -229,7 +238,7 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
           {mode === 'register' && (
             <>
               <div style={fieldWrap}>
-                <label style={labelStyle}>Область</label>
+                <label style={labelStyle}>{t('core.auth.regionLabel')}</label>
                 <select
                   style={{ ...inputStyle, appearance: 'none', cursor: 'pointer' }}
                   value={region}
@@ -240,17 +249,17 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
                   onFocus={(e) => (e.currentTarget.style.borderColor = GREEN)}
                   onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)')}
                 >
-                  <option value="" style={{ background: BG }}>Оберіть область…</option>
+                  <option value="" style={{ background: BG }}>{t('core.auth.regionPlaceholder')}</option>
                   {UKRAINE_REGIONS.map((r) => (
                     <option key={r.region} value={r.region} style={{ background: BG }}>
-                      {r.region}
+                      {t(`regions.${r.slug}.region`)}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div style={fieldWrap}>
-                <label style={labelStyle}>Місто</label>
+                <label style={labelStyle}>{t('core.auth.cityLabel')}</label>
                 <select
                   style={{ ...inputStyle, appearance: 'none', cursor: region ? 'pointer' : 'not-allowed', opacity: region ? 1 : 0.5 }}
                   value={city}
@@ -260,11 +269,11 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
                   onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)')}
                 >
                   <option value="" style={{ background: BG }}>
-                    {region ? 'Оберіть місто…' : 'Спершу оберіть область'}
+                    {region ? t('core.auth.cityPlaceholder') : t('core.auth.cityPlaceholderNoRegion')}
                   </option>
-                  {cities.map((c) => (
+                  {cities.map((c, idx) => (
                     <option key={c} value={c} style={{ background: BG }}>
-                      {c}
+                      {cityLabel(c, idx)}
                     </option>
                   ))}
                 </select>
@@ -297,17 +306,17 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
               marginTop: '4px',
             }}
           >
-            {loading ? 'Зачекайте…' : mode === 'register' ? 'Зареєструватися' : 'Увійти'}
+            {loading ? t('core.auth.submitLoading') : mode === 'register' ? t('core.auth.submitRegister') : t('core.auth.submitLogin')}
           </button>
         </form>
 
         <p style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(244,241,232,0.55)', marginTop: '22px', marginBottom: 0 }}>
-          {mode === 'register' ? 'Вже маєте акаунт? ' : 'Ще не з нами? '}
+          {mode === 'register' ? t('core.auth.hasAccount') : t('core.auth.noAccount')}
           <button
             onClick={() => switchMode(mode === 'register' ? 'login' : 'register')}
             style={{ background: 'none', border: 'none', color: LIGHT, fontWeight: 700, cursor: 'pointer', fontSize: '13px', padding: 0 }}
           >
-            {mode === 'register' ? 'Увійти' : 'Зареєструватися'}
+            {mode === 'register' ? t('core.auth.submitLogin') : t('core.auth.submitRegister')}
           </button>
         </p>
       </div>

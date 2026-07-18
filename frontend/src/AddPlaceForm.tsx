@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { CATEGORY_META, CATEGORY_ORDER, DIFFICULTY_META, DIFFICULTY_ORDER, type PlaceCategory, type Place } from './data/places';
 import { isInUkraine } from './data/geo';
 import { fileToCompressedDataUrl } from './data/imageUtils';
@@ -21,6 +22,7 @@ interface AddPlaceFormProps {
 }
 
 function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, adminToken }: AddPlaceFormProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [category, setCategory] = useState<PlaceCategory>('nature');
   const [region, setRegion] = useState('');
@@ -41,7 +43,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
 
   const useMyLocation = () => {
     if (!('geolocation' in navigator)) {
-      setError('Геолокація недоступна у цьому браузері');
+      setError(t('forms.addPlace.errorGeoUnavailable'));
       return;
     }
     setGeoLoading(true);
@@ -51,7 +53,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
         const la = Number(pos.coords.latitude.toFixed(5));
         const lo = Number(pos.coords.longitude.toFixed(5));
         if (!isInUkraine(la, lo)) {
-          setError('Твоя геолокація поза межами України — познач місце на карті вручну');
+          setError(t('forms.addPlace.errorOutsideUkraine'));
         } else {
           setLat(la);
           setLng(lo);
@@ -59,7 +61,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
         setGeoLoading(false);
       },
       () => {
-        setError('Не вдалося отримати геолокацію. Познач місце на карті.');
+        setError(t('forms.addPlace.errorGeoFailed'));
         setGeoLoading(false);
       },
       { enableHighAccuracy: true, timeout: 8000 },
@@ -78,7 +80,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
         try {
           encoded.push(await fileToCompressedDataUrl(file));
         } catch {
-          setError('Одне із зображень не вдалося обробити');
+          setError(t('forms.addPlace.errorPhotoFailed'));
         }
       }
       if (encoded.length) setPhotos((cur) => [...cur, ...encoded].slice(0, MAX_PHOTOS));
@@ -101,8 +103,8 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
 
   const handleSubmit = async () => {
     setError('');
-    if (photos.length < 2) return setError('Додай щонайменше 2 фотографії');
-    if (lat == null || lng == null) return setError('Познач геолокацію місця');
+    if (photos.length < 2) return setError(t('forms.addPlace.errorNeedPhotos'));
+    if (lat == null || lng == null) return setError(t('forms.addPlace.errorNeedLocation'));
     setSubmitting(true);
     try {
       const payload = {
@@ -124,7 +126,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
         res = {
           status: 'approved',
           decision: 'approve',
-          reason: 'Місце додано адміністратором і одразу опубліковано на карті.',
+          reason: t('forms.addPlace.adminReason'),
           moderatedByAi: false,
           place,
         };
@@ -134,7 +136,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
       setResult(res);
       if (res.status === 'approved' && onApproved) onApproved(res.place);
     } catch (e: any) {
-      setError(e?.message ?? 'Не вдалося надіслати місце');
+      setError(e?.message ?? t('forms.addPlace.errorSubmitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -176,10 +178,10 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
           <div>
             <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: 0 }}>
-              {result ? 'Заявку надіслано' : 'Додати місце на карту'}
+              {result ? t('forms.addPlace.titleResult') : t('forms.addPlace.title')}
             </h2>
           </div>
-          <button onClick={onClose} aria-label="Закрити" style={iconBtn}>
+          <button onClick={onClose} aria-label={t('forms.addPlace.closeAria')} style={iconBtn}>
             <Icon name="close" size={18} />
           </button>
         </div>
@@ -190,19 +192,19 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
           <>
             <p style={{ fontSize: '13.5px', lineHeight: 1.6, color: 'rgba(244,241,232,0.62)', margin: '0 0 20px' }}>
               {adminToken ? (
-                <>Місце публікується одразу від імені адміністратора. Потрібні щонайменше <b>2 фото</b> та <b>геолокація</b>.</>
+                <Trans i18nKey="forms.addPlace.descAdmin" components={{ b: <b /> }} />
               ) : (
-                <>Розкажи про цікаве місце в Україні. Заявку перевірить ШІ-модератор: обов’язково потрібні щонайменше <b>2 фото</b> та <b>геолокація</b>.</>
+                <Trans i18nKey="forms.addPlace.descUser" components={{ b: <b /> }} />
               )}
             </p>
 
             {/* name */}
-            <Field label="Назва місця">
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Напр. Водоспад Шипіт" style={input} maxLength={80} />
+            <Field label={t('forms.addPlace.nameLabel')}>
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('forms.addPlace.namePlaceholder')} style={input} maxLength={80} />
             </Field>
 
             {/* category */}
-            <Field label="Категорія">
+            <Field label={t('forms.addPlace.categoryLabel')}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {CATEGORY_ORDER.map((cat) => {
                   const meta = CATEGORY_META[cat];
@@ -235,16 +237,16 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
             </Field>
 
             {/* region */}
-            <Field label="Область / регіон">
-              <input value={region} onChange={(e) => setRegion(e.target.value)} placeholder="Напр. Закарпатська область" style={input} maxLength={80} />
+            <Field label={t('forms.addPlace.regionLabel')}>
+              <input value={region} onChange={(e) => setRegion(e.target.value)} placeholder={t('forms.addPlace.regionPlaceholder')} style={input} maxLength={80} />
             </Field>
 
             {/* description */}
-            <Field label={`Опис (${description.trim().length}/20+)`}>
+            <Field label={t('forms.addPlace.descriptionLabel', { count: description.trim().length })}>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Що це за місце і що там варто побачити?"
+                placeholder={t('forms.addPlace.descriptionPlaceholder')}
                 rows={4}
                 style={{ ...input, resize: 'vertical', lineHeight: 1.5 }}
                 maxLength={1500}
@@ -252,12 +254,12 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
             </Field>
 
             {/* best season */}
-            <Field label="Найкращий час (необов’язково)">
-              <input value={bestSeason} onChange={(e) => setBestSeason(e.target.value)} placeholder="Напр. Травень – вересень" style={input} maxLength={80} />
+            <Field label={t('forms.addPlace.bestSeasonLabel')}>
+              <input value={bestSeason} onChange={(e) => setBestSeason(e.target.value)} placeholder={t('forms.addPlace.bestSeasonPlaceholder')} style={input} maxLength={80} />
             </Field>
 
             {/* difficulty */}
-            <Field label="Складність дослідження">
+            <Field label={t('forms.addPlace.difficultyLabel')}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {DIFFICULTY_ORDER.map((d) => {
                   const meta = DIFFICULTY_META[d];
@@ -290,17 +292,17 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
             </Field>
 
             {/* geolocation */}
-            <Field label="Геолокація (обов’язково)">
+            <Field label={t('forms.addPlace.geoLabel')}>
               <LocationPicker lat={lat} lng={lng} onPick={(la, lo) => { setLat(la); setLng(lo); }} accent={accent} />
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px', alignItems: 'center' }}>
                 <button onClick={useMyLocation} disabled={geoLoading} style={{ ...secondaryBtn, opacity: geoLoading ? 0.6 : 1 }}>
                   <Icon name="target" size={15} strokeWidth={1.9} />
-                  {geoLoading ? 'Визначаю…' : 'Моя геолокація'}
+                  {geoLoading ? t('forms.addPlace.myLocationLoading') : t('forms.addPlace.myLocationBtn')}
                 </button>
                 <input
                   value={lat ?? ''}
                   onChange={(e) => setLat(e.target.value === '' ? null : Number(e.target.value))}
-                  placeholder="Широта"
+                  placeholder={t('forms.addPlace.latPlaceholder')}
                   type="number"
                   step="0.00001"
                   style={{ ...input, width: '120px' }}
@@ -308,7 +310,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
                 <input
                   value={lng ?? ''}
                   onChange={(e) => setLng(e.target.value === '' ? null : Number(e.target.value))}
-                  placeholder="Довгота"
+                  placeholder={t('forms.addPlace.lngPlaceholder')}
                   type="number"
                   step="0.00001"
                   style={{ ...input, width: '120px' }}
@@ -317,12 +319,12 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
             </Field>
 
             {/* photos */}
-            <Field label={`Фотографії (${photos.length}/2+ мінімум)`}>
+            <Field label={t('forms.addPlace.photosLabel', { count: photos.length })}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                 {photos.map((src, i) => (
                   <div key={i} style={{ position: 'relative', width: '92px', height: '92px', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.14)' }}>
-                    <img src={src} alt={`Фото ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <button onClick={() => removePhoto(i)} aria-label="Видалити фото" style={{ position: 'absolute', top: '4px', right: '4px', width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(4,16,11,0.8)', border: 'none', color: CREAM, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img src={src} alt={t('forms.addPlace.photoAlt', { count: i + 1 })} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <button onClick={() => removePhoto(i)} aria-label={t('forms.addPlace.removePhotoAria')} style={{ position: 'absolute', top: '4px', right: '4px', width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(4,16,11,0.8)', border: 'none', color: CREAM, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Icon name="close" size={12} />
                     </button>
                   </div>
@@ -334,7 +336,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
                     style={{ width: '92px', height: '92px', borderRadius: '10px', border: '1px dashed rgba(255,255,255,0.28)', background: 'transparent', color: 'rgba(244,241,232,0.6)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px', fontSize: '11px', fontFamily: "'Manrope', sans-serif" }}
                   >
                     <Icon name={photoBusy ? 'image' : 'plus'} size={18} />
-                    {photoBusy ? 'Обробка…' : 'Додати'}
+                    {photoBusy ? t('forms.addPlace.processing') : t('forms.addPlace.addPhotoBtn')}
                   </button>
                 )}
               </div>
@@ -348,7 +350,7 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
             )}
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-              <button onClick={onClose} style={{ ...secondaryBtn, flex: '0 0 auto' }}>Скасувати</button>
+              <button onClick={onClose} style={{ ...secondaryBtn, flex: '0 0 auto' }}>{t('forms.addPlace.cancelBtn')}</button>
               <button
                 onClick={handleSubmit}
                 disabled={!canSubmit}
@@ -367,11 +369,11 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
               >
                 {submitting
                   ? adminToken
-                    ? 'Публікую…'
-                    : 'ШІ перевіряє місце…'
+                    ? t('forms.addPlace.submittingAdmin')
+                    : t('forms.addPlace.submittingUser')
                   : adminToken
-                    ? 'Опублікувати місце'
-                    : 'Надіслати на перевірку'}
+                    ? t('forms.addPlace.submitAdmin')
+                    : t('forms.addPlace.submitUser')}
               </button>
             </div>
           </>
@@ -382,10 +384,11 @@ function AddPlaceForm({ accent = '#3FA66B', submitterName, onClose, onApproved, 
 }
 
 function ResultView({ result, accent, onClose }: { result: SubmitPlaceResult; accent: string; onClose: () => void }) {
+  const { t } = useTranslation();
   const cfg = {
-    approved: { color: '#3FA66B', icon: 'check' as const, title: 'Місце опубліковано!', sub: 'ШІ-модератор схвалив твоє місце — воно вже на карті.' },
-    pending: { color: '#D9B44A', icon: 'shield' as const, title: 'Відправлено на перевірку', sub: 'Місце очікує ручної перевірки адміністратором.' },
-    rejected: { color: '#E05A5A', icon: 'close' as const, title: 'Місце відхилено', sub: 'На жаль, ШІ-модератор не пропустив це місце.' },
+    approved: { color: '#3FA66B', icon: 'check' as const, title: t('forms.addPlace.result.approvedTitle'), sub: t('forms.addPlace.result.approvedSub') },
+    pending: { color: '#D9B44A', icon: 'shield' as const, title: t('forms.addPlace.result.pendingTitle'), sub: t('forms.addPlace.result.pendingSub') },
+    rejected: { color: '#E05A5A', icon: 'close' as const, title: t('forms.addPlace.result.rejectedTitle'), sub: t('forms.addPlace.result.rejectedSub') },
   }[result.status];
 
   return (
@@ -397,12 +400,12 @@ function ResultView({ result, accent, onClose }: { result: SubmitPlaceResult; ac
       <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'rgba(244,241,232,0.7)', margin: '0 0 16px', maxWidth: '440px', marginInline: 'auto' }}>{cfg.sub}</p>
       <div style={{ background: PANEL, border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '14px 16px', textAlign: 'left', margin: '0 auto 20px', maxWidth: '460px' }}>
         <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(244,241,232,0.5)', marginBottom: '6px' }}>
-          {result.moderatedByAi ? 'ВИСНОВОК ШІ-МОДЕРАТОРА' : 'ПРИМІТКА'}
+          {result.moderatedByAi ? t('forms.addPlace.result.aiConclusion') : t('forms.addPlace.result.note')}
         </div>
         <div style={{ fontSize: '13.5px', lineHeight: 1.55, color: 'rgba(244,241,232,0.85)' }}>{result.reason}</div>
       </div>
       <button onClick={onClose} style={{ background: accent, color: '#071F16', border: 'none', borderRadius: '12px', padding: '12px 28px', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}>
-        Готово
+        {t('forms.addPlace.result.done')}
       </button>
     </div>
   );

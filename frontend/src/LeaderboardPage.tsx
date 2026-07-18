@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { getMyRank, getXpLeaderboard, type MyRank, type XpLeaderboardRow } from './api';
 import { UserAvatar } from './UserCard';
 
@@ -17,11 +19,13 @@ interface LeaderboardPageProps {
 
 type Metric = 'xp' | 'cells' | 'places';
 
-const METRICS: { id: Metric; label: string; unit: string; noun: string }[] = [
-  { id: 'xp', label: 'Досвід', unit: 'XP', noun: 'досвіду' },
-  { id: 'cells', label: 'Кроки', unit: 'клітинок', noun: 'відкритих клітинок' },
-  { id: 'places', label: 'Місця', unit: 'місць', noun: 'підкорених місць' },
-];
+function buildMetrics(t: TFunction): { id: Metric; label: string; unit: string; noun: string }[] {
+  return [
+    { id: 'xp', label: t('social.leaderboard.metricXp.label'), unit: 'XP', noun: t('social.leaderboard.metricXp.noun') },
+    { id: 'cells', label: t('social.leaderboard.metricCells.label'), unit: t('social.leaderboard.metricCells.unit'), noun: t('social.leaderboard.metricCells.noun') },
+    { id: 'places', label: t('social.leaderboard.metricPlaces.label'), unit: t('social.leaderboard.metricPlaces.unit'), noun: t('social.leaderboard.metricPlaces.noun') },
+  ];
+}
 
 const PODIUM_COLORS = [GOLD, SILVER, BRONZE];
 /** Visual order on the podium: silver, gold, bronze. */
@@ -80,6 +84,7 @@ function PodiumCard({
   row,
   place,
   metric,
+  metrics,
   max,
   isMe,
   accent,
@@ -88,16 +93,18 @@ function PodiumCard({
   row: XpLeaderboardRow;
   place: number;
   metric: Metric;
+  metrics: { id: Metric; label: string; unit: string; noun: string }[];
   max: number;
   isMe: boolean;
   accent: string;
   onOpenProfile?: (userId: number) => void;
 }) {
+  const { t } = useTranslation();
   const { isMobile } = useViewport();
   const color = PODIUM_COLORS[place];
   const value = valueOf(row, metric);
   const shown = useCountUp(value);
-  const unit = METRICS.find((m) => m.id === metric)!.unit;
+  const unit = metrics.find((m) => m.id === metric)!.unit;
   const barPct = Math.max(6, Math.round((value / max) * 100));
   const avatarSize = isMobile ? (place === 0 ? 50 : 40) : place === 0 ? 72 : 56;
 
@@ -126,9 +133,9 @@ function PodiumCard({
 
       <div className="lb-podium-name">
         {row.name}
-        {isMe && <span style={{ color: accent }}> (ти)</span>}
+        {isMe && <span style={{ color: accent }}> ({t('social.leaderboard.you')})</span>}
       </div>
-      <div className="lb-podium-level">Рівень {row.level}</div>
+      <div className="lb-podium-level">{t('social.leaderboard.level', { level: row.level })}</div>
 
       {/* the plinth — its height ranks, the fill inside shows the metric */}
       <div
@@ -153,6 +160,7 @@ function PodiumCard({
 function Row({
   row,
   metric,
+  metrics,
   max,
   isMe,
   accent,
@@ -161,16 +169,18 @@ function Row({
 }: {
   row: XpLeaderboardRow;
   metric: Metric;
+  metrics: { id: Metric; label: string; unit: string; noun: string }[];
   max: number;
   isMe: boolean;
   accent: string;
   index: number;
   onOpenProfile?: (userId: number) => void;
 }) {
+  const { t } = useTranslation();
   const { isMobile } = useViewport();
   const value = valueOf(row, metric);
   const shown = useCountUp(value);
-  const unit = METRICS.find((m) => m.id === metric)!.unit;
+  const unit = metrics.find((m) => m.id === metric)!.unit;
   const barPct = Math.max(3, Math.round((value / max) * 100));
 
   return (
@@ -219,12 +229,12 @@ function Row({
         <div className="lb-row-title">
           <span className="lb-row-name">
             {row.name}
-            {isMe && <span style={{ color: accent, fontWeight: 900 }}> (ти)</span>}
+            {isMe && <span style={{ color: accent, fontWeight: 900 }}> ({t('social.leaderboard.you')})</span>}
           </span>
           <span className="lb-row-handle">@{row.username}</span>
         </div>
         <div className="lb-row-meta">
-          <span>Рівень {row.level}</span>
+          <span>{t('social.leaderboard.level', { level: row.level })}</span>
           <span>🧭 {row.cells}</span>
           <span>📍 {row.places}</span>
           {row.region && <span className="lb-row-region">{row.region}</span>}
@@ -454,6 +464,8 @@ const STYLES = `
 `;
 
 function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile }: LeaderboardPageProps) {
+  const { t } = useTranslation();
+  const METRICS = useMemo(() => buildMetrics(t), [t]);
   const [tab, setTab] = useState<'global' | 'regional'>('global');
   const [metric, setMetric] = useState<Metric>('xp');
   const [rows, setRows] = useState<XpLeaderboardRow[]>([]);
@@ -511,11 +523,11 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
         <div className="lb-blob lb-blob-b" style={{ background: `radial-gradient(circle, ${GOLD}22, transparent 66%)` }} />
 
         <div className="lb-hero-inner">
-          <div className="lb-eyebrow">РЕЙТИНГ</div>
-          <h2 className="lb-title">Зала мандрівників</h2>
+          <div className="lb-eyebrow">{t('social.leaderboard.eyebrow')}</div>
+          <h2 className="lb-title">{t('social.leaderboard.title')}</h2>
           <p className="lb-sub">
-            Ходи, відкривай клітинки, підкорюй місця. Разом уже пройдено{' '}
-            <strong style={{ color: GOLD }}>{totalCells.toLocaleString('uk-UA')}</strong> клітинок.
+            {t('social.leaderboard.subtitlePrefix')}{' '}
+            <strong style={{ color: GOLD }}>{totalCells.toLocaleString('uk-UA')}</strong> {t('social.leaderboard.subtitleSuffix')}
           </p>
 
           {me && (
@@ -524,12 +536,12 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
               <div className="lb-me-id">
                 <div className="lb-me-name">{me.user.name}</div>
                 <div className="lb-me-meta">
-                  Рівень {me.user.level} · 🧭 {me.user.cells} · 📍 {me.user.places}
+                  {t('social.leaderboard.level', { level: me.user.level })} · 🧭 {me.user.cells} · 📍 {me.user.places}
                 </div>
               </div>
               <div className="lb-me-ranks">
                 <div>
-                  <div className="lb-me-label">ГЛОБАЛЬНО</div>
+                  <div className="lb-me-label">{t('social.leaderboard.global')}</div>
                   <div className="lb-me-rank" style={{ color: GOLD }}>
                     #{me.global.rank}
                     <span className="lb-me-total"> / {me.global.total}</span>
@@ -554,12 +566,19 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
         <div className="lb-tabs">
           {(
             [
-              { id: 'global', label: 'Глобальний' },
-              { id: 'regional', label: userRegion ? (isMobile ? 'Мій регіон' : `Регіон: ${userRegion}`) : 'Регіональний' },
+              { id: 'global', label: t('social.leaderboard.globalTab') },
+              {
+                id: 'regional',
+                label: userRegion
+                  ? isMobile
+                    ? t('social.leaderboard.myRegionTab')
+                    : t('social.leaderboard.regionTabWithName', { region: userRegion })
+                  : t('social.leaderboard.regionTab'),
+              },
             ] as const
-          ).map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={`lb-tab${tab === t.id ? ' lb-tab-on' : ''}`}>
-              {t.label}
+          ).map((tabItem) => (
+            <button key={tabItem.id} onClick={() => setTab(tabItem.id)} className={`lb-tab${tab === tabItem.id ? ' lb-tab-on' : ''}`}>
+              {tabItem.label}
             </button>
           ))}
         </div>
@@ -569,7 +588,7 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
             <button
               key={m.id}
               onClick={() => setMetric(m.id)}
-              title={`Сортувати за кількістю ${m.noun}`}
+              title={t('social.leaderboard.sortByMetric', { noun: m.noun })}
               className={`lb-metric${metric === m.id ? ' lb-metric-on' : ''}`}
             >
               {m.label}
@@ -580,10 +599,10 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
 
       {error && <div className="lb-error">{error}</div>}
       {tab === 'regional' && !userRegion && (
-        <div className="lb-panel">У твоєму профілі не вказано область — регіональний рейтинг недоступний.</div>
+        <div className="lb-panel">{t('social.leaderboard.noRegionInProfile')}</div>
       )}
 
-      {loading && <div style={{ fontSize: '13.5px', color: 'rgba(244,241,232,0.5)', padding: '12px 4px' }}>Завантаження…</div>}
+      {loading && <div style={{ fontSize: '13.5px', color: 'rgba(244,241,232,0.5)', padding: '12px 4px' }}>{t('social.leaderboard.loading')}</div>}
 
       {!loading && podium.length > 0 && (
         <div className="lb-podium">
@@ -593,6 +612,7 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
               row={podium[place]}
               place={place}
               metric={metric}
+              metrics={METRICS}
               max={max}
               isMe={podium[place].userId === userId}
               accent={accent}
@@ -609,6 +629,7 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
               key={row.userId}
               row={row}
               metric={metric}
+              metrics={METRICS}
               max={max}
               isMe={row.userId === userId}
               accent={accent}
@@ -617,13 +638,13 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
             />
           ))}
         {!loading && sorted.length === 0 && tab === 'regional' && userRegion && (
-          <div className="lb-panel">У цьому регіоні поки немає мандрівників.</div>
+          <div className="lb-panel">{t('social.leaderboard.noRegionalTravelers')}</div>
         )}
       </div>
 
       {!loading && sorted.length > 0 && (
         <div className="lb-note">
-          Сортування за: {activeMetric.label.toLowerCase()} · рейтинг оновлюється кожні 5 хвилин
+          {t('social.leaderboard.sortedBy', { metric: activeMetric.label.toLowerCase() })}
         </div>
       )}
     </div>

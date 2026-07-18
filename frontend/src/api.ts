@@ -1,5 +1,6 @@
 // Simple API helper that scans the backend ports (3000-3005) the NestJS server may bind to.
 import type { Place, PlaceCategory } from './data/places';
+import i18n from './i18n';
 
 export interface AuthUser {
   id: number;
@@ -84,7 +85,7 @@ async function call<T>(
   extraHeaders?: Record<string, string>,
 ): Promise<T> {
   const ports = cachedPort ? [cachedPort] : [3000, 3001, 3002, 3003, 3004, 3005];
-  let lastError = 'Не вдалося з’єднатися із сервером';
+  let lastError = i18n.t('common.errors.connectionFailed');
 
   for (const port of ports) {
     try {
@@ -98,7 +99,7 @@ async function call<T>(
       cachedPort = port;
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.message || 'Помилка запиту');
+        throw new Error(data.message || i18n.t('common.errors.requestFailed'));
       }
       return data as T;
     } catch (e: any) {

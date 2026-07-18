@@ -1,0 +1,28 @@
+{
+  "common": {
+    "language": "Language",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "yes": "Yes",
+    "no": "No",
+    "loading": "Loading…",
+    "error": "Error",
+    "confirm": "Confirm",
+    "geo": {
+      "unsupported": "Geolocation isn't supported in this browser",
+      "denied": "Location access denied",
+      "failed": "Couldn't determine your location"
+    },
+    "errors": {
+      "connectionFailed": "Couldn't connect to the server",
+      "requestFailed": "Request failed",
+      "imageReadFailed": "Failed to read file",
+      "imageLoadFailed": "Failed to load image",
+      "notAnImage": "This is not an image",
+      "imageProcessFailed": "Failed to process image"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CATEGORY_META, CATEGORY_ORDER, DIFFICULTY_META, DIFFICULTY_ORDER, type PlaceCategory } from './data/places';
 import { adminUpdatePlace, type AdminPlace } from './api';
 import LeafletMap from './LeafletMap';
@@ -17,6 +18,7 @@ interface EditPlaceModalProps {
 // Admin-only: edit an existing place's details, difficulty and exact position
 // (drag the pin on the real OpenStreetMap). Photos & moderation stay untouched.
 function EditPlaceModal({ place, token, accent = '#3FA66B', onClose, onSaved }: EditPlaceModalProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState(place.name);
   const [category, setCategory] = useState<PlaceCategory>(place.category);
   const [region, setRegion] = useState(place.region);
@@ -47,7 +49,7 @@ function EditPlaceModal({ place, token, accent = '#3FA66B', onClose, onSaved }: 
       });
       onSaved(updated);
     } catch (e: any) {
-      setError(e?.message ?? 'Не вдалося зберегти зміни');
+      setError(e?.message ?? t('forms.editPlace.errorSaveFailed'));
     } finally {
       setSaving(false);
     }
@@ -90,16 +92,16 @@ function EditPlaceModal({ place, token, accent = '#3FA66B', onClose, onSaved }: 
           <div>
             <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: 0 }}>{place.name}</h2>
           </div>
-          <button onClick={onClose} aria-label="Закрити" style={iconBtn}>
+          <button onClick={onClose} aria-label={t('forms.editPlace.closeAria')} style={iconBtn}>
             <Icon name="close" size={18} />
           </button>
         </div>
 
-        <Field label="Назва місця">
+        <Field label={t('forms.editPlace.nameLabel')}>
           <input value={name} onChange={(e) => setName(e.target.value)} style={input} maxLength={80} />
         </Field>
 
-        <Field label="Категорія">
+        <Field label={t('forms.editPlace.categoryLabel')}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {CATEGORY_ORDER.map((cat) => {
               const meta = CATEGORY_META[cat];
@@ -131,11 +133,11 @@ function EditPlaceModal({ place, token, accent = '#3FA66B', onClose, onSaved }: 
           </div>
         </Field>
 
-        <Field label="Область / регіон">
+        <Field label={t('forms.editPlace.regionLabel')}>
           <input value={region} onChange={(e) => setRegion(e.target.value)} style={input} maxLength={80} />
         </Field>
 
-        <Field label={`Опис (${description.trim().length}/20+)`}>
+        <Field label={t('forms.editPlace.descriptionLabel', { count: description.trim().length })}>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -145,11 +147,11 @@ function EditPlaceModal({ place, token, accent = '#3FA66B', onClose, onSaved }: 
           />
         </Field>
 
-        <Field label="Найкращий час">
+        <Field label={t('forms.editPlace.bestSeasonLabel')}>
           <input value={bestSeason} onChange={(e) => setBestSeason(e.target.value)} style={input} maxLength={80} />
         </Field>
 
-        <Field label="Складність дослідження">
+        <Field label={t('forms.editPlace.difficultyLabel')}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {DIFFICULTY_ORDER.map((d) => {
               const meta = DIFFICULTY_META[d];
@@ -181,7 +183,7 @@ function EditPlaceModal({ place, token, accent = '#3FA66B', onClose, onSaved }: 
           </div>
         </Field>
 
-        <Field label="Положення на карті (перетягни мітку)">
+        <Field label={t('forms.editPlace.positionLabel')}>
           <LeafletMap
             pickable
             pin={{ lat, lng }}
@@ -217,7 +219,7 @@ function EditPlaceModal({ place, token, accent = '#3FA66B', onClose, onSaved }: 
         )}
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-          <button onClick={onClose} style={secondaryBtn}>Скасувати</button>
+          <button onClick={onClose} style={secondaryBtn}>{t('forms.editPlace.cancelBtn')}</button>
           <button
             onClick={save}
             disabled={!canSave}
@@ -234,7 +236,7 @@ function EditPlaceModal({ place, token, accent = '#3FA66B', onClose, onSaved }: 
               fontFamily: "'Manrope', sans-serif",
             }}
           >
-            {saving ? 'Зберігаю…' : 'Зберегти зміни'}
+            {saving ? t('forms.editPlace.savingBtn') : t('forms.editPlace.saveBtn')}
           </button>
         </div>
       </div>

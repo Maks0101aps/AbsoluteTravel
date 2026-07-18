@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PLACES, CATEGORY_META, DIFFICULTY_META, type Place, type PlaceCategory } from './data/places';
 import { getPlaces, type VerifyCheckmarkResult, type VisitCellResult, type ProfileCustomization, getFriendLabels, reactToFriendLabel, reportFriendLabel, deleteFriendLabel, type FriendLabel } from './api';
 import AddPlaceForm from './AddPlaceForm';
@@ -51,6 +52,7 @@ interface ExploreMapProps {
 }
 
 function CategoryBadge({ category }: { category: PlaceCategory }) {
+  const { t } = useTranslation();
   const meta = CATEGORY_META[category];
   return (
     <span
@@ -68,12 +70,13 @@ function CategoryBadge({ category }: { category: PlaceCategory }) {
       }}
     >
       <Icon name={CATEGORY_ICON[category]} size={13} strokeWidth={1.9} />
-      {meta.label}
+      {t(`category.${category}`, { defaultValue: meta.label })}
     </span>
   );
 }
 
 function DifficultyBadge({ difficulty }: { difficulty: number }) {
+  const { t } = useTranslation();
   const meta = DIFFICULTY_META[difficulty] ?? DIFFICULTY_META[1];
   return (
     <span
@@ -91,7 +94,7 @@ function DifficultyBadge({ difficulty }: { difficulty: number }) {
       }}
     >
       <Icon name="star" size={13} strokeWidth={1.9} />
-      {meta.label} · +{meta.xp} XP
+      {t(`difficulty.${difficulty}`, { defaultValue: meta.label })} · +{meta.xp} XP
     </span>
   );
 }
@@ -108,6 +111,7 @@ function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): nu
 }
 
 function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, openedPlaceIds, onVerified, onExplored, onMessageFriend, onOpenProfile, focusPlace }: ExploreMapProps) {
+  const { t } = useTranslation();
   const [places, setPlaces] = useState<Place[]>(PLACES);
   const [activeId, setActiveId] = useState<string | number | null>(null);
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number } | null>(null);
@@ -168,7 +172,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
         id: 'self',
         ...selfPosition,
         color: profile?.color ?? accent ?? '#4D9DE0',
-        label: `${profile?.displayName ?? submitterName ?? 'Ви'} (Ви тут)`,
+        label: t('explore.live.youHere', { name: profile?.displayName ?? submitterName ?? t('explore.live.youFallback') }),
         avatar: profile?.customAvatar || profile?.avatarId || undefined,
         pulse: true
       });
@@ -179,7 +183,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
         lat: d.lat,
         lng: d.lng,
         color: FRIEND_COLORS[i % FRIEND_COLORS.length],
-        label: `${d.friend.name}${d.stale ? ' · давно не оновлювалось' : ''}`,
+        label: `${d.friend.name}${d.stale ? t('explore.live.staleSuffix') : ''}`,
         avatar: d.friend.avatar,
         dimmed: d.stale,
         onClick: () => setSelectedFriend(d),
@@ -284,10 +288,10 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '20px' }}>
         <div>
           <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 3vw, 34px)', margin: '0 0 8px' }}>
-            Куди поїхати в Україні
+            {t('explore.heading')}
           </h2>
           <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'rgba(244,241,232,0.62)', margin: 0, maxWidth: '560px' }}>
-            Наведи або торкнись точки на карті — і дізнайся, що варто побачити. Знаєш круте місце? Додай його!
+            {t('explore.subheading')}
           </p>
         </div>
         <button
@@ -309,7 +313,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
           }}
         >
           <Icon name="plus" size={17} strokeWidth={2} />
-          Додати місце
+          {t('explore.addPlace')}
         </button>
       </div>
 
@@ -412,7 +416,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    +{e.xp} XP{e.newRegion ? ' · Новий регіон!' : ' · Нова клітинка'}
+                    +{e.xp} XP{e.newRegion ? t('explore.xp.newRegion') : t('explore.xp.newCell')}
                   </div>
                 ))}
               </div>
@@ -440,10 +444,10 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                 }}
               >
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: sharing ? '#4D9DE0' : 'rgba(244,241,232,0.3)' }} />
-                {sharing ? 'Геолокація увімкнена — друзі бачать тебе' : 'Геолокація вимкнена'}
+                {sharing ? t('explore.live.geoOn') : t('explore.live.geoOff')}
               </button>
               <span style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.45)' }}>
-                {geoError ?? `Друзів на мапі: ${friendDots.length} · Клітинок відкрито: ${totalCells}`}
+                {geoError ?? t('explore.live.friendsCount', { count: friendDots.length, cells: totalCells })}
               </span>
             </div>
           )}
@@ -469,7 +473,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
             >
               <button
                 onClick={() => onOpenProfile?.(selectedFriend.friend.id)}
-                title={`Профіль ${selectedFriend.friend.name}`}
+                title={t('explore.live.profileOf', { name: selectedFriend.friend.name })}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -487,10 +491,10 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: '14px', fontWeight: 700, color: CREAM }}>{selectedFriend.friend.name}</div>
                   <div style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.55)' }}>
-                    Рівень {selectedFriend.friend.level} · {selectedFriend.friend.xp} XP
+                    {t('explore.live.level', { level: selectedFriend.friend.level, xp: selectedFriend.friend.xp })}
                   </div>
                   <div style={{ fontSize: '11px', color: selectedFriend.stale ? '#E0A54E' : accent }}>
-                    {selectedFriend.stale ? 'Давно не оновлювалось' : `Оновлено ${new Date(selectedFriend.updatedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}`}
+                    {selectedFriend.stale ? t('explore.live.staleLong') : t('explore.live.updatedAt', { time: new Date(selectedFriend.updatedAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }) })}
                   </div>
                 </div>
               </button>
@@ -499,13 +503,13 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                   onClick={() => onMessageFriend?.(selectedFriend.friend.id)}
                   style={{ background: accent, color: '#071F16', border: 'none', borderRadius: '9px', padding: '7px 13px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}
                 >
-                  Написати
+                  {t('explore.live.message')}
                 </button>
                 <button
                   onClick={() => setSelectedFriend(null)}
                   style={{ background: 'transparent', color: 'rgba(244,241,232,0.6)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '9px', padding: '6px 13px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}
                 >
-                  Закрити
+                  {t('explore.live.close')}
                 </button>
               </div>
             </div>
@@ -555,7 +559,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                   );
                 }}
                 onReport={async (id, reason) => {
-                  if (userId == null) return { action: 'kept', reason: 'Будь ласка, увійдіть' };
+                  if (userId == null) return { action: 'kept', reason: t('explore.label.loginToReport') };
                   const res = await reportFriendLabel(id, userId, reason);
                   if (res.action === 'deleted') {
                     setFriendLabels((cur) => cur.filter((l) => l.id !== id));
@@ -572,14 +576,14 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                   {openedPlaceIds?.has(shown.id) && <OpenedBadge />}
                 </div>
                 <div style={{ fontFamily: "'Lora', serif", fontSize: '22px', fontWeight: 500, margin: '12px 0 4px' }}>
-                  {shown.name}
+                  {t(`places.${shown.id}.name`, { defaultValue: shown.name })}
                 </div>
-                <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.5)', marginBottom: '14px' }}>{shown.region}</div>
+                <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.5)', marginBottom: '14px' }}>{t(`places.${shown.id}.region`, { defaultValue: shown.region })}</div>
 
-                {shown.photos && shown.photos.length > 0 && <PhotoStrip photos={shown.photos} name={shown.name} />}
+                {shown.photos && shown.photos.length > 0 && <PhotoStrip photos={shown.photos} name={t(`places.${shown.id}.name`, { defaultValue: shown.name })} />}
 
                 <p style={{ fontSize: '13.5px', lineHeight: 1.65, color: 'rgba(244,241,232,0.78)', margin: '0 0 16px' }}>
-                  {shown.description}
+                  {t(`places.${shown.id}.description`, { defaultValue: shown.description })}
                 </p>
                 <div
                   style={{
@@ -595,7 +599,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
                     <Icon name="sun" size={15} stroke={accent} strokeWidth={1.9} />
-                    {shown.bestSeason}
+                    {t(`places.${shown.id}.bestSeason`, { defaultValue: shown.bestSeason })}
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', color: 'rgba(244,241,232,0.5)' }}>
                     <Icon name="target" size={14} strokeWidth={1.9} />
@@ -604,7 +608,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                 </div>
                 {shown.submittedBy && (
                   <div style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.4)', marginTop: '10px' }}>
-                    Додав: {shown.submittedBy}
+                    {t('explore.detail.addedBy', { name: shown.submittedBy })}
                   </div>
                 )}
 
@@ -631,7 +635,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                     }}
                   >
                     <Icon name="camera" size={16} strokeWidth={1.9} />
-                    Верифікувати відвідування
+                    {t('explore.detail.verifyVisit')}
                   </button>
                 )}
 
@@ -657,12 +661,12 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                   }}
                 >
                   <Icon name="signpost" size={16} strokeWidth={1.9} />
-                  Навігувати
+                  {t('explore.detail.navigate')}
                 </button>
               </>
             ) : (
               <div style={{ color: 'rgba(244,241,232,0.55)', fontSize: '14px' }}>
-                Обери точку на карті, щоб побачити деталі.
+                {t('explore.detail.selectPrompt')}
               </div>
             )}
           </div>
@@ -680,7 +684,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 800, color: '#3FA66B', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 <Icon name="compass" size={15} strokeWidth={2.2} />
-                <span>Найближчі місця поруч</span>
+                <span>{t('explore.nearby.heading')}</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {top3Nearby.map((place) => {
@@ -717,14 +721,16 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                       </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {place.name}
+                          {t(`places.${place.id}.name`, { defaultValue: place.name })}
                         </div>
                         <div style={{ fontSize: '11.5px', color: 'rgba(244, 241, 232, 0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {place.region}
+                          {t(`places.${place.id}.region`, { defaultValue: place.region })}
                         </div>
                       </div>
                       <div style={{ fontSize: '12px', fontWeight: 800, color: '#3FA66B', flex: '0 0 auto', paddingLeft: '6px' }}>
-                        {dist < 1 ? `${(dist * 1000).toFixed(0)} м` : `${dist.toFixed(1)} км`}
+                        {dist < 1
+                          ? t('explore.distance.meters', { value: (dist * 1000).toFixed(0) })
+                          : t('explore.distance.km', { value: dist.toFixed(1) })}
                       </div>
                     </button>
                   );
@@ -791,11 +797,11 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h3 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '22px', margin: 0 }}>
-                Що ви хочете додати?
+                {t('explore.selectModal.title')}
               </h3>
               <button
                 onClick={() => setShowSelectionModal(false)}
-                aria-label="Закрити"
+                aria-label={t('explore.selectModal.close')}
                 style={{
                   background: 'rgba(255,255,255,0.06)',
                   border: '1px solid rgba(255,255,255,0.14)',
@@ -843,8 +849,8 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                   <Icon name="map" size={22} strokeWidth={2} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '15px', fontWeight: 700, marginBottom: '2px' }}>Публічне місце</div>
-                  <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.6)' }}>Цікава локація для всіх мандрівників України (модерується ШІ).</div>
+                  <div style={{ fontSize: '15px', fontWeight: 700, marginBottom: '2px' }}>{t('explore.selectModal.publicPlace.title')}</div>
+                  <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.6)' }}>{t('explore.selectModal.publicPlace.desc')}</div>
                 </div>
               </button>
 
@@ -879,9 +885,9 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                   <Icon name="flag" size={22} strokeWidth={2} />
                 </div>
                 <div>
-                  <div style={{ fontSize: '15px', fontWeight: 700, marginBottom: '2px' }}>Мітка для друзів</div>
+                  <div style={{ fontSize: '15px', fontWeight: 700, marginBottom: '2px' }}>{t('explore.selectModal.friendLabel.title')}</div>
                   <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.6)' }}>
-                    {userId == null ? 'Увійдіть в систему, щоб створювати мітки' : 'Локальна мітка з вашими параметрами для себе та друзів.'}
+                    {userId == null ? t('explore.selectModal.friendLabel.loginRequired') : t('explore.selectModal.friendLabel.desc')}
                   </div>
                 </div>
               </button>
@@ -923,6 +929,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
 // Compact overlay in the map's top-left corner: how much territory the user has
 // uncovered. The numbers flash briefly whenever they change.
 function ExplorationHud({ totalCells, totalRegions, accent }: { totalCells: number; totalRegions: number; accent: string }) {
+  const { t: hudT } = useTranslation();
   return (
     <div
       style={{
@@ -935,8 +942,8 @@ function ExplorationHud({ totalCells, totalRegions, accent }: { totalCells: numb
         pointerEvents: 'none',
       }}
     >
-      <HudStat icon="hexagon" label="Клітинки" value={totalCells} accent={accent} />
-      <HudStat icon="compass" label="Регіони" value={totalRegions} accent={accent} />
+      <HudStat icon="hexagon" label={hudT('explore.hud.cells')} value={totalCells} accent={accent} />
+      <HudStat icon="compass" label={hudT('explore.hud.regions')} value={totalRegions} accent={accent} />
     </div>
   );
 }
@@ -981,6 +988,7 @@ function HudStat({ icon, label, value, accent }: { icon: IconName; label: string
 }
 
 function OpenedBadge() {
+  const { t } = useTranslation();
   const color = '#3FA66B';
   return (
     <span
@@ -998,7 +1006,7 @@ function OpenedBadge() {
       }}
     >
       <Icon name="check" size={13} strokeWidth={2.4} />
-      Відкрито
+      {t('explore.detail.opened')}
     </span>
   );
 }
@@ -1043,6 +1051,7 @@ interface LabelDetailViewProps {
 }
 
 function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }: LabelDetailViewProps) {
+  const { t } = useTranslation();
   const [showReportForm, setShowReportForm] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reporting, setReporting] = useState(false);
@@ -1055,9 +1064,9 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
     if (diff > 0) {
       const hours = Math.floor(diff / (3600 * 1000));
       const mins = Math.floor((diff % (3600 * 1000)) / (60 * 1000));
-      expiresStr = `Залишилось: ${hours} год ${mins} хв`;
+      expiresStr = t('explore.label.timeLeft', { hours, mins });
     } else {
-      expiresStr = 'Термін закінчився';
+      expiresStr = t('explore.label.expired');
     }
   }
 
@@ -1073,7 +1082,7 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
       const res = await onReport(label.id, reportReason.trim());
       setReportFeedback(res);
     } catch (err: any) {
-      setReportFeedback({ action: 'kept', reason: err?.message || 'Помилка скарги' });
+      setReportFeedback({ action: 'kept', reason: err?.message || t('explore.label.reportError') });
     } finally {
       setReporting(false);
     }
@@ -1099,7 +1108,7 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
           }}
         >
           <Icon name="flag" size={12} strokeWidth={2} />
-          {label.friendsOnly ? 'Тільки для друзів' : 'Публічна'}
+          {label.friendsOnly ? t('explore.label.friendsOnly') : t('explore.label.public')}
         </span>
 
         <span
@@ -1116,7 +1125,7 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
             padding: '3px 9px',
           }}
         >
-          {label.isTemporary ? `Тимчасова · ${expiresStr}` : 'Постійна мітка'}
+          {label.isTemporary ? t('explore.label.temporary', { time: expiresStr }) : t('explore.label.permanent')}
         </span>
       </div>
 
@@ -1130,7 +1139,7 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
           alt=""
           style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }}
         />
-        <span>Додав: {label.user.name || label.user.username}</span>
+        <span>{t('explore.label.addedBy', { name: label.user.name || label.user.username })}</span>
       </div>
 
       {label.photo && (
@@ -1157,7 +1166,7 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
 
       {/* coordinates */}
       <div style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.4)', marginBottom: '16px' }}>
-        Координати: {label.lat.toFixed(5)}, {label.lng.toFixed(5)}
+        {t('explore.label.coordinates', { lat: label.lat.toFixed(5), lng: label.lng.toFixed(5) })}
       </div>
 
       {/* Likes / Dislikes / Actions row */}
@@ -1226,7 +1235,7 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
                   fontFamily: "'Manrope', sans-serif",
                 }}
               >
-                Видалити
+                {t('explore.label.delete')}
               </button>
             )}
 
@@ -1246,7 +1255,7 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
                   fontFamily: "'Manrope', sans-serif",
                 }}
               >
-                Поскаржитись
+                {t('explore.label.report')}
               </button>
             )}
           </div>
@@ -1254,11 +1263,11 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
           {/* Inline Report Form */}
           {showReportForm && !reportFeedback && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '12px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(244,241,232,0.6)' }}>Причина скарги:</label>
+              <label style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(244,241,232,0.6)' }}>{t('explore.label.reportReasonLabel')}</label>
               <textarea
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
-                placeholder="Вкажіть, чому ця мітка є неприйнятною..."
+                placeholder={t('explore.label.reportPlaceholder')}
                 rows={2}
                 style={{
                   width: '100%',
@@ -1289,7 +1298,7 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
                     cursor: 'pointer',
                   }}
                 >
-                  Скасувати
+                  {t('explore.label.cancel')}
                 </button>
                 <button
                   onClick={handleReportSubmit}
@@ -1305,7 +1314,7 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
                     cursor: reporting || !reportReason.trim() ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {reporting ? 'ШІ перевіряє...' : 'Надіслати скаргу'}
+                  {reporting ? t('explore.label.aiChecking') : t('explore.label.submitReport')}
                 </button>
               </div>
             </div>
@@ -1324,7 +1333,7 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', fontWeight: 800, color: reportFeedback.action === 'deleted' ? '#E05A5A' : '#3FA66B' }}>
                 <Icon name={reportFeedback.action === 'deleted' ? 'close' : 'check'} size={15} strokeWidth={2} />
-                <span>{reportFeedback.action === 'deleted' ? 'Мітку видалено ШІ-модератором' : 'Скаргу відхилено ШІ-модератором'}</span>
+                <span>{reportFeedback.action === 'deleted' ? t('explore.label.reportDeletedTitle') : t('explore.label.reportRejectedTitle')}</span>
               </div>
               <p style={{ fontSize: '12.5px', lineHeight: 1.5, color: 'rgba(244,241,232,0.85)', margin: 0 }}>
                 {reportFeedback.reason}
@@ -1348,7 +1357,7 @@ function LabelDetailView({ label, userId, accent, onDelete, onReact, onReport }:
                   marginTop: '4px'
                 }}
               >
-                Зрозуміло
+                {t('explore.label.gotIt')}
               </button>
             </div>
           )}

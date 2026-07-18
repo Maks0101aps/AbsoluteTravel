@@ -2,12 +2,14 @@
 // it down to a sane max dimension and re-encode as a compressed JPEG data URL.
 // Keeps payloads small enough to embed in the JSON request (and the DB).
 
+import i18n from '../i18n';
+
 const MAX_DIM = 1280;
 const QUALITY = 0.78;
 
 export async function fileToCompressedDataUrl(file: File): Promise<string> {
   if (!file.type.startsWith('image/')) {
-    throw new Error('Це не зображення');
+    throw new Error(i18n.t('common.errors.notAnImage'));
   }
 
   const dataUrl = await readAsDataUrl(file);
@@ -24,7 +26,7 @@ export async function fileToCompressedDataUrl(file: File): Promise<string> {
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Не вдалося обробити зображення');
+  if (!ctx) throw new Error(i18n.t('common.errors.imageProcessFailed'));
   ctx.drawImage(img, 0, 0, width, height);
 
   // AVIF first — noticeably smaller than JPEG at the same visual quality. Not
@@ -41,7 +43,7 @@ function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error('Не вдалося прочитати файл'));
+    reader.onerror = () => reject(new Error(i18n.t('common.errors.imageReadFailed')));
     reader.readAsDataURL(file);
   });
 }
@@ -50,7 +52,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Не вдалося завантажити зображення'));
+    img.onerror = () => reject(new Error(i18n.t('common.errors.imageLoadFailed')));
     img.src = src;
   });
 }

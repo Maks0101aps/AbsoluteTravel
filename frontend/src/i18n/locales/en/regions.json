@@ -1,0 +1,31 @@
+{
+  "regions": {
+    "vinnytsia_oblast": { "region": "Vinnytsia Oblast", "cities": ["Vinnytsia", "Zhmerynka", "Mohyliv-Podilskyi", "Kozyatyn", "Khmilnyk", "Haisyn", "Ladyzhyn", "Tulchyn", "Bar"] },
+    "volyn_oblast": { "region": "Volyn Oblast", "cities": ["Lutsk", "Kovel", "Novovolynsk", "Volodymyr", "Kivertsi", "Rozhyshche", "Kamin-Kashyrskyi"] },
+    "dnipropetrovsk_oblast": { "region": "Dnipropetrovsk Oblast", "cities": ["Dnipro", "Kryvyi Rih", "Kamianske", "Nikopol", "Pavlohrad", "Novomoskovsk", "Marhanets", "Zhovti Vody", "Synelnykove"] },
+    "donetsk_oblast": { "region": "Donetsk Oblast", "cities": ["Kramatorsk", "Mariupol", "Donetsk", "Sloviansk", "Bakhmut", "Pokrovsk", "Kostiantynivka", "Druzhkivka", "Avdiivka"] },
+    "zhytomyr_oblast": { "region": "Zhytomyr Oblast", "cities": ["Zhytomyr", "Berdychiv", "Korosten", "Novohrad-Volynskyi", "Malyn", "Ovruch", "Korostyshiv"] },
+    "zakarpattia_oblast": { "region": "Zakarpattia Oblast", "cities": ["Uzhhorod", "Mukachevo", "Khust", "Berehove", "Vynohradiv", "Svaliava", "Tiachiv", "Rakhiv"] },
+    "zaporizhzhia_oblast": { "region": "Zaporizhzhia Oblast", "cities": ["Zaporizhzhia", "Melitopol", "Berdiansk", "Enerhodar", "Tokmak", "Polohy", "Vasylivka"] },
+    "ivano-frankivsk_oblast": { "region": "Ivano-Frankivsk Oblast", "cities": ["Ivano-Frankivsk", "Kalush", "Kolomyia", "Dolyna", "Nadvirna", "Burshtyn", "Yaremche", "Kosiv", "Tlumach"] },
+    "kyiv_oblast": { "region": "Kyiv Oblast", "cities": ["Bila Tserkva", "Brovary", "Boryspil", "Irpin", "Bucha", "Fastiv", "Vyshneve", "Obukhiv", "Vasylkiv", "Slavutych"] },
+    "kirovohrad_oblast": { "region": "Kirovohrad Oblast", "cities": ["Kropyvnytskyi", "Oleksandriia", "Svitlovodsk", "Znamianka", "Haivoron", "Dolynska"] },
+    "luhansk_oblast": { "region": "Luhansk Oblast", "cities": ["Sievierodonetsk", "Lysychansk", "Luhansk", "Rubizhne", "Starobilsk", "Kreminna", "Svatove"] },
+    "lviv_oblast": { "region": "Lviv Oblast", "cities": ["Lviv", "Drohobych", "Chervonohrad", "Stryi", "Sambir", "Boryslav", "Truskavets", "Zolochiv", "Sokal", "Brody"] },
+    "mykolaiv_oblast": { "region": "Mykolaiv Oblast", "cities": ["Mykolaiv", "Pervomaisk", "Voznesensk", "Yuzhnoukrainsk", "Bashtanka", "Ochakiv", "Nova Odesa"] },
+    "odesa_oblast": { "region": "Odesa Oblast", "cities": ["Odesa", "Izmail", "Chornomorsk", "Bilhorod-Dnistrovskyi", "Podilsk", "Yuzhne", "Rozdilna", "Balta", "Kiliia"] },
+    "poltava_oblast": { "region": "Poltava Oblast", "cities": ["Poltava", "Kremenchuk", "Horishni Plavni", "Lubny", "Myrhorod", "Pyriatyn", "Hadiach", "Karlivka"] },
+    "rivne_oblast": { "region": "Rivne Oblast", "cities": ["Rivne", "Dubno", "Kostopil", "Varash", "Sarny", "Zdolbuniv", "Ostroh"] },
+    "sumy_oblast": { "region": "Sumy Oblast", "cities": ["Sumy", "Konotop", "Shostka", "Okhtyrka", "Romny", "Hlukhiv", "Lebedyn", "Trostianets"] },
+    "ternopil_oblast": { "region": "Ternopil Oblast", "cities": ["Ternopil", "Chortkiv", "Kremenets", "Berezhany", "Buchach", "Zalishchyky", "Borshchiv"] },
+    "kharkiv_oblast": { "region": "Kharkiv Oblast", "cities": ["Kharkiv", "Lozova", "Izium", "Chuhuiv", "Kupiansk", "Balakliia", "Pervomaiskyi", "Bohodukhiv"] },
+    "kherson_oblast": { "region": "Kherson Oblast", "cities": ["Kherson", "Nova Kakhovka", "Kakhovka", "Henichesk", "Skadovsk", "Hola Prystan", "Beryslav"] },
+    "khmelnytskyi_oblast": { "region": "Khmelnytskyi Oblast", "cities": ["Khmelnytskyi", "Kamianets-Podilskyi", "Shepetivka", "Netishyn", "Slavuta", "Starokostiantyniv", "Dunaivtsi"] },
+    "cherkasy_oblast": { "region": "Cherkasy Oblast", "cities": ["Cherkasy", "Uman", "Smila", "Zolotonosha", "Kaniv", "Vatutine", "Horodyshche"] },
+    "chernivtsi_oblast": { "region": "Chernivtsi Oblast", "cities": ["Chernivtsi", "Novodnistrovsk", "Khotyn", "Storozhynets", "Kitsman", "Vyzhnytsia"] },
+    "chernihiv_oblast": { "region": "Chernihiv Oblast", "cities": ["Chernihiv", "Nizhyn", "Pryluky", "Bakhmach", "Novhorod-Siverskyi", "Mena", "Koriukivka"] },
+    "kyiv_city": { "region": "Kyiv (city)", "cities": ["Kyiv"] },
+    "autonomous_republic_of_crimea": { "region": "Autonomous Republic of Crimea", "cities": ["Simferopol", "Kerch", "Yevpatoria", "Yalta", "Feodosia", "Dzhankoi", "Bakhchysarai"] },
+    "sevastopol_city": { "region": "Sevastopol (city)", "cities": ["Sevastopol"] }
+  }
+}

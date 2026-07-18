@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import i18n from './i18n';
 import { CATEGORY_META, DIFFICULTY_META, type Place } from './data/places';
 import { AVATARS } from './data/profileOptions';
 import { cellPolygon, cellCenter } from './exploration/h3';
@@ -568,7 +569,7 @@ function LeafletMap({
       options: { position: 'bottomright' },
       onAdd() {
         const el = L.DomUtil.create('button', 'leaflet-bar');
-        el.title = 'Моя геолокація';
+        el.title = i18n.t('explore.map.myLocationTitle');
         el.style.width = '34px';
         el.style.height = '34px';
         el.style.display = 'flex';
@@ -666,7 +667,7 @@ function LeafletMap({
         const activeState = isActive || isHovered;
 
         const color = DIFFICULTY_META[item.difficulty]?.color ?? '#3FA66B';
-        const diffLabel = DIFFICULTY_META[item.difficulty]?.label ?? '';
+        const diffLabel = i18n.t(`difficulty.${item.difficulty}`, { defaultValue: DIFFICULTY_META[item.difficulty]?.label ?? '' });
 
         let marker = existing.get(item.id);
         if (!marker) {
@@ -685,9 +686,16 @@ function LeafletMap({
         }
 
         const maxToShow = 4;
-        const placeNames = item.places.slice(0, maxToShow).map((p) => escapeHtml(p.name)).join(', ');
-        const suffix = item.places.length > maxToShow ? ` та ще ${item.places.length - maxToShow}...` : '';
-        marker.bindTooltip(`<strong>Складність: ${diffLabel} (${item.places.length} місць)</strong><br/><span style="font-size:11px;opacity:0.85">${placeNames}${suffix}</span>`, {
+        const placeNames = item.places
+          .slice(0, maxToShow)
+          .map((p) => escapeHtml(i18n.t(`places.${p.id}.name`, { defaultValue: p.name })))
+          .join(', ');
+        const suffix =
+          item.places.length > maxToShow
+            ? i18n.t('explore.tooltip.andMore', { count: item.places.length - maxToShow })
+            : '';
+        const clusterHeader = i18n.t('explore.tooltip.difficultyCluster', { difficulty: diffLabel, count: item.places.length });
+        marker.bindTooltip(`<strong>${clusterHeader}</strong><br/><span style="font-size:11px;opacity:0.85">${placeNames}${suffix}</span>`, {
           direction: 'top',
           offset: [0, -14],
         });
@@ -701,8 +709,9 @@ function LeafletMap({
           marker.on('click', () => stateRef.current.onSelect?.(place.id));
           marker.on('mouseover', () => stateRef.current.onHover?.(place.id));
           marker.on('mouseout', () => stateRef.current.onHover?.(null));
-          const diffLabel = DIFFICULTY_META[place.difficulty ?? 1]?.label ?? '';
-          marker.bindTooltip(`${escapeHtml(place.name)}${diffLabel ? ` · ${diffLabel}` : ''}`, {
+          const diffLabel = i18n.t(`difficulty.${place.difficulty ?? 1}`, { defaultValue: DIFFICULTY_META[place.difficulty ?? 1]?.label ?? '' });
+          const placeName = i18n.t(`places.${place.id}.name`, { defaultValue: place.name });
+          marker.bindTooltip(`${escapeHtml(placeName)}${diffLabel ? ` · ${diffLabel}` : ''}`, {
             direction: 'top',
             offset: [0, -8],
           });
@@ -954,10 +963,12 @@ function LeafletMap({
       }
 
       const creator = escapeHtml(label.user.name || label.user.username);
+      const visibility = label.friendsOnly ? i18n.t('explore.tooltip.friendsOnly') : i18n.t('explore.tooltip.public');
+      const addedBySuffix = i18n.t('explore.tooltip.addedBy', { name: creator });
       marker.unbindTooltip();
       marker.bindTooltip(
         `<strong>${escapeHtml(label.name)}</strong><br/>` +
-        `<span style="font-size:11px;opacity:0.85">${label.friendsOnly ? 'Тільки для друзів' : 'Публічна'} · Додав ${creator}</span>`,
+        `<span style="font-size:11px;opacity:0.85">${visibility}${addedBySuffix}</span>`,
         { direction: 'top', offset: [0, -10] }
       );
     });
@@ -1105,7 +1116,7 @@ function LeafletMap({
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
           transition: 'all 0.2s ease',
         }}
-        title="Показати/приховати сітку туману"
+        title={i18n.t('explore.map.gridToggleTitle')}
       >
         <Icon name="hexagon" size={18} strokeWidth={2} />
       </button>

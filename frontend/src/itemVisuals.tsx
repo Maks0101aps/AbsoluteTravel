@@ -1,16 +1,22 @@
 import React from 'react';
+import i18n from './i18n';
 import ProfileAvatar from './ProfileAvatar';
 import { Icon, type IconName } from './icons';
 import { AVATARS, BACKGROUNDS, BADGES, COLORS, EFFECTS, FRAMES } from './data/profileOptions';
 import type { EquipKey } from './ProfileShop';
 
-// Human-readable names for icon-only avatars.
-const AVATAR_NAMES: Partial<Record<IconName, string>> = {
-  compass: 'Компас', mountain: 'Вершина', pine: 'Хвоя', tent: 'Намет', map: 'Мапа',
-  signpost: 'Дороговказ', binoculars: 'Розвідник', flame: 'Вогонь', backpack: 'Рюкзак',
-  feather: 'Перо', shield: 'Щит', moon: 'Місяць', sun: 'Сонце', crown: 'Корона',
-  star: 'Зірка', trophy: 'Трофей', sparkle: 'Сяйво',
+// Keys into shop.avatarNames — human-readable names for icon-only avatars.
+const AVATAR_NAME_KEYS: Partial<Record<IconName, string>> = {
+  compass: 'compass', mountain: 'mountain', pine: 'pine', tent: 'tent', map: 'map',
+  signpost: 'signpost', binoculars: 'binoculars', flame: 'flame', backpack: 'backpack',
+  feather: 'feather', shield: 'shield', moon: 'moon', sun: 'sun', crown: 'crown',
+  star: 'star', trophy: 'trophy', sparkle: 'sparkle',
 };
+
+// itemVisual() is called from non-component code paths (CaseOpener reel/reveal
+// tiles), so it reads the current language directly off the shared i18n
+// instance rather than requiring a `t` prop threaded through every caller.
+const t = (key: string, opts?: any): string => i18n.t(key, opts) as string;
 
 export interface ItemVisual {
   label: string;
@@ -25,8 +31,8 @@ export function itemVisual(slot: EquipKey, id: string, size = 40): ItemVisual {
     case 'avatar': {
       const a = AVATARS.find((x) => x.id === id) ?? AVATARS[0];
       return {
-        label: AVATAR_NAMES[a.icon] ?? 'Аватар',
-        slotLabel: 'Аватар',
+        label: AVATAR_NAME_KEYS[a.icon] ? t(`shop.avatarNames.${AVATAR_NAME_KEYS[a.icon]}`) : t('shop.genericAvatar'),
+        slotLabel: t('shop.slotLabels.avatar'),
         node: a.imageUrl ? (
           <img src={a.imageUrl} alt={a.id} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
@@ -39,16 +45,16 @@ export function itemVisual(slot: EquipKey, id: string, size = 40): ItemVisual {
     case 'background': {
       const b = BACKGROUNDS.find((x) => x.id === id) ?? BACKGROUNDS[0];
       return {
-        label: b.label,
-        slotLabel: 'Фон профілю',
+        label: t(`shop.items.background.${b.id}.name`, { defaultValue: b.label }),
+        slotLabel: t('shop.slotLabels.background'),
         node: <div style={{ width: '100%', height: '100%', background: b.css }} />,
       };
     }
     case 'frame': {
       const f = FRAMES.find((x) => x.id === id) ?? FRAMES[0];
       return {
-        label: f.label,
-        slotLabel: 'Рамка',
+        label: t(`shop.items.frame.${f.id}.name`, { defaultValue: f.label }),
+        slotLabel: t('shop.slotLabels.frame'),
         node: (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: 'linear-gradient(135deg,#0B3B29,#071F16)' }}>
             <ProfileAvatar avatarId="a1" frameId={f.id} color="#3FA66B" size={Math.round(size * 1.35)} />
@@ -59,8 +65,8 @@ export function itemVisual(slot: EquipKey, id: string, size = 40): ItemVisual {
     case 'color': {
       const c = COLORS.find((x) => x.id === id) ?? COLORS[0];
       return {
-        label: 'Колір акценту',
-        slotLabel: 'Колір',
+        label: t('shop.slotLabels.accentColor'),
+        slotLabel: t('shop.slotLabels.color'),
         node: (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: 'linear-gradient(135deg,#0B3B29,#071F16)' }}>
             <span style={{ width: size + 6, height: size + 6, borderRadius: '50%', background: c.value, boxShadow: `0 0 22px ${c.value}88` }} />
@@ -71,8 +77,8 @@ export function itemVisual(slot: EquipKey, id: string, size = 40): ItemVisual {
     case 'badges': {
       const b = BADGES.find((x) => x.id === id) ?? BADGES[0];
       return {
-        label: b.label,
-        slotLabel: 'Значок',
+        label: t(`shop.items.badges.${b.id}.name`, { defaultValue: b.label }),
+        slotLabel: t('shop.slotLabels.badges'),
         node: (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: 'linear-gradient(135deg,#0B3B29,#071F16)' }}>
             <Icon name={b.icon} size={size} strokeWidth={1.7} stroke="rgba(244,241,232,0.92)" />
@@ -148,8 +154,8 @@ export function itemVisual(slot: EquipKey, id: string, size = 40): ItemVisual {
       }
 
       return {
-        label: ef?.label ?? 'Ефект',
-        slotLabel: 'Ефект',
+        label: ef ? t(`shop.items.effect.${ef.id}.name`, { defaultValue: ef.label }) : t('shop.slotLabels.effect'),
+        slotLabel: t('shop.slotLabels.effect'),
         node: (
           <div style={{ position: 'relative', width: '100%', height: '100%', background, overflow: 'hidden' }}>
             <ProfileCardEffect effectId={id} color={effectColor} />

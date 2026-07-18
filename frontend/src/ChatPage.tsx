@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   getChatHistory,
   getChatConversations,
@@ -39,15 +41,19 @@ interface QuickTopic {
   prompt: string;
 }
 
-const QUICK_TOPICS: QuickTopic[] = [
-  { key: 'packing', label: 'Що взяти з собою', icon: 'backpack', prompt: 'Допоможи скласти список речей у подорож.' },
-  { key: 'where', label: 'Куди поїхати', icon: 'compass', prompt: 'Порадь цікаві напрямки для подорожі Україною.' },
-  { key: 'route', label: 'Скласти маршрут', icon: 'map', prompt: 'Допоможи спланувати маршрут на кілька днів.' },
-  { key: 'food', label: 'Що скуштувати', icon: 'flame', prompt: 'Які локальні страви варто скуштувати і де?' },
-  { key: 'budget', label: 'Бюджет поїздки', icon: 'coin', prompt: 'Як розрахувати бюджет на подорож і заощадити?' },
-  { key: 'season', label: 'Коли їхати', icon: 'sun', prompt: 'Підкажи найкращий час для поїздки.' },
-  { key: 'safety', label: 'Безпека', icon: 'shield', prompt: 'Дай поради щодо безпечної подорожі.' },
-];
+// The label is shown in the UI (localized); the prompt is sent to the AI
+// advisor as-is, so it stays in Ukrainian regardless of UI language.
+function buildQuickTopics(t: TFunction): QuickTopic[] {
+  return [
+    { key: 'packing', label: t('social.chat.quickTopics.packing'), icon: 'backpack', prompt: t('social.chat.quickPrompts.packing') },
+    { key: 'where', label: t('social.chat.quickTopics.where'), icon: 'compass', prompt: t('social.chat.quickPrompts.where') },
+    { key: 'route', label: t('social.chat.quickTopics.route'), icon: 'map', prompt: t('social.chat.quickPrompts.route') },
+    { key: 'food', label: t('social.chat.quickTopics.food'), icon: 'flame', prompt: t('social.chat.quickPrompts.food') },
+    { key: 'budget', label: t('social.chat.quickTopics.budget'), icon: 'coin', prompt: t('social.chat.quickPrompts.budget') },
+    { key: 'season', label: t('social.chat.quickTopics.season'), icon: 'sun', prompt: t('social.chat.quickPrompts.season') },
+    { key: 'safety', label: t('social.chat.quickTopics.safety'), icon: 'shield', prompt: t('social.chat.quickPrompts.safety') },
+  ];
+}
 
 function FormattedText({ text }: { text: string }) {
   const lines = text.split('\n');
@@ -233,6 +239,8 @@ function VoiceMessagePlayer({ text, mine }: { text: string; mine: boolean }) {
 }
 
 function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hideSidebar = false, onOpenProfile }: ChatPageProps) {
+  const { t } = useTranslation();
+  const QUICK_TOPICS = useMemo(() => buildQuickTopics(t), [t]);
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [unread, setUnread] = useState<Record<string, number>>({});
   const [activeId, setActiveId] = useState<number | 'advisor' | null>(initialFriendId);
@@ -569,7 +577,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
       }, 1000);
     } catch (err) {
       console.error('Failed to start recording:', err);
-      setError('Не вдалося отримати доступ до мікрофона');
+      setError(t('social.chat.micAccessDenied'));
       setIsRecording(false);
       setIsHolding(false);
       isHoldingRef.current = false;
@@ -604,7 +612,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
       const socket = currentSocket();
       if (socket?.connected) {
         const ack = await socket.timeout(5000).emitWithAck('chat:send', { toUserId: activeId, text });
-        if (!ack?.ok) throw new Error(ack?.error ?? 'Не вдалося надіслати');
+        if (!ack?.ok) throw new Error(ack?.error ?? t('social.chat.cannotSend'));
         setMessages((prev) =>
           mergeMessages(prev, [
             { id: ack.id, senderId: userId, receiverId: activeId, text, createdAt: ack.createdAt, readAt: null },
@@ -615,7 +623,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
         setMessages((prev) => mergeMessages(prev, [msg]));
       }
     } catch (e: any) {
-      setError(e.message ?? 'Не вдалося надіслати голосове повідомлення');
+      setError(e.message ?? t('social.chat.cannotSendVoice'));
     } finally {
       setSending(false);
     }
@@ -644,7 +652,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
       });
       setAdvisorMessages((cur) => [...cur, { role: 'model', text: reply }]);
     } catch (e: any) {
-      setError(e?.message ?? 'Не вдалося отримати відповідь від ШІ-порадника');
+      setError(e?.message ?? t('social.chat.advisorError'));
     } finally {
       setAdvisorLoading(false);
     }
@@ -659,7 +667,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
       const socket = currentSocket();
       if (socket?.connected) {
         const ack = await socket.timeout(5000).emitWithAck('chat:send', { toUserId: activeId, text });
-        if (!ack?.ok) throw new Error(ack?.error ?? 'Не вдалося надіслати');
+        if (!ack?.ok) throw new Error(ack?.error ?? t('social.chat.cannotSend'));
         setMessages((prev) =>
           mergeMessages(prev, [
             { id: ack.id, senderId: userId, receiverId: activeId, text, createdAt: ack.createdAt, readAt: null },
@@ -672,7 +680,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
       }
       setInput('');
     } catch (e: any) {
-      setError(e.message ?? 'Не вдалося надіслати повідомлення');
+      setError(e.message ?? t('social.chat.cannotSendMessage'));
     } finally {
       setSending(false);
     }
@@ -685,7 +693,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
     isNarrow && !hideSidebar ? (
       <button
         onClick={() => setActiveId(null)}
-        aria-label="Назад до списку чатів"
+        aria-label={t('social.chat.backToList')}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -719,10 +727,10 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
         {showSidebar && (
           <div style={{ flex: isNarrow ? '1 1 auto' : '0 0 280px', minWidth: isNarrow ? 0 : '220px', minHeight: 0, background: PANEL, borderRight: isNarrow ? 'none' : '1px solid rgba(255,255,255,0.09)', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
             
-            {/* Section: ШІ-Порадник */}
+            {/* Section: AI advisor */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
               <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(244,241,232,0.45)' }}>
-                ШІ-ПОРАДНИК
+                {t('social.chat.aiAdvisor')}
               </span>
             </div>
             <div style={{ padding: '10px 10px 4px', flexShrink: 0 }}>
@@ -758,9 +766,9 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                   <Icon name="compass" size={20} stroke={accent} strokeWidth={1.8} />
                 </div>
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: '13.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Порадник Absolute Travel</span>
+                  <span style={{ display: 'block', fontSize: '13.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('social.chat.advisorName')}</span>
                   <span style={{ display: 'block', fontSize: '11px', color: advisorAvailable ? accent : 'rgba(244,241,232,0.4)' }}>
-                    {advisorAvailable ? 'активний' : 'недоступний'}
+                    {advisorAvailable ? t('social.chat.advisorActive') : t('social.chat.advisorUnavailable')}
                   </span>
                 </span>
               </button>
@@ -768,18 +776,18 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 10px', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
               <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(244,241,232,0.45)' }}>
-                ЧАТИ {totalUnread > 0 && <span style={{ color: accent }}>· {totalUnread} нових</span>}
+                {t('social.chat.chats')} {totalUnread > 0 && <span style={{ color: accent }}>· {t('social.chat.newMessages', { count: totalUnread })}</span>}
               </span>
               {!wsConnected && (
-                <span title="офлайн-режим · оновлення кожні 5 с" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#E0A54E', background: 'rgba(224,165,78,0.15)', border: '1px solid rgba(224,165,78,0.4)', borderRadius: '999px', padding: '2px 8px' }}>
-                  офлайн
+                <span title={t('social.chat.offlineMode')} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#E0A54E', background: 'rgba(224,165,78,0.15)', border: '1px solid rgba(224,165,78,0.4)', borderRadius: '999px', padding: '2px 8px' }}>
+                  {t('social.chat.offline')}
                 </span>
               )}
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
               {friends.length === 0 && (
                 <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.5)', padding: '8px' }}>
-                  Немає активних чатів. Знайди мандрівників у вкладці «Друзі» чи «Рейтинг» та напиши їм!
+                  {t('social.chat.noActiveChats')}
                 </div>
               )}
               {friends.map((f) => {
@@ -809,7 +817,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                     <span style={{ flex: 1, minWidth: 0 }}>
                       <span style={{ display: 'block', fontSize: '13.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
                       <span style={{ display: 'block', fontSize: '11px', color: f.online ? accent : 'rgba(244,241,232,0.4)' }}>
-                        {f.online ? 'онлайн' : 'офлайн'}
+                        {f.online ? t('social.chat.online') : t('social.chat.offline')}
                       </span>
                     </span>
                     {n > 0 && (
@@ -829,7 +837,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
         <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column', background: '#081E15' }}>
           {activeId === null ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(244,241,232,0.45)', fontSize: '14px', padding: '20px', textAlign: 'center' }}>
-              Обери друга ліворуч або ШІ-порадника, щоб почати розмову 💬
+              {t('social.chat.pickFriendOrAdvisor')}
             </div>
           ) : (
             <>
@@ -851,9 +859,9 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                     <Icon name="compass" size={20} stroke={accent} strokeWidth={1.8} />
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '14.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Порадник Absolute Travel</div>
+                    <div style={{ fontSize: '14.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('social.chat.advisorName')}</div>
                     <div style={{ fontSize: '11.5px', color: advisorAvailable ? accent : 'rgba(244,241,232,0.45)' }}>
-                      {advisorAvailable ? 'активний' : 'недоступний'} · ШІ-порадник
+                      {advisorAvailable ? t('social.chat.advisorActive') : t('social.chat.advisorUnavailable')} · {t('social.chat.aiAdvisor')}
                     </div>
                   </div>
                 </div>
@@ -865,7 +873,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                     // the sidebar rows are already spoken for (they switch threads).
                     <button
                       onClick={() => onOpenProfile?.(activeFriend.id)}
-                      title={`Профіль ${activeFriend.name}`}
+                      title={t('social.chat.profileOf', { name: activeFriend.name })}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -884,7 +892,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: '14.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeFriend.name}</div>
                         <div style={{ fontSize: '11.5px', color: activeFriend.online ? accent : 'rgba(244,241,232,0.45)' }}>
-                          {activeFriend.online ? 'онлайн' : 'був(ла) нещодавно'} · Рівень {activeFriend.level}
+                          {activeFriend.online ? t('social.chat.online') : t('social.chat.wasOnlineRecently')} · {t('social.leaderboard.level', { level: activeFriend.level })}
                         </div>
                       </div>
                     </button>
@@ -910,7 +918,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                         <Icon name="compass" size={26} stroke={accent} strokeWidth={1.7} />
                       </div>
                       <div style={{ fontSize: '14px', maxWidth: '320px', lineHeight: 1.6 }}>
-                        Привіт! Я — твій ШІ-порадник з подорожей Україною. Обери тему нижче або напиши своє запитання.
+                        {t('social.chat.advisorGreeting')}
                       </div>
                     </div>
                   ) : (
@@ -947,7 +955,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                             color: 'rgba(244,241,232,0.6)',
                             fontSize: '13px',
                           }}>
-                            <span className="at-typing">Порадник друкує…</span>
+                            <span className="at-typing">{t('social.chat.advisorTyping')}</span>
                           </div>
                         </div>
                       )}
@@ -960,7 +968,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                         onClick={loadOlder}
                         style={{ alignSelf: 'center', background: 'rgba(255,255,255,0.07)', color: 'rgba(244,241,232,0.7)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '999px', padding: '6px 16px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', marginBottom: '6px' }}
                       >
-                        Показати старіші
+                        {t('social.chat.showOlder')}
                       </button>
                     )}
                     {messages.map((m) => {
@@ -989,7 +997,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                               {formatTime(m.createdAt)}
                               {mine && (
                                 // Read receipt: grey ✓ = delivered, blue ✓✓ = read.
-                                <span title={m.readAt ? 'Прочитано' : 'Надіслано'} style={{ color: m.readAt ? READ_BLUE : 'rgba(7,31,22,0.55)', fontWeight: 800, letterSpacing: '-2px' }}>
+                                <span title={m.readAt ? t('social.chat.read') : t('social.chat.sent')} style={{ color: m.readAt ? READ_BLUE : 'rgba(7,31,22,0.55)', fontWeight: 800, letterSpacing: '-2px' }}>
                                   {m.readAt ? '✓✓' : '✓'}
                                 </span>
                               )}
@@ -1145,10 +1153,10 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                         animation: 'recPulse 1.5s infinite',
                       }} />
                       <span style={{ color: CREAM, fontSize: '13.5px', fontFamily: "'Manrope', sans-serif" }}>
-                        Запис голосу… {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+                        {t('social.chat.recording', { time: `${Math.floor(recordingTime / 60)}:${(recordingTime % 60).toString().padStart(2, '0')}` })}
                         {isHolding && (
                           <span style={{ opacity: 0.7, fontSize: '12px', marginLeft: '6px' }}>
-                            (відпустіть для надсилання, проведіть вліво для скасування)
+                            {t('social.chat.recordingHint')}
                           </span>
                         )}
                       </span>
@@ -1168,7 +1176,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                         fontFamily: "'Manrope', sans-serif",
                       }}
                     >
-                      Скасувати
+                      {t('social.chat.cancel')}
                     </button>
                     <button
                       onClick={() => stopRecording(true)}
@@ -1184,7 +1192,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                         fontFamily: "'Manrope', sans-serif",
                       }}
                     >
-                      Надіслати
+                      {t('social.chat.send')}
                     </button>
                   </>
                 ) : (
@@ -1202,7 +1210,13 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                           }
                         }
                       }}
-                      placeholder={activeId === 'advisor' ? 'Запитайте ШІ-порадника…' : activeFriend ? `Повідомлення для ${activeFriend.name}…` : 'Повідомлення…'}
+                      placeholder={
+                        activeId === 'advisor'
+                          ? t('social.chat.messagePlaceholderAdvisor')
+                          : activeFriend
+                          ? t('social.chat.messagePlaceholderFriend', { name: activeFriend.name })
+                          : t('social.chat.messagePlaceholderDefault')
+                      }
                       disabled={activeId === 'advisor' ? (advisorAvailable === false || advisorLoading) : false}
                       style={{
                         flex: 1,
@@ -1262,7 +1276,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
                         fontFamily: "'Manrope', sans-serif",
                       }}
                     >
-                      {activeId === 'advisor' ? (advisorLoading ? '…' : 'Надіслати') : (sending ? '…' : 'Надіслати')}
+                      {activeId === 'advisor' ? (advisorLoading ? '…' : t('social.chat.send')) : (sending ? '…' : t('social.chat.send'))}
                     </button>
                   </>
                 )}

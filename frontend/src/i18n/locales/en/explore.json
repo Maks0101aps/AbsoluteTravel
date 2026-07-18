@@ -1,0 +1,137 @@
+{
+  "explore": {
+    "heading": "Where to go in Ukraine",
+    "subheading": "Hover or tap a point on the map to see what's worth visiting. Know a great spot? Add it!",
+    "addPlace": "Add a place",
+    "selectModal": {
+      "title": "What would you like to add?",
+      "close": "Close",
+      "publicPlace": {
+        "title": "Public place",
+        "desc": "An interesting location for all travelers across Ukraine (AI-moderated)."
+      },
+      "friendLabel": {
+        "title": "Friend label",
+        "desc": "A local label with your own parameters, for you and your friends.",
+        "loginRequired": "Log in to create labels"
+      }
+    },
+    "detail": {
+      "selectPrompt": "Pick a point on the map to see the details.",
+      "addedBy": "Added by: {{name}}",
+      "verifyVisit": "Verify visit",
+      "navigate": "Navigate",
+      "opened": "Opened"
+    },
+    "nearby": {
+      "heading": "Nearby places"
+    },
+    "distance": {
+      "meters": "{{value}} m",
+      "km": "{{value}} km"
+    },
+    "live": {
+      "youHere": "{{name}} (You are here)",
+      "youFallback": "You",
+      "staleSuffix": " · not updated in a while",
+      "staleLong": "Not updated in a while",
+      "geoOn": "Location sharing is on — friends can see you",
+      "geoOff": "Location sharing is off",
+      "friendsCount_one": "Friends on the map: {{count}} · Cells unlocked: {{cells}}",
+      "friendsCount_other": "Friends on the map: {{count}} · Cells unlocked: {{cells}}",
+      "level": "Level {{level}} · {{xp}} XP",
+      "updatedAt": "Updated at {{time}}",
+      "message": "Message",
+      "close": "Close",
+      "profileOf": "{{name}}'s profile"
+    },
+    "xp": {
+      "newRegion": " · New region!",
+      "newCell": " · New cell"
+    },
+    "hud": {
+      "cells": "Cells",
+      "regions": "Regions"
+    },
+    "label": {
+      "friendsOnly": "Friends only",
+      "public": "Public",
+      "temporary": "Temporary · {{time}}",
+      "permanent": "Permanent label",
+      "timeLeft": "{{hours}}h {{mins}}m left",
+      "expired": "Expired",
+      "addedBy": "Added by: {{name}}",
+      "coordinates": "Coordinates: {{lat}}, {{lng}}",
+      "delete": "Delete",
+      "report": "Report",
+      "reportReasonLabel": "Report reason:",
+      "reportPlaceholder": "Explain why this label is inappropriate...",
+      "submitReport": "Submit report",
+      "aiChecking": "AI reviewing...",
+      "cancel": "Cancel",
+      "reportDeletedTitle": "Label removed by AI moderator",
+      "reportRejectedTitle": "Report dismissed by AI moderator",
+      "gotIt": "Got it",
+      "loginToReport": "Please log in",
+      "reportError": "Report failed"
+    },
+    "tooltip": {
+      "difficultyCluster": "Difficulty: {{difficulty}} ({{count}} places)",
+      "andMore": " and {{count}} more...",
+      "friendsOnly": "Friends only",
+      "public": "Public",
+      "addedBy": " · Added by {{name}}"
+    },
+    "map": {
+      "myLocationTitle": "My location",
+      "gridToggleTitle": "Show/hide fog grid"
+    },
+    "locationPicker": {
+      "picked": "Picked: {{lat}}, {{lng}} — drag the pin to fine-tune",
+      "tapToPick": "Tap the map to mark a spot"
+    },
+    "navigator": {
+      "label": "NAVIGATOR · drag to move",
+      "close": "Close",
+      "start": "START",
+      "change": "Change",
+      "pickStartButton": "Pick a start point on the map",
+      "picking": "Click on the map…",
+      "waypoints": "STOPS ALONG THE WAY",
+      "addWaypoint": "Add a stop along the way",
+      "waypointDone": "Click the map to add · Done",
+      "removeWaypoint": "Remove stop",
+      "driving": "Driving",
+      "walking": "Walking",
+      "buildRoute": "Build route",
+      "rebuildRoute": "Rebuild route",
+      "building": "Building route…",
+      "footNotice": "Vehicles not allowed beyond this point — {{meters}} m on foot (~{{duration}}), shown dashed",
+      "startRequired": "Pick a start point on the map first",
+      "buildFailed": "Could not build a route"
+    },
+    "walkIntro": {
+      "badge": "Welcome to Absolute Travel",
+      "titleLine1": "Top 3 places for",
+      "titleLine2": "a walk",
+      "leadCity": "We've picked three great spots right in your city — perfect time for a walk.",
+      "leadRegion": "Your city is a bit quiet for now, so here are three great routes from your region.",
+      "leadNearby": "Not many places nearby, so we added the closest interesting spots from neighboring towns.",
+      "leadCountry": "Here are three of our favorite places for a walk to start your journey across Ukraine.",
+      "openOnMap": "Open \"{{name}}\" on the map",
+      "cta": "Let's explore the map",
+      "close": "Close"
+    },
+    "duration": {
+      "minutes": "{{count}} min",
+      "hoursOnly": "{{count}}h",
+      "hoursMinutes": "{{hours}}h {{mins}}m"
+    },
+    "routing": {
+      "needTwoPoints": "At least two points are required for a route",
+      "connectFailed": "Could not connect to the routing service",
+      "buildFailed": "Could not build a route",
+      "noRoute": "No route found between these points"
+    }
+  }
+}

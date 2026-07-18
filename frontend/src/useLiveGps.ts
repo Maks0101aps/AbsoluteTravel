@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { getFriends, setLocationVisibility, type FriendEntry, type LiveLocation } from './api';
 import { getSocket } from './socket';
+import i18n from './i18n';
 
 const PUBLISH_INTERVAL_MS = 15_000;
 const STALE_AFTER_MS = 5 * 60 * 1000;
@@ -88,7 +89,7 @@ export function useLiveGps(userId: number | undefined, enabled = true): LiveGpsS
   useEffect(() => {
     if (!userId || !enabled) return;
     if (!('geolocation' in navigator)) {
-      setGeoError('Геолокація недоступна у цьому браузері');
+      setGeoError(i18n.t('common.geo.unsupported'));
       return;
     }
 
@@ -112,7 +113,7 @@ export function useLiveGps(userId: number | undefined, enabled = true): LiveGpsS
         });
       },
       (err) => {
-        if (!stopped) setGeoError(err.code === err.PERMISSION_DENIED ? 'Доступ до геолокації заборонено' : 'Не вдалося визначити позицію');
+        if (!stopped) setGeoError(err.code === err.PERMISSION_DENIED ? i18n.t('common.geo.denied') : i18n.t('common.geo.failed'));
       },
       { enableHighAccuracy: true, timeout: 10_000, maximumAge: GEO_MAX_AGE_MS },
     );

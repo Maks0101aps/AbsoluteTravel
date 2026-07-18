@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import './App.css';
 import { UA_PATH, UA_CONTOURS, UA_CITIES } from './data/ukraineMap';
 
@@ -157,6 +158,7 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
 ];
 
 function App({ onStart }: { onStart?: () => void } = {}) {
+  const { t } = useTranslation();
   const [currentUser, setCurrentUser] = useState<User>(DEFAULT_USER);
   const [friends, setFriends] = useState<User[]>(DEFAULT_FRIENDS);
   const [, setDestinations] = useState<Destination[]>(DEFAULT_DESTINATIONS);
@@ -167,11 +169,11 @@ function App({ onStart }: { onStart?: () => void } = {}) {
   const [, setLoading] = useState(true);
 
   const navLinks = [
-    { href: '#features', label: 'Як це працює' },
-    { href: '#features', label: 'Можливості' },
-    { href: '#map', label: 'Карта' },
-    { href: '#progress', label: 'Досягнення' },
-    { href: '#cta', label: 'Контакти' },
+    { href: '#features', label: t('core.landing.navHowItWorks') },
+    { href: '#features', label: t('core.landing.navFeatures') },
+    { href: '#map', label: t('core.landing.navMap') },
+    { href: '#progress', label: t('core.landing.navAchievements') },
+    { href: '#cta', label: t('core.landing.navContact') },
   ];
 
   useEffect(() => {
@@ -221,11 +223,11 @@ function App({ onStart }: { onStart?: () => void } = {}) {
           ))}
         </div>
         <button className="at-nav-cta" onClick={onStart} style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#9BD8B4', fontFamily: "'Manrope', sans-serif", fontSize: '13.5px', fontWeight: 700, padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', cursor: 'pointer', transition: 'all 0.2s' }}>
-          Почати дослідження
+          {t('core.landing.startExploring')}
         </button>
 
         {/* mobile hamburger */}
-        <button className="at-burger" aria-label="Меню" aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}>
+        <button className="at-burger" aria-label={t('core.landing.menuAria')} aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}>
           {menuOpen ? (
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12" /><path d="M18 6l-12 12" /></svg>
           ) : (
@@ -242,7 +244,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
               </a>
             ))}
             <button onClick={() => { setMenuOpen(false); onStart?.(); }} style={{ marginTop: '8px', width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#3FA66B', color: '#071F16', fontFamily: "'Manrope', sans-serif", fontSize: '15px', fontWeight: 700, padding: '15px 22px', borderRadius: '12px', border: 'none', cursor: 'pointer' }}>
-              Почати дослідження
+              {t('core.landing.startExploring')}
             </button>
           </div>
         )}
@@ -258,18 +260,18 @@ function App({ onStart }: { onStart?: () => void } = {}) {
           {/* left copy */}
           <div className="at-hero-copy" style={{ flex: '1 1 420px', minWidth: '320px', animation: 'fadeUp 0.7s ease both' }}>
             <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(38px, 4.6vw, 58px)', lineHeight: 1.14, margin: '0 0 26px', color: '#F4F1E8' }}>
-              Відкрий Україну.<br />Разом із друзями.
+              <Trans i18nKey="core.landing.heroTitle" components={{ 1: <br /> }} />
             </h1>
             <p style={{ fontSize: '15.5px', lineHeight: 1.7, color: 'rgba(244,241,232,0.68)', maxWidth: '440px', margin: '0 0 34px' }}>
-              Absolute Travel — соціальна платформа для дослідження України. Знаходь цікаві місця, проходь маршрути, виконуй завдання та створюй свою карту відкриттів разом із друзями.
+              {t('core.landing.heroBody')}
             </p>
             <div className="at-hero-btns" style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '44px' }}>
               <button onClick={onStart} style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#3FA66B', color: '#071F16', fontFamily: "'Manrope', sans-serif", fontSize: '14px', fontWeight: 700, padding: '15px 26px', borderRadius: '12px', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>
-                Почати дослідження
+                {t('core.landing.startExploring')}
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
               </button>
               <a href="#features" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'transparent', color: '#F4F1E8', fontSize: '14px', fontWeight: 600, padding: '15px 26px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.18)', transition: 'border-color 0.2s' }}>
-                Як це працює
+                {t('core.landing.howItWorks')}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"></path></svg>
               </a>
             </div>
@@ -282,16 +284,16 @@ function App({ onStart }: { onStart?: () => void } = {}) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '22px', padding: '13px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(244,241,232,0.8)" strokeWidth="2" strokeLinecap="round"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path></svg>
                 <div style={{ display: 'flex', gap: '20px', fontSize: '11px', fontWeight: 600, flex: 1 }}>
-                  <span style={{ color: '#3FA66B', borderBottom: '2px solid #3FA66B', paddingBottom: '4px' }}>Карта</span>
-                  <span style={{ color: 'rgba(244,241,232,0.55)' }}>Маршрути</span>
-                  <span style={{ color: 'rgba(244,241,232,0.55)' }}>Друзі</span>
-                  <span style={{ color: 'rgba(244,241,232,0.55)' }}>Досягнення</span>
+                  <span style={{ color: '#3FA66B', borderBottom: '2px solid #3FA66B', paddingBottom: '4px' }}>{t('core.landing.previewMapTab')}</span>
+                  <span style={{ color: 'rgba(244,241,232,0.55)' }}>{t('core.landing.previewRoutesTab')}</span>
+                  <span style={{ color: 'rgba(244,241,232,0.55)' }}>{t('core.landing.previewFriendsTab')}</span>
+                  <span style={{ color: 'rgba(244,241,232,0.55)' }}>{t('core.landing.previewAchievementsTab')}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <img src={currentUser.avatar} alt={currentUser.name} style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.2)' }} />
                   <div style={{ fontSize: '9.5px', lineHeight: 1.3 }}>
                     <div style={{ fontWeight: 700 }}>{currentUser.name}</div>
-                    <div style={{ color: 'rgba(244,241,232,0.5)' }}>Рівень {currentUser.level}</div>
+                    <div style={{ color: 'rgba(244,241,232,0.5)' }}>{t('core.nav.level', { level: currentUser.level })}</div>
                   </div>
                 </div>
               </div>
@@ -346,14 +348,14 @@ function App({ onStart }: { onStart?: () => void } = {}) {
               {showToast && (
                 <div className="at-toast" style={{ position: 'absolute', top: '54px', right: '-18px', width: '190px', background: 'rgba(11,43,32,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', padding: '12px 14px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', animation: 'fadeIn 0.8s 0.5s both', transform: 'translateZ(25px)', transformStyle: 'preserve-3d' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                    <img src="/assets/carpathians_thumb.avif" alt="Карпати" style={{ width: '30px', height: '30px', borderRadius: '8px', objectFit: 'cover', flex: '0 0 auto', border: '1px solid rgba(255,255,255,0.1)' }} />
+                    <img src="/assets/carpathians_thumb.avif" alt={t('core.landing.previewPlaceNameCarpathians')} style={{ width: '30px', height: '30px', borderRadius: '8px', objectFit: 'cover', flex: '0 0 auto', border: '1px solid rgba(255,255,255,0.1)' }} />
                     <div style={{ fontSize: '10.5px', lineHeight: 1.4 }}>
-                      <div style={{ color: 'rgba(244,241,232,0.55)' }}>Нове досягнення!</div>
-                      <div style={{ fontWeight: 700 }}>Карпатський дослідник</div>
+                      <div style={{ color: 'rgba(244,241,232,0.55)' }}>{t('core.landing.newAchievement')}</div>
+                      <div style={{ fontWeight: 700 }}>{t('core.landing.previewAchievementTitle')}</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                    <button onClick={() => setShowToast(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '9px', padding: 0 }}>Закрити</button>
+                    <button onClick={() => setShowToast(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '9px', padding: 0 }}>{t('core.landing.closeToast')}</button>
                     <div style={{ color: '#3FA66B', fontSize: '11px', fontWeight: 700 }}>+250 XP</div>
                   </div>
                 </div>
@@ -362,14 +364,14 @@ function App({ onStart }: { onStart?: () => void } = {}) {
               {/* floating place card */}
               <div className="at-placecard" style={{ position: 'absolute', bottom: '-26px', right: '-22px', width: '200px', background: 'rgba(11,43,32,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '14px', padding: '13px', boxShadow: '0 24px 50px rgba(0,0,0,0.55)', animation: 'fadeIn 0.8s 0.8s both', transform: 'translateZ(32px)', transformStyle: 'preserve-3d' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '3px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 800 }}>Львів</div>
+                  <div style={{ fontSize: '13px', fontWeight: 800 }}>{t('core.landing.previewPlaceName')}</div>
                 </div>
-                <div style={{ fontSize: '10px', color: 'rgba(244,241,232,0.55)', marginBottom: '9px' }}>Історичний центр</div>
-                <img src="/assets/lviv_thumb.avif" alt="Львів" style={{ width: '100%', height: '78px', borderRadius: '9px', marginBottom: '10px', objectFit: 'cover', display: 'block', border: '1px solid rgba(255,255,255,0.08)' }} />
+                <div style={{ fontSize: '10px', color: 'rgba(244,241,232,0.55)', marginBottom: '9px' }}>{t('core.landing.previewPlaceCategory')}</div>
+                <img src="/assets/lviv_thumb.avif" alt={t('core.landing.previewPlaceName')} style={{ width: '100%', height: '78px', borderRadius: '9px', marginBottom: '10px', objectFit: 'cover', display: 'block', border: '1px solid rgba(255,255,255,0.08)' }} />
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(63,166,107,0.16)', color: '#3FA66B', fontSize: '9.5px', fontWeight: 700, padding: '4px 8px', borderRadius: '6px' }}>
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12l5 5 11-11"></path></svg>
-                    Підтверджено
+                    {t('core.landing.verified')}
                   </div>
                   <div style={{ color: '#3FA66B', fontSize: '11px', fontWeight: 700 }}>+100 XP</div>
                 </div>
@@ -381,7 +383,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
 
       {/* ============ FEATURES ============ */}
       <section id="features" className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '40px 40px 30px' }}>
-        <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(28px, 3.2vw, 40px)', margin: '0 0 40px', color: '#F4F1E8' }}>Україна, яку ти ще не бачив</h2>
+        <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(28px, 3.2vw, 40px)', margin: '0 0 40px', color: '#F4F1E8' }}>{t('core.landing.featuresTitle')}</h2>
 
         {/* min() keeps the track from forcing a 300px column — and a sideways
             scroll — once the viewport itself is narrower than that */}
@@ -393,14 +395,14 @@ function App({ onStart }: { onStart?: () => void } = {}) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', color: '#3FA66B', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>01</div>
                 </div>
-                <div style={{ fontFamily: "'Lora', serif", fontSize: '21px', fontWeight: 500 }}>Знаходь цікаві місця</div>
+                <div style={{ fontFamily: "'Lora', serif", fontSize: '21px', fontWeight: 500 }}>{t('core.landing.feature1Title')}</div>
               </div>
               <div style={{ width: '92px', height: '88px', flex: '0 0 auto', borderRadius: '10px', background: 'linear-gradient(180deg, #123326, #0B2B20)', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <div style={{ position: 'absolute', left: '-10%', right: '-10%', bottom: 0, height: '60%', background: '#1A4030', clipPath: 'polygon(0 100%, 30% 20%, 55% 70%, 78% 10%, 100% 100%)' }}></div>
               </div>
             </div>
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px', fontSize: '13.5px', lineHeight: 1.65, color: 'rgba(244,241,232,0.62)' }}>
-              Знаходь тисячі дивовижних місць України — від замків та каньйонів до затишних куточків у Карпатах.
+              {t('core.landing.feature1Body')}
             </div>
           </div>
 
@@ -411,7 +413,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', color: '#3FA66B', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>02</div>
                 </div>
-                <div style={{ fontFamily: "'Lora', serif", fontSize: '21px', fontWeight: 500 }}>Підтверджуй свої відкриття</div>
+                <div style={{ fontFamily: "'Lora', serif", fontSize: '21px', fontWeight: 500 }}>{t('core.landing.feature2Title')}</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px', flex: '0 0 auto' }}>
                 <div style={{ width: '100px', height: '68px', position: 'relative' }}>
@@ -422,12 +424,12 @@ function App({ onStart }: { onStart?: () => void } = {}) {
                 </div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(63,166,107,0.16)', color: '#3FA66B', fontSize: '9.5px', fontWeight: 700, padding: '4px 8px', borderRadius: '6px', whiteSpace: 'nowrap', border: '1px solid rgba(63,166,107,0.25)' }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12l5 5 11-11"></path></svg>
-                  AI перевірка <span style={{ opacity: 0.65, margin: '0 2px' }}>•</span> +150 XP
+                  {t('core.landing.feature2AiCheck')} <span style={{ opacity: 0.65, margin: '0 2px' }}>•</span> +150 XP
                 </div>
               </div>
             </div>
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px', fontSize: '13.5px', lineHeight: 1.65, color: 'rgba(244,241,232,0.62)' }}>
-              Завантажуй фото, проходь перевірку штучним інтелектом та отримуй досвід за кожне відкриття.
+              {t('core.landing.feature2Body')}
             </div>
           </div>
 
@@ -438,7 +440,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', color: '#3FA66B', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>03</div>
                 </div>
-                <div style={{ fontFamily: "'Lora', serif", fontSize: '21px', fontWeight: 500 }}>Досліджуй разом</div>
+                <div style={{ fontFamily: "'Lora', serif", fontSize: '21px', fontWeight: 500 }}>{t('core.landing.feature3Title')}</div>
               </div>
               <div style={{ width: '92px', height: '88px', flex: '0 0 auto', position: 'relative' }}>
                 <svg viewBox="0 0 92 88" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}><path d="M24 26 L64 22 L70 62 L30 66 Z" fill="none" stroke="rgba(63,166,107,0.5)" strokeWidth="1.2" strokeDasharray="3 4"></path></svg>
@@ -449,7 +451,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
               </div>
             </div>
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px', fontSize: '13.5px', lineHeight: 1.65, color: 'rgba(244,241,232,0.62)' }}>
-              Створюй маршрути, запрошуй друзів, ділись відкриттями та досліджуйте Україну разом.
+              {t('core.landing.feature3Body')}
             </div>
           </div>
         </div>
@@ -461,13 +463,13 @@ function App({ onStart }: { onStart?: () => void } = {}) {
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 55% 65% at 60% 45%, rgba(63,166,107,0.08), transparent 70%)' }}></div>
           {/* text col */}
           <div style={{ position: 'relative', flex: '0 1 280px', minWidth: '240px', display: 'flex', flexDirection: 'column' }}>
-            <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(26px, 2.8vw, 36px)', lineHeight: 1.2, margin: '0 0 20px' }}>Твоя карта відкриттів</h2>
-            <p style={{ fontSize: '14px', lineHeight: 1.7, color: 'rgba(244,241,232,0.62)', margin: '0 0 auto' }}>Кожне місце залишає слід. Заповнюй карту України своїми пригодами.</p>
-            
+            <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(26px, 2.8vw, 36px)', lineHeight: 1.2, margin: '0 0 20px' }}>{t('core.landing.mapSectionTitle')}</h2>
+            <p style={{ fontSize: '14px', lineHeight: 1.7, color: 'rgba(244,241,232,0.62)', margin: '0 0 auto' }}>{t('core.landing.mapSectionBody')}</p>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12.5px', color: 'rgba(244,241,232,0.72)', paddingTop: '32px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#3FA66B' }}></span>Відвідані регіони</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#9BD8B4' }}></span>Відкриті місця</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#D9B44A' }}></span>Друзі</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#3FA66B' }}></span>{t('core.landing.legendVisitedRegions')}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#9BD8B4' }}></span>{t('core.landing.legendOpenedPlaces')}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#D9B44A' }}></span>{t('core.landing.legendFriends')}</div>
             </div>
           </div>
 
@@ -501,7 +503,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
               <MapDot x={UA_CITIES.mykolaiv.x} y={UA_CITIES.mykolaiv.y} r={6} pulse delay="1.2s" />
 
               {/* active user + friends avatar markers on map */}
-              <MapAvatar clipId="avBigUser" src={currentUser.avatar} title={`${currentUser.name} (Ви)`} x={UA_CITIES.kyiv.x} y={UA_CITIES.kyiv.y} r={22} />
+              <MapAvatar clipId="avBigUser" src={currentUser.avatar} title={`${currentUser.name} ${t('core.landing.mapUserSuffix')}`} x={UA_CITIES.kyiv.x} y={UA_CITIES.kyiv.y} r={22} />
               {friends.map((friend, idx) => {
                 const positions = [UA_CITIES.lviv, UA_CITIES.kharkiv, UA_CITIES.odesa];
                 const pos = positions[idx] || UA_CITIES.dnipro;
@@ -527,13 +529,13 @@ function App({ onStart }: { onStart?: () => void } = {}) {
         <div className="at-panel" style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '36px 40px', display: 'flex', flexWrap: 'wrap', gap: '36px', alignItems: 'center' }}>
           {/* text */}
           <div style={{ flex: '1 1 260px', minWidth: '240px' }}>
-            <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 2.4vw, 32px)', lineHeight: 1.3, margin: '0' }}>Кожне відкриття наближає тебе до нового рівня.</h2>
+            <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 2.4vw, 32px)', lineHeight: 1.3, margin: '0' }}>{t('core.landing.progressTitle')}</h2>
           </div>
           {/* level card */}
           <div style={{ flex: '0 1 280px', minWidth: '250px', background: '#081E15', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '16px', padding: '26px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(63,166,107,0.10), transparent 70%)' }}></div>
             <div style={{ position: 'relative' }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(244,241,232,0.75)', marginBottom: '6px' }}>Explorer Level</div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(244,241,232,0.75)', marginBottom: '6px' }}>{t('core.landing.explorerLevel')}</div>
               <div style={{ fontFamily: "'Lora', serif", fontSize: '76px', lineHeight: 1, color: '#9BD8B4', marginBottom: '18px' }}>{currentUser.level}</div>
               <div style={{ height: '6px', borderRadius: '3px', background: 'rgba(255,255,255,0.10)', overflow: 'hidden', marginBottom: '10px' }}>
                 <div style={{ width: `${(currentUser.xp / 3000) * 100}%`, height: '100%', borderRadius: '3px', background: 'linear-gradient(90deg, #3FA66B, #9BD8B4)' }}></div>
@@ -544,7 +546,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
           {/* achievements list */}
           <div style={{ flex: '1 1 380px', minWidth: '300px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 700 }}>Досягнення</div>
+              <div style={{ fontSize: '14px', fontWeight: 700 }}>{t('core.landing.achievementsTitle')}</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {achievements.map((ach) => (
@@ -568,7 +570,7 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       <section className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '20px 40px 40px' }}>
         <div className="at-panel" style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '32px 36px', display: 'flex', flexWrap: 'wrap', gap: '28px', alignItems: 'stretch' }}>
           <div style={{ flex: '0 1 220px', minWidth: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px' }}>
-            <div style={{ fontFamily: "'Lora', serif", fontSize: '23px', fontWeight: 500, lineHeight: 1.35 }}>Досліджуйте разом ще цікавіше</div>
+            <div style={{ fontFamily: "'Lora', serif", fontSize: '23px', fontWeight: 500, lineHeight: 1.35 }}>{t('core.landing.friendsSectionTitle')}</div>
           </div>
           <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '14px' }}>
             {friends.map((friend) => (
@@ -577,10 +579,10 @@ function App({ onStart }: { onStart?: () => void } = {}) {
                   <img src={friend.avatar} alt={friend.name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.15)', flex: '0 0 auto' }} />
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: '13px', fontWeight: 700 }}>{friend.name}</div>
-                    <div style={{ fontSize: '11px', color: 'rgba(244,241,232,0.5)', lineHeight: 1.4 }}>зараз досліджує<br />{friend.currentDestination || 'Україну'}</div>
+                    <div style={{ fontSize: '11px', color: 'rgba(244,241,232,0.5)', lineHeight: 1.4 }}>{t('core.landing.friendCardExploring')}<br />{friend.currentDestination || t('core.landing.friendCardFallback')}</div>
                   </div>
                 </div>
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '11px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: 'rgba(244,241,232,0.75)', cursor: 'pointer' }}>Переглянути</div>
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '11px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: 'rgba(244,241,232,0.75)', cursor: 'pointer' }}>{t('core.landing.friendCardView')}</div>
               </div>
             ))}
           </div>
@@ -593,9 +595,9 @@ function App({ onStart }: { onStart?: () => void } = {}) {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, #071F16 0%, rgba(7,31,22,0.85) 60%, rgba(7,31,22,0.2) 100%)', pointerEvents: 'none' }}></div>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 50% 60% at 50% 100%, rgba(63,166,107,0.15), transparent 70%)', pointerEvents: 'none' }}></div>
         <div style={{ position: 'relative', maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
-          <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(32px, 3.6vw, 46px)', lineHeight: 1.25, margin: 0, color: '#F4F1E8' }}>Твоя наступна пригода<br />вже поруч.</h2>
+          <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(32px, 3.6vw, 46px)', lineHeight: 1.25, margin: 0, color: '#F4F1E8' }}><Trans i18nKey="core.landing.ctaTitle" components={{ 1: <br /> }} /></h2>
           <button onClick={onStart} style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#3FA66B', color: '#071F16', fontFamily: "'Manrope', sans-serif", fontSize: '14px', fontWeight: 700, padding: '15px 30px', borderRadius: '12px', border: 'none', cursor: 'pointer', marginTop: '8px' }}>
-            Почати подорож
+            {t('core.landing.ctaButton')}
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
           </button>
         </div>
