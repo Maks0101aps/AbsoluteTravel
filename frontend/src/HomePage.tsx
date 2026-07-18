@@ -14,6 +14,7 @@ import {
 } from './api';
 import ProfileAvatar from './ProfileAvatar';
 import ProfileShop, { type EquipKey } from './ProfileShop';
+import CaseOpener from './CaseOpener';
 import XpBar from './XpBar';
 import ExploreMap from './ExploreMap';
 import FriendsPage from './FriendsPage';
@@ -31,7 +32,7 @@ const CREAM = '#F4F1E8';
 const BG = '#071F16';
 const DEFAULT_ACCENT = '#3FA66B';
 
-type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'profile';
+type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'profile' | 'cases';
 
 // The profile view is opened by clicking the avatar (top-right), not a tab.
 // `short` is what the phone tab bar shows — the full labels don't fit six-across.
@@ -82,13 +83,13 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
 
   // Which one-time cases (the free starter) the user has already opened.
   useEffect(() => {
-    if (!shopOpen) return;
+    if (!shopOpen && tab !== 'cases') return;
     getCasesState(user.id)
       .then((s) => setOpenedCaseIds(s.openedCaseIds))
       .catch(() => {
         // non-blocking: cases still openable, server enforces the once-only rule
       });
-  }, [shopOpen, user.id]);
+  }, [shopOpen, tab, user.id]);
 
   const handleOpenCase = async (caseId: string) => {
     const res = await openCase(user.id, caseId);
@@ -376,8 +377,8 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
           })}
           {p && (
             <button
-              onClick={() => { setShopError(null); setShopOpen(true); }}
-              title="Магазин"
+              onClick={() => setTab('cases')}
+              title="Кейси"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -385,8 +386,8 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
                 flexShrink: 0,
                 width: '38px',
                 height: '38px',
-                background: 'rgba(240,198,75,0.12)',
-                border: '1px solid rgba(240,198,75,0.35)',
+                background: tab === 'cases' ? 'rgba(240,198,75,0.12)' : 'transparent',
+                border: `1px solid ${tab === 'cases' ? 'rgba(240,198,75,0.35)' : 'transparent'}`,
                 color: '#F0C64B',
                 borderRadius: '50%',
                 padding: 0,
@@ -394,7 +395,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
                 transition: 'all 0.2s ease',
               }}
             >
-              <Icon name="shoppingBag" size={17} strokeWidth={1.9} stroke="#F0C64B" />
+              <Icon name="gift" size={17} strokeWidth={1.9} stroke="#F0C64B" />
             </button>
           )}
         </div>
@@ -404,11 +405,35 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
             (logo, this cluster) and justify-content:space-between pins them
             to the edges cleanly, independent of the absolutely-centered tabs. */}
         <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '20px' }}>
-          {/* group 3: coins */}
-          <div title="Монети" style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#F0C64B', background: 'transparent', border: 'none', borderRadius: '999px', padding: '10px 16px', fontSize: '12.5px', fontWeight: 700, whiteSpace: 'nowrap' }}>
-            <Icon name="coin" size={15} strokeWidth={1.9} />
-            {user.coins ?? 0}
-          </div>
+          {/* group 3: coins — opens the shop */}
+          {p && (
+            <button
+              onClick={() => { setShopError(null); setShopOpen(true); }}
+              title="Крамниця"
+              style={{
+                flex: '0 0 auto',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: '#F0C64B',
+                background: 'linear-gradient(135deg, rgba(240,198,75,0.16), rgba(240,198,75,0.06))',
+                border: '1.5px solid rgba(240,198,75,0.55)',
+                borderRadius: '999px',
+                padding: '9px 17px',
+                fontSize: '12.5px',
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+                boxShadow: '0 0 0 1px rgba(240,198,75,0.12), 0 6px 18px -8px rgba(240,198,75,0.55)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(240,198,75,0.85)'; e.currentTarget.style.boxShadow = '0 0 0 1px rgba(240,198,75,0.2), 0 8px 22px -8px rgba(240,198,75,0.7)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(240,198,75,0.55)'; e.currentTarget.style.boxShadow = '0 0 0 1px rgba(240,198,75,0.12), 0 6px 18px -8px rgba(240,198,75,0.55)'; }}
+            >
+              <Icon name="coin" size={15} strokeWidth={1.9} />
+              {user.coins ?? 0}
+            </button>
+          )}
 
           {/* group 4: profile + logout */}
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: '10px', background: 'transparent', border: 'none', borderRadius: '18px', padding: '8px 12px' }}>
@@ -459,14 +484,14 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
         })}
         {p && (
           <button
-            onClick={() => { setShopError(null); setShopOpen(true); }}
-            className="at-tabbar-btn"
-            style={{ color: '#F0C64B' }}
+            onClick={() => setTab('cases')}
+            className={`at-tabbar-btn${tab === 'cases' ? ' at-tabbar-btn-on' : ''}`}
+            style={{ color: tab === 'cases' ? '#F0C64B' : 'rgba(240,198,75,0.6)' }}
           >
             <span className="at-tabbar-icon">
-              <Icon name="shoppingBag" size={19} strokeWidth={1.9} stroke="#F0C64B" />
+              <Icon name="gift" size={19} strokeWidth={1.9} />
             </span>
-            Магазин
+            Кейси
           </button>
         )}
       </nav>
@@ -518,6 +543,18 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
         )}
         {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} onOpenProfile={openProfileOf} />}
         {tab === 'chat' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId={chatFriendId} onOpenProfile={openProfileOf} />}
+        {tab === 'cases' && p && (
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '70vh', borderRadius: '24px', overflow: 'hidden', background: 'linear-gradient(180deg,#0B2A1D,#081E15)', border: '1px solid rgba(255,255,255,0.10)' }}>
+            <CaseOpener
+              coins={user.coins ?? 0}
+              owned={user.unlockedItems ?? []}
+              openedCaseIds={openedCaseIds}
+              onOpen={handleOpenCase}
+              onEquip={equip}
+              onBack={() => setTab('map')}
+            />
+          </div>
+        )}
       </main>
 
       {viewingUserId !== null && (
@@ -545,10 +582,8 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
             badges: p.badges,
             effectId: p.effectId,
           }}
-          openedCaseIds={openedCaseIds}
           onBuy={handleBuy}
           onEquip={equip}
-          onOpenCase={handleOpenCase}
           onClose={() => setShopOpen(false)}
         />
       )}

@@ -121,13 +121,13 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 auto', minHeight: 0, fontFamily: "'Manrope', sans-serif", color: CREAM }}>
       {/* ---- header ---- */}
-      <div style={{ position: 'relative', padding: '20px 26px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', flex: '0 0 auto' }}>
+      <div className="at-case-header" style={{ position: 'relative', padding: '20px 26px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', flex: '0 0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '14px' }}>
           <button
             onClick={onBack}
             style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(244,241,232,0.85)', borderRadius: '10px', padding: '8px 13px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}
           >
-            <Icon name="arrowLeft" size={15} strokeWidth={2} /> Магазин
+            <Icon name="arrowLeft" size={15} strokeWidth={2} /> Назад
           </button>
           <div style={{ textAlign: 'center', flex: 1 }}>
             <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(18px,2.4vw,24px)', margin: '2px 0 0' }}>Скриня мандрівника</h2>
@@ -138,37 +138,25 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
         </div>
 
         {/* case switcher */}
-        <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
+        <div className="at-case-switcher" style={{ display: 'grid', gap: '12px', marginTop: '18px' }}>
           {CASES.map((c) => {
             const on = c.id === caseId;
             const used = c.cost === 0 && openedCaseIds.includes(c.id);
             return (
-              <button
+              <CaseTab
                 key={c.id}
+                def={c}
+                selected={on}
+                used={used}
                 onClick={() => switchCase(c.id)}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '9px',
-                  padding: '9px 14px', borderRadius: '12px', cursor: 'pointer',
-                  border: `1.5px solid ${on ? c.accent : 'rgba(255,255,255,0.1)'}`,
-                  background: on ? `${c.accent}22` : 'rgba(255,255,255,0.02)',
-                  color: on ? CREAM : 'rgba(244,241,232,0.7)',
-                  fontFamily: "'Manrope', sans-serif", fontSize: '13px', fontWeight: 700,
-                  transition: 'all 0.16s ease',
-                }}
-              >
-                <Icon name="gift" size={16} strokeWidth={1.8} stroke={on ? c.accent : 'rgba(244,241,232,0.7)'} />
-                {c.name}
-                <span style={{ fontSize: '11px', fontWeight: 800, color: c.cost === 0 ? '#7BD6A2' : GOLD }}>
-                  {used ? '✓' : c.cost === 0 ? 'FREE' : `${c.cost}`}
-                </span>
-              </button>
+              />
             );
           })}
         </div>
       </div>
 
       {/* ---- body ---- */}
-      <div style={{ padding: '22px 26px 28px', overflowY: 'auto', minHeight: 0, flex: '1 1 auto', position: 'relative' }}>
+      <div className="at-case-body" style={{ padding: '22px 26px 28px', overflowY: 'auto', minHeight: 0, flex: '1 1 auto', position: 'relative' }}>
         {/* ambient case aura */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: `radial-gradient(60% 55% at 50% 24%, ${def.accent}22, transparent 70%)`, transition: 'background 0.4s ease' }} />
 
@@ -260,22 +248,38 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
           )}
         </div>
 
-        {/* ---- odds ---- */}
-        <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '14px', marginTop: '16px' }}>
-          {odds.map(({ rarity, pct }) => (
-            <span key={rarity} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', fontWeight: 700, color: 'rgba(244,241,232,0.7)' }}>
-              <span style={{ width: '9px', height: '9px', borderRadius: '2px', background: RARITY_META[rarity].color, boxShadow: `0 0 8px ${RARITY_META[rarity].glow}` }} />
-              {RARITY_META[rarity].label} · {pct}%
-            </span>
-          ))}
+        {/* ---- odds bar ---- */}
+        <div style={{ marginTop: '20px' }}>
+          <div style={{ display: 'flex', height: '10px', borderRadius: '999px', overflow: 'hidden', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)' }}>
+            {odds.map(({ rarity, pct }) => (
+              <div
+                key={rarity}
+                title={`${RARITY_META[rarity].label} · ${pct}%`}
+                style={{ width: `${pct}%`, background: RARITY_META[rarity].color, boxShadow: `inset 0 0 8px ${RARITY_META[rarity].glow}` }}
+              />
+            ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '6px 16px', marginTop: '10px' }}>
+            {odds.map(({ rarity, pct }) => (
+              <span key={rarity} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: 'rgba(244,241,232,0.7)' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: RARITY_META[rarity].color, boxShadow: `0 0 8px ${RARITY_META[rarity].glow}` }} />
+                {RARITY_META[rarity].label} · {pct}%
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* ---- contents ---- */}
         <div style={{ marginTop: '24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.16em', color: 'rgba(244,241,232,0.5)', marginBottom: '12px' }}>
-            МОЖЛИВІ ПРИЗИ
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.16em', color: 'rgba(244,241,232,0.5)' }}>
+              МОЖЛИВІ ПРИЗИ
+            </div>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(244,241,232,0.4)' }}>
+              {def.rewards.length}
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(104px, 1fr))', gap: '10px' }}>
             {[...def.rewards]
               .sort((a, b) => RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity))
               .map((r, i) => (
@@ -304,6 +308,88 @@ function openBtnStyle(accent: string, enabled: boolean): React.CSSProperties {
     boxShadow: enabled ? `0 12px 30px -10px ${accent}` : 'none',
     transition: 'transform 0.12s ease, box-shadow 0.16s ease',
   };
+}
+
+// ---- case selector card -------------------------------------------------------
+
+function CaseTab({
+  def, selected, used, onClick,
+}: {
+  def: CaseDef;
+  selected: boolean;
+  used: boolean;
+  onClick: () => void;
+}) {
+  const isFree = def.cost === 0;
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        position: 'relative', display: 'flex', flexDirection: 'column',
+        padding: 0, borderRadius: '16px', overflow: 'hidden', cursor: 'pointer',
+        textAlign: 'left', fontFamily: "'Manrope', sans-serif",
+        border: `1.5px solid ${selected ? def.accent : 'rgba(255,255,255,0.08)'}`,
+        background: 'rgba(255,255,255,0.02)',
+        boxShadow: selected
+          ? `0 14px 34px -14px ${def.accent}, inset 0 0 0 1px ${def.accent}55`
+          : '0 8px 20px -16px rgba(0,0,0,0.9)',
+        transform: selected ? 'translateY(-2px)' : 'none',
+        transition: 'transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+      }}
+    >
+      {/* artwork */}
+      <div style={{ position: 'relative', height: '76px', overflow: 'hidden', background: def.gradient }}>
+        {def.imageUrl && (
+          <img
+            src={def.imageUrl}
+            alt={def.name}
+            style={{
+              width: '100%', height: '100%', objectFit: 'cover',
+              opacity: selected ? 1 : 0.82,
+              transform: selected ? 'scale(1.04)' : 'scale(1)',
+              transition: 'transform 0.3s ease, opacity 0.2s ease',
+            }}
+          />
+        )}
+        {/* accent aura */}
+        <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(90% 80% at 50% 120%, ${def.accent}55, transparent 70%)` }} />
+        {/* fade to footer */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(4,12,9,0.72))' }} />
+        {/* price / status chip */}
+        <span style={{
+          position: 'absolute', top: '8px', right: '8px',
+          display: 'inline-flex', alignItems: 'center', gap: '4px',
+          fontSize: '11px', fontWeight: 800, lineHeight: 1,
+          color: used ? '#7BD6A2' : isFree ? BG : BG,
+          background: used ? 'rgba(4,12,9,0.7)' : isFree ? '#7BD6A2' : GOLD,
+          border: used ? '1px solid rgba(123,214,162,0.5)' : 'none',
+          padding: '5px 9px', borderRadius: '999px',
+          boxShadow: used ? 'none' : `0 4px 12px -4px ${isFree ? 'rgba(123,214,162,0.7)' : GOLD}`,
+        }}>
+          {used ? (
+            <><Icon name="check" size={12} strokeWidth={2.6} stroke="#7BD6A2" /> Відкрито</>
+          ) : isFree ? (
+            'FREE'
+          ) : (
+            <><Icon name="coin" size={12} strokeWidth={2} stroke={BG} /> {def.cost}</>
+          )}
+        </span>
+      </div>
+
+      {/* footer */}
+      <div style={{ padding: '10px 12px 12px', background: selected ? `${def.accent}14` : 'transparent', transition: 'background 0.2s ease' }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px',
+          fontFamily: "'Lora', serif", fontWeight: 500,
+          fontSize: 'clamp(12px,1.5vw,15px)',
+          color: selected ? CREAM : 'rgba(244,241,232,0.86)',
+        }}>
+          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: def.accent, boxShadow: `0 0 8px ${def.accent}`, flex: '0 0 auto' }} />
+          {def.name}
+        </div>
+      </div>
+    </button>
+  );
 }
 
 // ---- idle closed-case artwork -------------------------------------------------
@@ -420,8 +506,8 @@ function DropCard({ reward, owned }: { reward: CaseReward; owned: boolean }) {
   const meta = RARITY_META[reward.rarity];
   const v = itemVisual(reward.slot, reward.id, 30);
   return (
-    <div style={{ borderRadius: '12px', overflow: 'hidden', border: `1px solid ${meta.color}66`, background: 'rgba(255,255,255,0.02)', boxShadow: `inset 0 -20px 24px -18px ${meta.color}` }}>
-      <div style={{ position: 'relative', height: '68px', overflow: 'hidden' }}>
+    <div style={{ scrollSnapAlign: 'start', borderRadius: '12px', overflow: 'hidden', border: `1px solid ${meta.color}66`, background: 'rgba(255,255,255,0.02)', boxShadow: `inset 0 -20px 24px -18px ${meta.color}` }}>
+      <div style={{ position: 'relative', height: '58px', overflow: 'hidden' }}>
         {v.node}
         {owned && (
           <div title="Вже у тебе" style={{ position: 'absolute', top: '6px', right: '6px', width: '20px', height: '20px', borderRadius: '50%', background: '#3FA66B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
