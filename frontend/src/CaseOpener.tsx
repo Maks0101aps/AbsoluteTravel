@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { Icon } from './icons';
+import CaseArt from './CaseArt';
 import { itemVisual, equipValue } from './itemVisuals';
 import type { EquipKey } from './ProfileShop';
 import type { OpenCaseResult } from './api';
@@ -338,19 +339,10 @@ function CaseTab({
       }}
     >
       {/* artwork */}
-      <div style={{ position: 'relative', height: '76px', overflow: 'hidden', background: def.gradient }}>
-        {def.imageUrl && (
-          <img
-            src={def.imageUrl}
-            alt={def.name}
-            style={{
-              width: '100%', height: '100%', objectFit: 'cover',
-              opacity: selected ? 1 : 0.82,
-              transform: selected ? 'scale(1.04)' : 'scale(1)',
-              transition: 'transform 0.3s ease, opacity 0.2s ease',
-            }}
-          />
-        )}
+      <div style={{ position: 'relative', height: '82px', overflow: 'hidden', background: def.gradient }}>
+        <div style={{ position: 'absolute', inset: 0, opacity: selected ? 1 : 0.72, transition: 'opacity 0.2s ease' }}>
+          <CaseArt id={def.id} mode="tab" />
+        </div>
         {/* accent aura */}
         <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(90% 80% at 50% 120%, ${def.accent}55, transparent 70%)` }} />
         {/* fade to footer */}
@@ -396,28 +388,16 @@ function CaseTab({
 
 function IdleCase({ def, locked }: { def: CaseDef; locked: boolean }) {
   return (
-    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ position: 'relative', width: '190px', height: '110px' }}>
-        {/* glow */}
-        <div style={{ position: 'absolute', inset: '-30px', borderRadius: '50%', background: `radial-gradient(circle, ${def.accent}44, transparent 70%)`, animation: 'softGlowOpacity 3s ease-in-out infinite' }} />
-        {/* box */}
-        <div style={{ position: 'absolute', inset: 0, borderRadius: '14px', border: `2px solid ${def.accent}`, boxShadow: `0 16px 40px -12px ${def.accent}`, overflow: 'hidden', filter: locked ? 'grayscale(0.6) brightness(0.7)' : 'none' }}>
-          {def.imageUrl ? (
-            <img src={def.imageUrl} alt={def.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <div style={{ width: '100%', height: '100%', background: def.gradient, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ position: 'absolute', top: '34%', left: 0, right: 0, height: '2px', background: 'rgba(0,0,0,0.35)' }} />
-              <Icon name="gift" size={46} strokeWidth={1.5} stroke="rgba(255,255,255,0.9)" />
-            </div>
-          )}
-          {/* overlay lock/checkmark icons if locked */}
-          {locked && (
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="check" size={24} strokeWidth={2.5} stroke="#FFF" />
-            </div>
-          )}
+    <div style={{ position: 'absolute', inset: 0, filter: locked ? 'grayscale(0.6) brightness(0.7)' : 'none' }}>
+      <CaseArt id={def.id} mode="stage" />
+      {/* overlay checkmark if this free case is already opened */}
+      {locked && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="check" size={24} strokeWidth={2.5} stroke="#FFF" />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
