@@ -5,6 +5,8 @@ import AddPlaceForm from './AddPlaceForm';
 import AddLabelForm from './AddLabelForm';
 
 import VerifyVisitModal from './VerifyVisitModal';
+import Navigator from './Navigator';
+import type { RouteResult } from './data/routing';
 import LeafletMap, { type LiveMarker } from './LeafletMap';
 import { useLiveGps, type FriendDot } from './useLiveGps';
 import { useExploration } from './exploration/useExploration';
@@ -116,6 +118,32 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
   const [showForm, setShowForm] = useState(false);
   const [verifyPlace, setVerifyPlace] = useState<Place | null>(null);
   const [selectedFriend, setSelectedFriend] = useState<FriendDot | null>(null);
+
+  // Navigator: road-following route to a destination, with optional stops
+  // along the way. See Navigator.tsx for the panel UI; state lives here
+  // because it has to drive props on the same <LeafletMap> instance the rest
+  // of the page already uses.
+  const [navTarget, setNavTarget] = useState<Place | null>(null);
+  const [navStart, setNavStart] = useState<{ lat: number; lng: number } | null>(null);
+  const [navWaypoints, setNavWaypoints] = useState<{ lat: number; lng: number }[]>([]);
+  const [navPicking, setNavPicking] = useState<'start' | 'waypoint' | null>(null);
+  const [navRoute, setNavRoute] = useState<RouteResult | null>(null);
+
+  const openNavigator = (place: Place) => {
+    setNavTarget(place);
+    setNavStart(selfPosition ?? null);
+    setNavWaypoints([]);
+    setNavRoute(null);
+    setNavPicking(null);
+  };
+
+  const closeNavigator = () => {
+    setNavTarget(null);
+    setNavStart(null);
+    setNavWaypoints([]);
+    setNavRoute(null);
+    setNavPicking(null);
+  };
 
   // Local friend labels states
   const [friendLabels, setFriendLabels] = useState<FriendLabel[]>([]);
@@ -328,6 +356,24 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
               setActiveId(null);
             }}
             onHoverLabel={(id) => setHoverLabelId(id)}
+            pickable={navPicking !== null}
+            onPick={(lat, lng) => {
+              if (navPicking === 'start') {
+                setNavStart({ lat, lng });
+                setNavPicking(null);
+              } else if (navPicking === 'waypoint') {
+                setNavWaypoints((w) => [...w, { lat, lng }]);
+              }
+            }}
+            route={navRoute?.points ?? null}
+            routeMarkers={
+              navTarget
+                ? [
+                    ...(navStart ? [{ ...navStart, label: 'A' }] : []),
+                    ...navWaypoints.map((w, i) => ({ ...w, label: String(i + 1) })),
+                  ]
+                : undefined
+            }
           />
 
           {/* territory progress + floating "+XP" popups (logged-in users only) */}
@@ -586,6 +632,31 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                     Верифікувати відвідування
                   </button>
                 )}
+
+                {/* Road-following route to this place — see Navigator.tsx. */}
+                <button
+                  onClick={() => openNavigator(shown)}
+                  style={{
+                    marginTop: '10px',
+                    width: '100%',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    background: `${accent}18`,
+                    color: accent,
+                    border: `1px solid ${accent}55`,
+                    borderRadius: '12px',
+                    padding: '12px 18px',
+                    fontSize: '13.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontFamily: "'Manrope', sans-serif",
+                  }}
+                >
+                  <Icon name="signpost" size={16} strokeWidth={1.9} />
+                  Навігувати
+                </button>
               </>
             ) : (
               <div style={{ color: 'rgba(244,241,232,0.55)', fontSize: '14px' }}>
@@ -824,6 +895,23 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
           accent={accent}
           onClose={() => setVerifyPlace(null)}
           onVerified={(result) => onVerified?.(verifyPlace.id, result)}
+        />
+      )}
+
+      {navTarget && (
+        <Navigator
+          target={navTarget}
+          start={navStart}
+          waypoints={navWaypoints}
+          route={navRoute}
+          picking={navPicking}
+          accent={accent}
+          onPickStart={() => setNavPicking('start')}
+          onPickWaypoint={() => setNavPicking('waypoint')}
+          onStopPicking={() => setNavPicking(null)}
+          onRemoveWaypoint={(i) => setNavWaypoints((w) => w.filter((_, idx) => idx !== i))}
+          onRouteBuilt={setNavRoute}
+          onClose={closeNavigator}
         />
       )}
     </div>
