@@ -478,14 +478,14 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
         })}
         {p && (
           <button
-            onClick={() => { setShopError(null); setShopOpen(true); }}
-            className="at-tabbar-btn"
-            style={{ color: '#F0C64B' }}
+            onClick={() => setTab('cases')}
+            className={`at-tabbar-btn${tab === 'cases' ? ' at-tabbar-btn-on' : ''}`}
+            style={{ color: tab === 'cases' ? '#F0C64B' : 'rgba(240,198,75,0.6)' }}
           >
             <span className="at-tabbar-icon">
-              <Icon name="shoppingBag" size={19} strokeWidth={1.9} stroke="#F0C64B" />
+              <Icon name="gift" size={19} strokeWidth={1.9} />
             </span>
-            Магазин
+            Кейси
           </button>
         )}
       </nav>
