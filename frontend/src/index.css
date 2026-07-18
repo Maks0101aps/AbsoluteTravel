@@ -219,6 +219,36 @@ a:hover {
 @keyframes atCaseSpin {
   to { transform: rotate(360deg); }
 }
+/* responsive case-selector grid: 3-up on desktop, wraps down on smaller screens */
+.at-case-switcher {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 620px) {
+  .at-case-switcher {
+    grid-template-columns: 1fr 1fr;
+  }
+  /* the last card spans both columns when the count is odd */
+  .at-case-switcher > button:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 380px) {
+  .at-case-switcher {
+    grid-template-columns: 1fr;
+  }
+  .at-case-switcher > button:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}
+@media (max-width: 560px) {
+  .at-case-header {
+    padding: 16px 16px 12px !important;
+  }
+  .at-case-body {
+    padding: 16px 16px 24px !important;
+  }
+}
+
 /* shimmering entrance for the cases banner in the shop */
 .at-case-banner-shine {
   position: absolute;
