@@ -42,6 +42,10 @@ interface ExploreMapProps {
   onMessageFriend?: (friendId: number) => void;
   // Open a traveler's profile (tapping the friend card on the map).
   onOpenProfile?: (userId: number) => void;
+  // A place to open on the map from outside (e.g. the welcome recommendation):
+  // selects it (opening its detail panel) and flies the map there. Carries a
+  // nonce so re-selecting the same place still triggers.
+  focusPlace?: { id: string | number; nonce: number } | null;
 }
 
 function CategoryBadge({ category }: { category: PlaceCategory }) {
@@ -101,9 +105,10 @@ function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): nu
   return 2 * R * Math.asin(Math.sqrt(s));
 }
 
-function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, openedPlaceIds, onVerified, onExplored, onMessageFriend, onOpenProfile }: ExploreMapProps) {
+function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, openedPlaceIds, onVerified, onExplored, onMessageFriend, onOpenProfile, focusPlace }: ExploreMapProps) {
   const [places, setPlaces] = useState<Place[]>(PLACES);
   const [activeId, setActiveId] = useState<string | number | null>(null);
+  const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number } | null>(null);
   const [hoverId, setHoverId] = useState<string | number | null>(null);
   // Only auto-pick the nearest place once per session — after that the user's
   // own clicks own `activeId`.
@@ -221,6 +226,18 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
     setActiveId(nearest.id);
   }, [selfPosition, places]);
 
+  // Open a place requested from outside the map (welcome recommendation): select
+  // it so the side detail panel appears, and fly the map to its coordinates. The
+  // nonce in the dep list lets the same place be re-opened.
+  useEffect(() => {
+    if (!focusPlace) return;
+    const p = places.find((x) => x.id === focusPlace.id) ?? PLACES.find((x) => x.id === focusPlace.id);
+    if (!p) return;
+    hasAutoSelectedRef.current = true; // don't let the GPS auto-pick override this
+    setActiveId(p.id);
+    setFlyTarget({ lat: p.lat, lng: p.lng });
+  }, [focusPlace, places]);
+
   const visiblePlaces = places;
 
   // The card shows whatever the pointer is hovering, otherwise the last clicked place.
@@ -298,6 +315,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
             onHover={(id) => setHoverId(id)}
             liveMarkers={userId != null ? liveMarkers : undefined}
             focusPosition={userId != null ? selfPosition : undefined}
+            flyTo={flyTarget}
             exploredCells={userId != null ? visitedCells : undefined}
             revealedCell={lastRevealed}
             fog={userId != null}

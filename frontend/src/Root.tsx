@@ -18,6 +18,11 @@ type View = 'landing' | 'auth' | 'setup' | 'home' | 'admin';
 
 const STORAGE_KEY = 'absolute_travel_user';
 const ADMIN_KEY = 'absolute_travel_admin_session';
+// Marks that the one-time "top-3 places to walk" welcome has already been shown
+// to a given user, so it fires exactly once per account (right after that
+// account registers) and never again on this device.
+const WALK_INTRO_KEY = 'absolute_travel_walk_intro_shown';
+const walkIntroKey = (userId: number) => `${WALK_INTRO_KEY}:${userId}`;
 
 function loadUser(): AuthUser | null {
   try {
@@ -58,6 +63,8 @@ function persistAdmin(session: AdminSession | null) {
 function Root() {
   const [user, setUser] = useState<AuthUser | null>(loadUser);
   const [admin, setAdmin] = useState<AdminSession | null>(loadAdmin);
+  // Shown once, right after the very first registration + profile save.
+  const [walkIntro, setWalkIntro] = useState(false);
   const [view, setView] = useState<View>(() => {
     // An active admin session takes precedence (validated in the effect below).
     if (loadAdmin()) return 'admin';
@@ -83,9 +90,21 @@ function Root() {
       });
   }, []);
 
-  const handleAuth = (u: AuthUser) => {
+  const handleAuth = (u: AuthUser, isNew = false) => {
     setUser(u);
     persist(u);
+    // A brand-new registration arms the one-time walk recommendation. It's shown
+    // the moment the user lands on the home screen — whether they fill in the
+    // profile or skip it. Guarded by localStorage so it never repeats.
+    if (isNew) {
+      let alreadyShown = false;
+      try {
+        alreadyShown = localStorage.getItem(walkIntroKey(u.id)) === '1';
+      } catch {
+        /* private mode — treat as not shown */
+      }
+      if (!alreadyShown) setWalkIntro(true);
+    }
     // Freshly authenticated users go through profile setup first.
     setView(u.profile ? 'home' : 'setup');
   };
@@ -171,12 +190,22 @@ function Root() {
   }
 
   if (view === 'home' && user) {
+    const closeWalkIntro = () => {
+      setWalkIntro(false);
+      try {
+        localStorage.setItem(walkIntroKey(user.id), '1');
+      } catch {
+        /* ignore storage errors */
+      }
+    };
     return (
       <HomePage
         user={user}
         onLogout={handleLogout}
         onEditProfile={() => setView('setup')}
         onUserUpdate={handleUserUpdate}
+        showWalkIntro={walkIntro}
+        onCloseWalkIntro={closeWalkIntro}
       />
     );
   }
