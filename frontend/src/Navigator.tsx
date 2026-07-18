@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Place } from './data/places';
-import { fetchRoute, formatDuration, type RoutePoint, type RouteResult, type TravelProfile } from './data/routing';
+import { fetchNavigatorRoute, formatDuration, type RoutePoint, type RouteResult, type TravelProfile } from './data/routing';
 import { Icon } from './icons';
 
 const CREAM = '#F4F1E8';
@@ -44,6 +44,25 @@ function Navigator({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Draggable like a floating window: offset from the default bottom-right
+  // anchor, dragged from the header. Starts at (0,0) so first render matches
+  // the original fixed position exactly.
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const dragState = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
+
+  const onDragStart = (e: React.PointerEvent) => {
+    dragState.current = { startX: e.clientX, startY: e.clientY, originX: dragOffset.x, originY: dragOffset.y };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const onDragMove = (e: React.PointerEvent) => {
+    if (!dragState.current) return;
+    const { startX, startY, originX, originY } = dragState.current;
+    setDragOffset({ x: originX + (e.clientX - startX), y: originY + (e.clientY - startY) });
+  };
+  const onDragEnd = () => {
+    dragState.current = null;
+  };
+
   const build = async () => {
     if (!start) {
       setError('Спершу познач точку старту на карті');
@@ -53,7 +72,7 @@ function Navigator({
     setError('');
     try {
       const points: RoutePoint[] = [start, ...waypoints, { lat: target.lat, lng: target.lng }];
-      const result = await fetchRoute(points, profile);
+      const result = await fetchNavigatorRoute(points, profile);
       onRouteBuilt(result);
     } catch (e: any) {
       onRouteBuilt(null);
@@ -67,8 +86,8 @@ function Navigator({
     <div
       style={{
         position: 'fixed',
-        bottom: '24px',
-        right: '24px',
+        bottom: `calc(24px - ${dragOffset.y}px)`,
+        right: `calc(24px - ${dragOffset.x}px)`,
         zIndex: 150,
         width: 'min(360px, calc(100vw - 48px))',
         maxHeight: 'calc(100vh - 48px)',
@@ -82,9 +101,15 @@ function Navigator({
         color: CREAM,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', marginBottom: '14px' }}>
+      <div
+        onPointerDown={onDragStart}
+        onPointerMove={onDragMove}
+        onPointerUp={onDragEnd}
+        onPointerCancel={onDragEnd}
+        style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', marginBottom: '14px', cursor: 'grab', touchAction: 'none' }}
+      >
         <div>
-          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: accent, marginBottom: '4px' }}>НАВІГАТОР</div>
+          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: accent, marginBottom: '4px' }}>НАВІГАТОР · перетягніть, щоб перемістити</div>
           <div style={{ fontSize: '15px', fontWeight: 700 }}>{target.name}</div>
         </div>
         <button
@@ -238,12 +263,23 @@ function Navigator({
       )}
 
       {route ? (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', background: `${accent}14`, border: `1px solid ${accent}45`, borderRadius: '12px', padding: '12px 14px', marginBottom: '10px' }}>
-          <div>
-            <div style={{ fontSize: '16px', fontWeight: 800, color: accent }}>{route.distanceKm.toFixed(1)} км</div>
-            <div style={{ fontSize: '12px', color: 'rgba(244,241,232,0.6)' }}>{formatDuration(route.durationMin)}</div>
+        <div style={{ marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', background: `${accent}14`, border: `1px solid ${accent}45`, borderRadius: '12px', padding: '12px 14px' }}>
+            <div>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: accent }}>{route.distanceKm.toFixed(1)} км</div>
+              <div style={{ fontSize: '12px', color: 'rgba(244,241,232,0.6)' }}>{formatDuration(route.durationMin)}</div>
+            </div>
+            <Icon name="check" size={20} strokeWidth={2.2} stroke={accent} />
           </div>
-          <Icon name="check" size={20} strokeWidth={2.2} stroke={accent} />
+          {route.footSegment && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '12px', color: 'rgba(244,241,232,0.65)', padding: '8px 2px 0' }}>
+              <Icon name="boot" size={13} strokeWidth={1.9} />
+              <span>
+                Далі під’їзд заборонено — {Math.round(route.footSegment.distanceKm * 1000)} м пішки
+                {' '}(~{formatDuration(route.footSegment.durationMin)}), позначено пунктиром
+              </span>
+            </div>
+          )}
         </div>
       ) : null}
 
