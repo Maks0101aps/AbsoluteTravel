@@ -85,6 +85,15 @@ const LABEL_PANE = 'at-labels';
 const LABEL_PANE_Z = 358;
 const BORDER_STROKE = 'rgba(155,216,180,0.38)';
 
+// --- navigator route ---------------------------------------------------------
+// Sits above the mask (360) and Leaflet's own overlay pane (400) — a route can
+// legitimately cross into fogged or (rarely) just-outside-border territory and
+// must stay visible there — but below the marker pane (600), so place pins
+// remain clickable on top of the line rather than the line stealing the click.
+const ROUTE_PANE = 'at-route';
+const ROUTE_PANE_Z = 450;
+const ROUTE_CASING_COLOR = '#04120C';
+
 const ICON_PATHS: Record<string, string> = {
   compass: '<circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z" />',
   mountain: '<path d="M3 20l6-11 4 6 2-3 6 8z" /><path d="M9 9l2 3" />',
@@ -129,6 +138,18 @@ function dotIcon(color: string, active: boolean) {
     html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid #F4F1E8;${ring}"></div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
+  });
+}
+
+// Small lettered/numbered marker for a navigator route's start point ("A")
+// and waypoints ("1", "2", …) — the destination itself is an existing place
+// marker, so it doesn't need one of these.
+function routeStopIcon(label: string, color: string) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:24px;height:24px;border-radius:50%;background:${color};border:2px solid #F4F1E8;box-shadow:0 2px 6px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;font:700 11px 'Manrope',sans-serif;color:#071F16;">${label}</div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
   });
 }
 
@@ -270,6 +291,13 @@ interface LeafletMapProps {
   hoverLabelId?: number | null;
   onSelectLabel?: (id: number) => void;
   onHoverLabel?: (id: number | null) => void;
+
+  // Navigator: a road-following route to draw (already-resolved [lat,lng]
+  // geometry — LeafletMap only renders it, it doesn't fetch it), plus small
+  // lettered/numbered markers for the start point and any waypoints. The
+  // destination itself needs no separate marker — it's already one of `places`.
+  route?: [number, number][] | null;
+  routeMarkers?: { lat: number; lng: number; label: string }[];
 }
 
 interface Cluster {
@@ -413,6 +441,8 @@ function LeafletMap({
   hoverLabelId,
   onSelectLabel,
   onHoverLabel,
+  route,
+  routeMarkers,
 }: LeafletMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -428,6 +458,8 @@ function LeafletMap({
   const fogRendererRef = useRef<L.SVG | null>(null);
   const maskRendererRef = useRef<L.SVG | null>(null);
   const pinMarkerRef = useRef<L.Marker | null>(null);
+  const routeLayersRef = useRef<L.Polyline[]>([]);
+  const routeMarkersRef = useRef<L.Marker[]>([]);
   const gridLayersRef = useRef<L.Polygon[]>([]);
   const gridRendererRef = useRef<L.SVG | null>(null);
   const [showGrid, setShowGrid] = useState(true);
@@ -485,6 +517,7 @@ function LeafletMap({
       [GRID_PANE, GRID_PANE_Z],
       [MASK_PANE, MASK_PANE_Z],
       [LABEL_PANE, LABEL_PANE_Z],
+      [ROUTE_PANE, ROUTE_PANE_Z],
     ] as const) {
       map.createPane(name);
       const pane = map.getPane(name);
@@ -945,6 +978,55 @@ function LeafletMap({
       pinMarkerRef.current.setLatLng([pin.lat, pin.lng]);
     }
   }, [map, pin, accent, onPick]);
+
+  // --- sync the navigator route polyline --------------------------------------
+  useEffect(() => {
+    if (!map) return;
+
+    routeLayersRef.current.forEach((layer) => layer.remove());
+    routeLayersRef.current = [];
+
+    if (!route || route.length < 2) return;
+
+    // Two overlaid lines — a wider dark casing underneath, a thinner accent
+    // line on top — so the route reads clearly over both fog and normal
+    // tiles, the same technique real map styles use for roads/routes.
+    const casing = L.polyline(route, {
+      pane: ROUTE_PANE,
+      color: ROUTE_CASING_COLOR,
+      weight: 7,
+      opacity: 0.55,
+      interactive: false,
+      lineCap: 'round',
+      lineJoin: 'round',
+    }).addTo(map);
+    const line = L.polyline(route, {
+      pane: ROUTE_PANE,
+      color: accent,
+      weight: 4,
+      opacity: 0.95,
+      interactive: false,
+      lineCap: 'round',
+      lineJoin: 'round',
+    }).addTo(map);
+    routeLayersRef.current = [casing, line];
+
+    map.fitBounds(line.getBounds(), { padding: [40, 40] });
+  }, [map, route, accent]);
+
+  // --- sync the navigator's start/waypoint markers ----------------------------
+  useEffect(() => {
+    if (!map) return;
+
+    routeMarkersRef.current.forEach((m) => m.remove());
+    routeMarkersRef.current = [];
+
+    for (const stop of routeMarkers ?? []) {
+      const marker = L.marker([stop.lat, stop.lng], { icon: routeStopIcon(stop.label, accent), interactive: false });
+      marker.addTo(map);
+      routeMarkersRef.current.push(marker);
+    }
+  }, [map, routeMarkers, accent]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height }}>
