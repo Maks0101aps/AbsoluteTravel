@@ -29,12 +29,13 @@ import ProfileWall from './ProfileWall';
 import UserProfilePage from './UserProfilePage';
 import WalkIntro from './WalkIntro';
 import LanguageSwitcher from './LanguageSwitcher';
+import AchievementsPage from './AchievementsPage';
 
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
 const DEFAULT_ACCENT = '#3FA66B';
 
-type Tab = 'map' | 'friends' | 'leaderboard' | 'chat' | 'profile' | 'cases';
+type Tab = 'map' | 'friends' | 'leaderboard' | 'achievements' | 'chat' | 'profile' | 'cases';
 
 // The profile view is opened by clicking the avatar (top-right), not a tab.
 // `short` is what the phone tab bar shows — the full labels don't fit six-across.
@@ -43,6 +44,7 @@ function buildTabs(t: (key: string) => string): { id: Tab; label: string; short:
     { id: 'map', label: t('core.nav.mapTab'), short: t('core.nav.mapTabShort'), icon: 'map' },
     { id: 'friends', label: t('core.nav.friendsTab'), short: t('core.nav.friendsTab'), icon: 'users' },
     { id: 'leaderboard', label: t('core.nav.leaderboardTab'), short: t('core.nav.leaderboardTab'), icon: 'trophy' },
+    { id: 'achievements', label: t('core.nav.achievementsTab'), short: t('core.nav.achievementsTabShort'), icon: 'medal' },
     { id: 'chat', label: t('core.nav.chatTab'), short: t('core.nav.chatTab'), icon: 'messageSquare' },
   ];
 }
@@ -548,6 +550,13 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
           />
         )}
         {tab === 'leaderboard' && <LeaderboardPage userId={user.id} userRegion={user.region} accent={accent} onOpenProfile={openProfileOf} />}
+        {tab === 'achievements' && (
+          <AchievementsPage
+            userId={user.id}
+            accent={accent}
+            onReward={({ coins, xp, level }) => onUserUpdate?.({ coins, xp, level })}
+          />
+        )}
         {tab === 'chat' && <ChatPage userId={user.id} user={user} accent={accent} initialFriendId={chatFriendId} onOpenProfile={openProfileOf} />}
         {tab === 'cases' && p && (
           <div style={{ display: 'flex', flexDirection: 'column', minHeight: '70vh', borderRadius: '24px', overflow: 'hidden', background: 'linear-gradient(180deg,#0B2A1D,#081E15)', border: '1px solid rgba(255,255,255,0.10)' }}>
