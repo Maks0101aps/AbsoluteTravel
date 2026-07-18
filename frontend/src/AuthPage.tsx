@@ -8,7 +8,8 @@ const CREAM = '#F4F1E8';
 const BG = '#071F16';
 
 interface AuthPageProps {
-  onAuth: (user: AuthUser) => void;
+  // `isNew` is true only for a fresh registration (drives the one-time onboarding).
+  onAuth: (user: AuthUser, isNew: boolean) => void;
   // Called when the entered credentials match an admin account.
   onAdminAuth: (session: AdminSession) => void;
   onBack: () => void;
@@ -79,7 +80,7 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
     try {
       if (mode === 'register') {
         const user = await registerUser({ username: username.trim(), email: email.trim(), password, region, city });
-        onAuth(user);
+        onAuth(user, true);
         return;
       }
 
@@ -95,7 +96,7 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
       }
 
       const user = await loginUser({ email: email.trim(), password });
-      onAuth(user);
+      onAuth(user, false);
     } catch (err: any) {
       setError(err?.message || 'Сталася помилка. Спробуйте ще раз.');
     } finally {

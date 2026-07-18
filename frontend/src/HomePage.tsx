@@ -25,6 +25,7 @@ import { Icon, type IconName } from './icons';
 import { ProfileCardEffect, ProfileCosmosFlourish, ProfileSakuraFlourish } from './itemVisuals';
 import ProfileWall from './ProfileWall';
 import UserProfilePage from './UserProfilePage';
+import WalkIntro from './WalkIntro';
 
 const CREAM = '#F4F1E8';
 const BG = '#071F16';
@@ -47,14 +48,19 @@ interface HomePageProps {
   onEditProfile: () => void;
   // Persist updated user fields (xp/coins/level/profile) after a shop purchase or verified visit.
   onUserUpdate?: (patch: Partial<AuthUser>) => void;
+  // One-time onboarding "top-3 places to walk" overlay (armed by Root on register).
+  showWalkIntro?: boolean;
+  onCloseWalkIntro?: () => void;
 }
 
-function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps) {
+function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, onCloseWalkIntro }: HomePageProps) {
   const p = user.profile;
   const accent = p?.color ?? DEFAULT_ACCENT;
   const background = BACKGROUNDS.find((b) => b.id === p?.backgroundId);
   const [tab, setTab] = useState<Tab>('map');
   const [openedPlaceIds, setOpenedPlaceIds] = useState<Set<string | number>>(new Set());
+  // A place asked to be opened on the map from outside (welcome recommendation).
+  const [mapFocus, setMapFocus] = useState<{ id: string | number; nonce: number } | null>(null);
   // Preselected friend when jumping into chat from "Написати" buttons.
   const [chatFriendId, setChatFriendId] = useState<number | null>(null);
   const [totalUnread, setTotalUnread] = useState(0);
@@ -495,6 +501,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
             onExplored={handleExplored}
             onMessageFriend={openChatWith}
             onOpenProfile={openProfileOf}
+            focusPlace={mapFocus}
           />
         )}
         {/* onRequestsChange must be a stable reference: it feeds FriendsPage's
@@ -543,6 +550,19 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate }: HomePageProps
           onEquip={equip}
           onOpenCase={handleOpenCase}
           onClose={() => setShopOpen(false)}
+        />
+      )}
+
+      {showWalkIntro && (
+        <WalkIntro
+          user={user}
+          accent={accent}
+          onOpenPlace={(id) => {
+            setTab('map');
+            setMapFocus({ id, nonce: Date.now() });
+            onCloseWalkIntro?.();
+          }}
+          onClose={() => onCloseWalkIntro?.()}
         />
       )}
     </div>

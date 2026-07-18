@@ -248,6 +248,11 @@ interface LeafletMapProps {
   // static country-wide view.
   focusPosition?: { lat: number; lng: number } | null;
 
+  // Imperative "fly here" target. Whenever this object identity changes to a
+  // non-null value the map animates to it (used to jump to a place picked from
+  // outside the map, e.g. the welcome recommendation).
+  flyTo?: { lat: number; lng: number; zoom?: number } | null;
+
   // Territory-exploration layer: H3 cell ids to paint as hexes, and the single
   // cell that was just unlocked (gets the one-shot reveal glow).
   exploredCells?: string[];
@@ -398,6 +403,7 @@ function LeafletMap({
   accent = '#3FA66B',
   liveMarkers,
   focusPosition,
+  flyTo,
   exploredCells,
   revealedCell,
   fog = false,
@@ -584,6 +590,12 @@ function LeafletMap({
     hasFocusedRef.current = true;
     map.flyTo([focusPosition.lat, focusPosition.lng], 15, { duration: 1 });
   }, [map, focusPosition]);
+
+  // --- imperative fly-to (place picked from outside the map) ------------------
+  useEffect(() => {
+    if (!map || !flyTo) return;
+    map.flyTo([flyTo.lat, flyTo.lng], flyTo.zoom ?? 12, { duration: 0.9 });
+  }, [map, flyTo]);
 
   // --- sync place markers -----------------------------------------------------
   useEffect(() => {
