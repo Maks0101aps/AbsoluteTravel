@@ -62,6 +62,8 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
   const [openedPlaceIds, setOpenedPlaceIds] = useState<Set<string | number>>(new Set());
   // A place asked to be opened on the map from outside (welcome recommendation).
   const [mapFocus, setMapFocus] = useState<{ id: string | number; nonce: number } | null>(null);
+  // "Are you sure?" gate before actually logging out (asked from the profile tab).
+  const [confirmLogout, setConfirmLogout] = useState(false);
   // Preselected friend when jumping into chat from "Написати" buttons.
   const [chatFriendId, setChatFriendId] = useState<number | null>(null);
   const [totalUnread, setTotalUnread] = useState(0);
@@ -452,9 +454,6 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
                 <img src={user.avatar} alt={user.name} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: `1.5px solid ${accent}` }} onError={(e) => (e.currentTarget.style.display = 'none')} />
               )}
             </button>
-            <button onClick={onLogout} style={{ background: 'transparent', color: 'rgba(244,241,232,0.7)', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '10px', padding: '8px 13px', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              Вийти
-            </button>
           </div>
         </div>
       </nav>
@@ -497,7 +496,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
       </nav>
 
       {tab === 'profile' && p && (
-        <ProfileHero user={user} accent={accent} onEditProfile={onEditProfile} />
+        <ProfileHero user={user} accent={accent} onEditProfile={onEditProfile} onRequestLogout={() => setConfirmLogout(true)} />
       )}
 
       {/* position+z-index here are only needed on the profile tab, to sit above
@@ -514,7 +513,7 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
           padding: '40px 24px 80px',
         }}
       >
-        {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} />}
+        {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} onRequestLogout={() => setConfirmLogout(true)} />}
         {tab === 'map' && (
           <ExploreMap
             accent={accent}
@@ -600,6 +599,134 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
           onClose={() => onCloseWalkIntro?.()}
         />
       )}
+
+      {confirmLogout && (
+        <LogoutConfirm
+          accent={accent}
+          onCancel={() => setConfirmLogout(false)}
+          onConfirm={() => {
+            setConfirmLogout(false);
+            onLogout();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// "Are you sure you want to log out?" gate — two explicit buttons so a stray
+// click near the old always-visible logout button in the nav can't sign
+// someone out by accident.
+function LogoutConfirm({
+  accent,
+  onCancel,
+  onConfirm,
+}: {
+  accent: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div
+      onClick={onCancel}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 5000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '22px',
+        background: 'rgba(4,16,11,0.72)',
+        backdropFilter: 'blur(7px)',
+        WebkitBackdropFilter: 'blur(7px)',
+        animation: 'fadeIn 0.2s ease both',
+        fontFamily: "'Manrope', sans-serif",
+      }}
+    >
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: 'min(360px, 100%)',
+          borderRadius: '20px',
+          background: 'linear-gradient(180deg, #0b2a1e 0%, #071c14 100%)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          boxShadow: '0 30px 70px -24px rgba(0,0,0,0.8)',
+          padding: '26px 24px',
+          color: CREAM,
+          animation: 'popIn 0.22s ease both',
+        }}
+      >
+        <div
+          style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '50%',
+            background: `${accent}1f`,
+            border: `1px solid ${accent}55`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '16px',
+            color: accent,
+          }}
+        >
+          <Icon name="signpost" size={20} strokeWidth={1.9} stroke={accent} />
+        </div>
+        <h3 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '19px', margin: '0 0 8px' }}>
+          Вийти з акаунту?
+        </h3>
+        <p style={{ fontSize: '13.5px', lineHeight: 1.5, color: 'rgba(244,241,232,0.62)', margin: '0 0 22px' }}>
+          Доведеться увійти знову, щоб продовжити подорож.
+        </p>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={onCancel}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              color: 'rgba(244,241,232,0.75)',
+              border: '1px solid rgba(255,255,255,0.16)',
+              borderRadius: '11px',
+              padding: '12px',
+              fontSize: '13.5px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: "'Manrope', sans-serif",
+            }}
+          >
+            Скасувати
+          </button>
+          <button
+            onClick={onConfirm}
+            style={{
+              flex: 1,
+              background: '#E4635F',
+              color: '#2A0E0C',
+              border: 'none',
+              borderRadius: '11px',
+              padding: '12px',
+              fontSize: '13.5px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              fontFamily: "'Manrope', sans-serif",
+            }}
+          >
+            Так, вийти
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -614,10 +741,12 @@ function ProfileHero({
   user,
   accent,
   onEditProfile,
+  onRequestLogout,
 }: {
   user: AuthUser;
   accent: string;
   onEditProfile: () => void;
+  onRequestLogout: () => void;
 }) {
   const p = user.profile!;
   return (
@@ -643,9 +772,14 @@ function ProfileHero({
             </div>
             {p.bio && <div style={{ fontSize: '13.5px', color: 'rgba(244,241,232,0.78)', lineHeight: 1.5, maxWidth: '440px' }}>{p.bio}</div>}
           </div>
-          <button onClick={onEditProfile} style={{ background: 'rgba(255,255,255,0.12)', color: CREAM, border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(6px)' }}>
-            Редагувати
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignSelf: 'flex-start' }}>
+            <button onClick={onEditProfile} style={{ background: 'rgba(255,255,255,0.12)', color: CREAM, border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(6px)' }}>
+              Редагувати
+            </button>
+            <button onClick={onRequestLogout} style={{ background: 'rgba(228,99,95,0.14)', color: '#E4635F', border: '1px solid rgba(228,99,95,0.4)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+              Вийти
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -659,10 +793,12 @@ function ProfileTab({
   user,
   onEditProfile,
   accent,
+  onRequestLogout,
 }: {
   user: AuthUser;
   onEditProfile: () => void;
   accent: string;
+  onRequestLogout: () => void;
 }) {
   const p = user.profile;
   if (!p) {
@@ -673,9 +809,14 @@ function ProfileTab({
         <p style={{ fontSize: '15.5px', lineHeight: 1.7, color: 'rgba(244,241,232,0.68)', maxWidth: '520px', margin: '0 0 32px' }}>
           Ти пропустив налаштування профілю. Персоналізуй його будь-коли.
         </p>
-        <button onClick={onEditProfile} style={{ background: accent, color: BG, fontFamily: "'Manrope', sans-serif", fontSize: '14.5px', fontWeight: 700, border: 'none', borderRadius: '12px', padding: '15px 30px', cursor: 'pointer' }}>
-          Налаштувати профіль
-        </button>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button onClick={onEditProfile} style={{ background: accent, color: BG, fontFamily: "'Manrope', sans-serif", fontSize: '14.5px', fontWeight: 700, border: 'none', borderRadius: '12px', padding: '15px 30px', cursor: 'pointer' }}>
+            Налаштувати профіль
+          </button>
+          <button onClick={onRequestLogout} style={{ background: 'rgba(228,99,95,0.14)', color: '#E4635F', fontFamily: "'Manrope', sans-serif", fontSize: '14px', fontWeight: 700, border: '1px solid rgba(228,99,95,0.4)', borderRadius: '12px', padding: '15px 24px', cursor: 'pointer' }}>
+            Вийти
+          </button>
+        </div>
       </>
     );
   }
