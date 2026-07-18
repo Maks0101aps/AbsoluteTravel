@@ -45,7 +45,11 @@
       "updatedAt": "Zaktualizowano {{time}}",
       "message": "Napisz",
       "close": "Zamknij",
-      "profileOf": "Profil {{name}}"
+      "profileOf": "Profil {{name}}",
+      "follow": "Śledź na mapie",
+      "following": "Śledzę ruch",
+      "followDisabledTitle": "Dawno nie aktualizowano — nie ma czego śledzić",
+      "followingChip": "Śledzę {{name}} · Zatrzymaj"
     },
     "xp": {
       "newRegion": " · Nowy region!",

@@ -45,7 +45,11 @@
       "updatedAt": "Оновлено {{time}}",
       "message": "Написати",
       "close": "Закрити",
-      "profileOf": "Профіль {{name}}"
+      "profileOf": "Профіль {{name}}",
+      "follow": "Стежити на карті",
+      "following": "Стежу за рухом",
+      "followDisabledTitle": "Давно не оновлювалось — стежити нема за чим",
+      "followingChip": "Стежу за {{name}} · Зупинити"
     },
     "xp": {
       "newRegion": " · Новий регіон!",

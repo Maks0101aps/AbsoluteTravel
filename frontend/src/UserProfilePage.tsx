@@ -9,6 +9,7 @@ import {
 } from './api';
 import ProfileAvatar from './ProfileAvatar';
 import ProfileWall from './ProfileWall';
+import FriendMapView from './FriendMapView';
 import XpBar from './XpBar';
 import { BACKGROUNDS, BADGES } from './data/profileOptions';
 import { Icon } from './icons';
@@ -44,6 +45,7 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
   // doesn't blank out the whole profile.
   const [acting, setActing] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -254,11 +256,33 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                   <StatChip icon="map" label={t('social.profile.statCells')} value={data.stats.cells} accent={accent} />
                   <StatChip icon="check" label={t('social.profile.statPlaces')} value={data.stats.places} accent={accent} />
                   <StatChip icon="users" label={t('social.profile.statFriends')} value={data.stats.friends} accent={accent} />
                   <StatChip icon="star" label="XP" value={data.xp} accent={accent} />
+                  {data.canSeeWall && (
+                    <button
+                      onClick={() => setShowMap(true)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: `${accent}18`,
+                        color: accent,
+                        border: `1px solid ${accent}55`,
+                        borderRadius: '12px',
+                        padding: '9px 16px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontFamily: "'Manrope', sans-serif",
+                      }}
+                    >
+                      <Icon name="compass" size={15} strokeWidth={1.9} />
+                      {t('social.profile.viewMap')}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -273,6 +297,16 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
           )}
         </div>
       </div>
+
+      {showMap && data && (
+        <FriendMapView
+          userId={data.id}
+          viewerId={viewerId}
+          displayName={p?.displayName ?? data.name}
+          accent={accent}
+          onClose={() => setShowMap(false)}
+        />
+      )}
     </div>
   );
 }

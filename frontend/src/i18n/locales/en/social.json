@@ -48,6 +48,7 @@
       "statCells": "cells",
       "statPlaces": "places",
       "statFriends": "friends",
+      "viewMap": "View map",
       "presenceOnline": "online",
       "presenceOffline": "offline",
       "presenceJustNow": "online just now",

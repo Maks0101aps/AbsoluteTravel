@@ -13,6 +13,7 @@ import { useLiveGps, type FriendDot } from './useLiveGps';
 import { useExploration } from './exploration/useExploration';
 import { UserAvatar } from './UserCard';
 import { Icon, type IconName } from './icons';
+import { BACKGROUNDS } from './data/profileOptions';
 
 // Distinct dot colors for friends on the live map.
 const FRIEND_COLORS = ['#E0A54E', '#5BB8F5', '#C77DDB', '#E58784', '#6FCF97', '#F2C94C'];
@@ -114,7 +115,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
   const { t } = useTranslation();
   const [places, setPlaces] = useState<Place[]>(PLACES);
   const [activeId, setActiveId] = useState<string | number | null>(null);
-  const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number } | null>(null);
+  const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
   const [hoverId, setHoverId] = useState<string | number | null>(null);
   // Only auto-pick the nearest place once per session — after that the user's
   // own clicks own `activeId`.
@@ -122,6 +123,15 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
   const [showForm, setShowForm] = useState(false);
   const [verifyPlace, setVerifyPlace] = useState<Place | null>(null);
   const [selectedFriend, setSelectedFriend] = useState<FriendDot | null>(null);
+  // Screen position (relative to the map box) of the avatar that was clicked,
+  // so the mini-profile card can pop up right next to it instead of a fixed
+  // corner. Cleared together with selectedFriend.
+  const [selectedFriendPos, setSelectedFriendPos] = useState<{ x: number; y: number } | null>(null);
+  const mapBoxRef = useRef<HTMLDivElement>(null);
+  // Live-tracking a friend: re-centers the map on them every time a new
+  // position broadcast comes in (see the effect below), so their movement is
+  // visible on the map itself rather than only as a jumping dot.
+  const [followFriendId, setFollowFriendId] = useState<number | null>(null);
 
   // Navigator: road-following route to a destination, with optional stops
   // along the way. See Navigator.tsx for the panel UI; state lives here
@@ -159,6 +169,28 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
   // Live GPS: own pulsing dot + friends' dots (server broadcasts every 10s).
   const { selfPosition, friendDots, sharing, geoError, setSharing } = useLiveGps(userId);
 
+  // While following a friend, re-center the map on them each time their dot
+  // moves. `flyTarget` is the same "fly here" channel the welcome-screen
+  // place recommendation uses (LeafletMap.tsx) — a new object identity here
+  // triggers the pan, no separate map-following plumbing needed. Stops
+  // itself if the friend drops off the live layer (goes offline/out of range).
+  const followedDot = followFriendId == null ? undefined : friendDots.find((d) => d.userId === followFriendId);
+  useEffect(() => {
+    if (followFriendId == null) return;
+    if (!followedDot) {
+      setFollowFriendId(null);
+      return;
+    }
+    setFlyTarget({ lat: followedDot.lat, lng: followedDot.lng });
+    // `useLiveGps` rebuilds `friendDots` (and every dot object in it) fresh
+    // on every render rather than memoizing — depending on the dot object,
+    // or the whole array, would refire this effect (and thus setFlyTarget)
+    // every render, not just on real position changes, which pegs React in
+    // an infinite update loop. Depending on the raw lat/lng numbers instead
+    // means it only reruns when the friend's position actually changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [followFriendId, followedDot?.lat, followedDot?.lng]);
+
   // Territory exploration: unlock the H3 cell under the user, award XP, animate.
   const { visitedCells, lastRevealed, events, totalCells, totalRegions } = useExploration(
     userId,
@@ -182,15 +214,25 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
         id: `friend-${d.userId}`,
         lat: d.lat,
         lng: d.lng,
-        color: FRIEND_COLORS[i % FRIEND_COLORS.length],
+        // A friend's own chosen accent colour wins when they've set one, so
+        // their pin's ring matches their profile — falls back to the
+        // rotating palette for friends who never customized.
+        color: d.friend.color ?? FRIEND_COLORS[i % FRIEND_COLORS.length],
         label: `${d.friend.name}${d.stale ? t('explore.live.staleSuffix') : ''}`,
-        avatar: d.friend.avatar,
+        avatar: d.friend.customAvatar || d.friend.avatarId || d.friend.avatar,
+        frameId: d.friend.frameId,
         dimmed: d.stale,
-        onClick: () => setSelectedFriend(d),
+        // Followed friend's dot pulses too, matching the "Ви тут" self-dot —
+        // a quick visual cue for which one you're currently tracking.
+        pulse: followFriendId === d.userId,
+        onClick: (point) => {
+          setSelectedFriend(d);
+          setSelectedFriendPos(point);
+        },
       });
     });
     return markers;
-  }, [selfPosition, sharing, userId, friendDots, profile, accent, submitterName]);
+  }, [selfPosition, sharing, userId, friendDots, profile, accent, submitterName, followFriendId]);
 
   const top3Nearby = useMemo(() => {
     if (!selfPosition || places.length === 0) return [];
@@ -267,7 +309,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
     if (!p) return;
     hasAutoSelectedRef.current = true; // don't let the GPS auto-pick override this
     setActiveId(p.id);
-    setFlyTarget({ lat: p.lat, lng: p.lng });
+    setFlyTarget({ lat: p.lat, lng: p.lng, zoom: 12 });
   }, [focusPlace, places]);
 
   const visiblePlaces = places;
@@ -321,8 +363,14 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
           based on how much content the selected place has — the detail panel
           always occupies the same 380px regardless of what's shown inside it. */}
       <div className="at-explore-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 380px', gap: '24px', alignItems: 'flex-start' }}>
-        {/* map */}
+        {/* map column: the map box + the GPS-controls row below it, as ONE
+            grid child — keeping this a strict 2-item grid (map column, detail
+            panel) so CSS grid's auto-placement can't push the detail panel
+            into an implicit second row (which left it sunk below an empty
+            row-1 cell — the "empty space above the place card" bug). */}
+        <div style={{ minWidth: 0 }}>
         <div
+          ref={mapBoxRef}
           style={{
             position: 'relative',
             // Contain Leaflet's internal z-indexes (panes/controls go up to ~1000)
@@ -392,7 +440,13 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                   top: '50%',
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
-                  zIndex: 25,
+                  // Leaflet's own panes (tiles/markers/popups) go up to
+                  // z-index:700 and — since .leaflet-container itself never
+                  // sets a z-index — aren't contained in their own stacking
+                  // context, so they leak straight into this wrapper's
+                  // isolated context and paint over anything with a lower
+                  // z-index here. Needs to clear 700, not just sibling overlays.
+                  zIndex: 900,
                   pointerEvents: 'none',
                   display: 'flex',
                   flexDirection: 'column',
@@ -423,44 +477,31 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
             </>
           )}
 
-          {/* live-GPS controls (logged-in users only) */}
-          {userId != null && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '10px', padding: '0 4px' }}>
-              <button
-                onClick={() => setSharing(!sharing)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  background: sharing ? 'rgba(77,157,224,0.15)' : 'transparent',
-                  border: `1px solid ${sharing ? 'rgba(77,157,224,0.55)' : 'rgba(255,255,255,0.15)'}`,
-                  color: sharing ? '#4D9DE0' : 'rgba(244,241,232,0.6)',
-                  borderRadius: '999px',
-                  padding: '7px 14px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  fontFamily: "'Manrope', sans-serif",
-                }}
-              >
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: sharing ? '#4D9DE0' : 'rgba(244,241,232,0.3)' }} />
-                {sharing ? t('explore.live.geoOn') : t('explore.live.geoOff')}
-              </button>
-              <span style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.45)' }}>
-                {geoError ?? t('explore.live.friendsCount', { count: friendDots.length, cells: totalCells })}
-              </span>
-            </div>
-          )}
-
-          {/* friend mini profile card */}
-          {selectedFriend && (
+          {/* friend mini profile card — pops up right next to the avatar that
+              was clicked, flipping to the other side/clamping vertically so
+              it never runs off the edge of the map box. */}
+          {selectedFriend && selectedFriendPos && (() => {
+            const CARD_W = 260;
+            const CARD_H = 100;
+            const boxW = mapBoxRef.current?.clientWidth ?? 600;
+            const boxH = mapBoxRef.current?.clientHeight ?? 400;
+            // Always to the right of the avatar — clamped (not flipped to the
+            // other side) so it never runs off the map box on narrow layouts.
+            const left = Math.min(selectedFriendPos.x + 16, Math.max(8, boxW - CARD_W - 8));
+            const top = Math.min(Math.max(selectedFriendPos.y - CARD_H / 2, 8), Math.max(8, boxH - CARD_H - 8));
+            const bg = BACKGROUNDS.find((b) => b.id === selectedFriend.friend.backgroundId)?.css ?? '#0B2B20';
+            return (
             <div
               style={{
                 position: 'absolute',
-                left: '20px',
-                bottom: '20px',
-                zIndex: 20,
-                background: '#0B2B20',
+                top: `${top}px`,
+                left: `${left}px`,
+                // Same reason as the xp-popup wrapper above: has to clear
+                // Leaflet's own panes (up to z-index:700), which leak into
+                // this box's stacking context since .leaflet-container has
+                // no z-index of its own to contain them.
+                zIndex: 900,
+                background: bg,
                 border: '1px solid rgba(255,255,255,0.15)',
                 borderRadius: '16px',
                 padding: '14px 16px',
@@ -468,7 +509,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                 alignItems: 'center',
                 gap: '12px',
                 boxShadow: '0 16px 40px -10px rgba(0,0,0,0.7)',
-                maxWidth: '320px',
+                width: `${CARD_W}px`,
               }}
             >
               <button
@@ -506,14 +547,97 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                   {t('explore.live.message')}
                 </button>
                 <button
-                  onClick={() => setSelectedFriend(null)}
+                  onClick={() => setFollowFriendId((id) => (id === selectedFriend.userId ? null : selectedFriend.userId))}
+                  disabled={selectedFriend.stale}
+                  title={selectedFriend.stale ? t('explore.live.followDisabledTitle') : undefined}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    background: followFriendId === selectedFriend.userId ? `${accent}22` : 'transparent',
+                    color: followFriendId === selectedFriend.userId ? accent : 'rgba(244,241,232,0.75)',
+                    border: `1px solid ${followFriendId === selectedFriend.userId ? accent : 'rgba(255,255,255,0.15)'}`,
+                    borderRadius: '9px',
+                    padding: '6px 13px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: selectedFriend.stale ? 'not-allowed' : 'pointer',
+                    opacity: selectedFriend.stale ? 0.5 : 1,
+                    fontFamily: "'Manrope', sans-serif",
+                  }}
+                >
+                  <Icon name="compass" size={13} strokeWidth={1.9} />
+                  {followFriendId === selectedFriend.userId ? t('explore.live.following') : t('explore.live.follow')}
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedFriend(null);
+                    setSelectedFriendPos(null);
+                  }}
                   style={{ background: 'transparent', color: 'rgba(244,241,232,0.6)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '9px', padding: '6px 13px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}
                 >
                   {t('explore.live.close')}
                 </button>
               </div>
             </div>
-          )}
+            );
+          })()}
+        </div>
+
+        {/* live-GPS controls (logged-in users only) — sits below the map, not
+            inside its position:relative box, so it can't push the friend-card/
+            xp-popup overlays (bottom/top percentages anchored to that box) down
+            past the map's own bottom edge. */}
+        {userId != null && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '10px', padding: '0 4px' }}>
+            <button
+              onClick={() => setSharing(!sharing)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: sharing ? 'rgba(77,157,224,0.15)' : 'transparent',
+                border: `1px solid ${sharing ? 'rgba(77,157,224,0.55)' : 'rgba(255,255,255,0.15)'}`,
+                color: sharing ? '#4D9DE0' : 'rgba(244,241,232,0.6)',
+                borderRadius: '999px',
+                padding: '7px 14px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: "'Manrope', sans-serif",
+              }}
+            >
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: sharing ? '#4D9DE0' : 'rgba(244,241,232,0.3)' }} />
+              {sharing ? t('explore.live.geoOn') : t('explore.live.geoOff')}
+            </button>
+            <span style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.45)' }}>
+              {geoError ?? t('explore.live.friendsCount', { count: friendDots.length, cells: totalCells })}
+            </span>
+            {followFriendId != null && (
+              <button
+                onClick={() => setFollowFriendId(null)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  background: `${accent}18`,
+                  border: `1px solid ${accent}55`,
+                  color: accent,
+                  borderRadius: '999px',
+                  padding: '7px 14px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: "'Manrope', sans-serif",
+                }}
+              >
+                <Icon name="compass" size={13} strokeWidth={1.9} />
+                {t('explore.live.followingChip', { name: friendDots.find((d) => d.userId === followFriendId)?.friend.name ?? '' })}
+              </button>
+            )}
+          </div>
+        )}
         </div>
 
         {/* detail panel */}
@@ -936,7 +1060,9 @@ function ExplorationHud({ totalCells, totalRegions, accent }: { totalCells: numb
         position: 'absolute',
         top: '22px',
         left: '22px',
-        zIndex: 20,
+        // Needs to clear Leaflet's own panes (up to z-index:700) — see the
+        // matching comment on the friend mini-profile card below.
+        zIndex: 900,
         display: 'flex',
         gap: '8px',
         pointerEvents: 'none',

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { FriendUser } from './api';
 import { AVATARS } from './data/profileOptions';
 import { Icon } from './icons';
+import ProfileAvatar from './ProfileAvatar';
 
 const CREAM = '#F4F1E8';
 
@@ -37,8 +38,29 @@ export function OnlineDot({ online, size = 10 }: { online: boolean; size?: numbe
   );
 }
 
-export function UserAvatar({ user, size = 44 }: { user: Pick<FriendUser, 'avatar' | 'name' | 'online'>; size?: number }) {
+export function UserAvatar({
+  user,
+  size = 44,
+}: {
+  user: Pick<FriendUser, 'avatar' | 'name' | 'online'> & Partial<Pick<FriendUser, 'avatarId' | 'customAvatar' | 'frameId' | 'color'>>;
+  size?: number;
+}) {
   const avatarOpt = AVATARS.find((a) => a.id === user.avatar);
+
+  // A saved profile customization (equipped avatar + frame) takes priority
+  // over the plain default `avatar` image — this is what makes a friend's
+  // actual frame show up on their map pin / mini-profile card instead of a
+  // bare photo.
+  if (user.avatarId) {
+    return (
+      <div style={{ position: 'relative', width: `${size}px`, height: `${size}px`, flex: '0 0 auto' }}>
+        <ProfileAvatar avatarId={user.avatarId} customAvatar={user.customAvatar} frameId={user.frameId} color={user.color ?? '#3FA66B'} size={size} />
+        <span style={{ position: 'absolute', right: '-1px', bottom: '-1px', display: 'inline-flex' }}>
+          <OnlineDot online={user.online} />
+        </span>
+      </div>
+    );
+  }
 
   const commonStyle: React.CSSProperties = {
     width: '100%',

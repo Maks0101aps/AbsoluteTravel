@@ -25,6 +25,7 @@ const FRIEND_USER_SELECT = {
   xp: true,
   region: true,
   city: true,
+  profile: true,
 } as const;
 
 @Injectable()
@@ -42,9 +43,27 @@ export class FriendsService {
     return id;
   }
 
-  private withPresence<T extends { id: number }>(user: T) {
+  // Unpacks the same avatarId/customAvatar/frameId/color blob UsersService's
+  // publicProfile exposes, so a friend's actual equipped avatar+frame can be
+  // drawn on the map/mini-profile instead of just their default `avatar`
+  // image — this is what the map's friend markers need frame data for.
+  private withPresence<T extends { id: number; profile?: string | null }>(user: T) {
+    const { profile: rawProfile, ...rest } = user;
+    let customization: { avatarId?: string; customAvatar?: string; frameId?: string; color?: string; backgroundId?: string } | null = null;
+    if (rawProfile) {
+      try {
+        customization = JSON.parse(rawProfile);
+      } catch {
+        customization = null;
+      }
+    }
     return {
-      ...user,
+      ...rest,
+      avatarId: customization?.avatarId,
+      customAvatar: customization?.customAvatar,
+      frameId: customization?.frameId,
+      color: customization?.color,
+      backgroundId: customization?.backgroundId,
       online: this.presence.isOnline(user.id),
       lastSeenAt: this.presence.lastSeenAt(user.id)?.toISOString() ?? null,
     };
