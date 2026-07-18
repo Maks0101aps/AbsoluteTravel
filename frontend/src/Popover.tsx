@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useViewport } from './useViewport';
 
 export interface AnchorRect {
@@ -23,6 +24,7 @@ interface PopoverProps {
 function Popover({ anchor, title, width = 320, accent, onClose, children }: PopoverProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { isMobile } = useViewport();
+  const { t } = useTranslation();
   const [pos, setPos] = useState<{ top: number; left: number; placement: 'below' | 'above' }>(() => ({
     top: anchor.bottom + 10,
     left: anchor.left,
@@ -130,7 +132,7 @@ function Popover({ anchor, title, width = 320, accent, onClose, children }: Popo
           <div style={{ fontSize: '12.5px', fontWeight: 700, letterSpacing: '0.04em', color: accent }}>{title}</div>
           <button
             onClick={onClose}
-            aria-label="Закрити"
+            aria-label={t('common.close')}
             style={{ background: 'none', border: 'none', color: 'rgba(244,241,232,0.5)', cursor: 'pointer', padding: 0, lineHeight: 0 }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>

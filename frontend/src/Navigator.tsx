@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Place } from './data/places';
 import { fetchNavigatorRoute, formatDuration, type RoutePoint, type RouteResult, type TravelProfile } from './data/routing';
 import { Icon } from './icons';
@@ -40,6 +41,7 @@ function Navigator({
   onRouteBuilt,
   onClose,
 }: NavigatorProps) {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<TravelProfile>('driving');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -65,7 +67,7 @@ function Navigator({
 
   const build = async () => {
     if (!start) {
-      setError('Спершу познач точку старту на карті');
+      setError(t('explore.navigator.startRequired'));
       return;
     }
     setLoading(true);
@@ -76,7 +78,7 @@ function Navigator({
       onRouteBuilt(result);
     } catch (e: any) {
       onRouteBuilt(null);
-      setError(e?.message || 'Не вдалося побудувати маршрут');
+      setError(e?.message || t('explore.navigator.buildFailed'));
     } finally {
       setLoading(false);
     }
@@ -109,12 +111,12 @@ function Navigator({
         style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', marginBottom: '14px', cursor: 'grab', touchAction: 'none' }}
       >
         <div>
-          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: accent, marginBottom: '4px' }}>НАВІГАТОР · перетягніть, щоб перемістити</div>
-          <div style={{ fontSize: '15px', fontWeight: 700 }}>{target.name}</div>
+          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: accent, marginBottom: '4px' }}>{t('explore.navigator.label')}</div>
+          <div style={{ fontSize: '15px', fontWeight: 700 }}>{t(`places.${target.id}.name`, { defaultValue: target.name })}</div>
         </div>
         <button
           onClick={onClose}
-          aria-label="Закрити"
+          aria-label={t('explore.navigator.close')}
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '9px', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: CREAM, cursor: 'pointer', flex: '0 0 auto' }}
         >
           <Icon name="close" size={14} strokeWidth={2} />
@@ -123,7 +125,7 @@ function Navigator({
 
       {/* start point */}
       <div style={{ marginBottom: '12px' }}>
-        <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(244,241,232,0.5)', marginBottom: '6px' }}>СТАРТ</div>
+        <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(244,241,232,0.5)', marginBottom: '6px' }}>{t('explore.navigator.start')}</div>
         {start ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', fontSize: '12.5px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '9px 12px' }}>
             <span>{start.lat.toFixed(5)}, {start.lng.toFixed(5)}</span>
@@ -131,7 +133,7 @@ function Navigator({
               onClick={onPickStart}
               style={{ background: 'none', border: 'none', color: accent, fontSize: '12px', fontWeight: 700, cursor: 'pointer', flex: '0 0 auto' }}
             >
-              Змінити
+              {t('explore.navigator.change')}
             </button>
           </div>
         ) : (
@@ -155,14 +157,14 @@ function Navigator({
             }}
           >
             <Icon name="target" size={14} strokeWidth={1.9} />
-            {picking === 'start' ? 'Клікни на карті…' : 'Оберіть точку старту на карті'}
+            {picking === 'start' ? t('explore.navigator.picking') : t('explore.navigator.pickStartButton')}
           </button>
         )}
       </div>
 
       {/* waypoints */}
       <div style={{ marginBottom: '12px' }}>
-        <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(244,241,232,0.5)', marginBottom: '6px' }}>ТОЧКИ ПО ДОРОЗІ</div>
+        <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(244,241,232,0.5)', marginBottom: '6px' }}>{t('explore.navigator.waypoints')}</div>
         {waypoints.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
             {waypoints.map((w, i) => (
@@ -170,7 +172,7 @@ function Navigator({
                 <span>{i + 1}. {w.lat.toFixed(5)}, {w.lng.toFixed(5)}</span>
                 <button
                   onClick={() => onRemoveWaypoint(i)}
-                  aria-label="Видалити точку"
+                  aria-label={t('explore.navigator.removeWaypoint')}
                   style={{ background: 'none', border: 'none', color: 'rgba(244,241,232,0.5)', cursor: 'pointer', display: 'flex', flex: '0 0 auto' }}
                 >
                   <Icon name="close" size={13} strokeWidth={2} />
@@ -199,7 +201,7 @@ function Navigator({
               fontFamily: "'Manrope', sans-serif",
             }}
           >
-            Клікай на карті, щоб додати · Готово
+            {t('explore.navigator.waypointDone')}
           </button>
         ) : (
           <button
@@ -222,7 +224,7 @@ function Navigator({
             }}
           >
             <Icon name="plus" size={14} strokeWidth={2} />
-            Додати точку по дорозі
+            {t('explore.navigator.addWaypoint')}
           </button>
         )}
       </div>
@@ -251,7 +253,7 @@ function Navigator({
             }}
           >
             <Icon name={p === 'driving' ? 'compass' : 'boot'} size={14} strokeWidth={1.9} />
-            {p === 'driving' ? 'Авто' : 'Пішки'}
+            {p === 'driving' ? t('explore.navigator.driving') : t('explore.navigator.walking')}
           </button>
         ))}
       </div>
@@ -266,7 +268,7 @@ function Navigator({
         <div style={{ marginBottom: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', background: `${accent}14`, border: `1px solid ${accent}45`, borderRadius: '12px', padding: '12px 14px' }}>
             <div>
-              <div style={{ fontSize: '16px', fontWeight: 800, color: accent }}>{route.distanceKm.toFixed(1)} км</div>
+              <div style={{ fontSize: '16px', fontWeight: 800, color: accent }}>{t('explore.distance.km', { value: route.distanceKm.toFixed(1) })}</div>
               <div style={{ fontSize: '12px', color: 'rgba(244,241,232,0.6)' }}>{formatDuration(route.durationMin)}</div>
             </div>
             <Icon name="check" size={20} strokeWidth={2.2} stroke={accent} />
@@ -275,8 +277,10 @@ function Navigator({
             <div style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '12px', color: 'rgba(244,241,232,0.65)', padding: '8px 2px 0' }}>
               <Icon name="boot" size={13} strokeWidth={1.9} />
               <span>
-                Далі під’їзд заборонено — {Math.round(route.footSegment.distanceKm * 1000)} м пішки
-                {' '}(~{formatDuration(route.footSegment.durationMin)}), позначено пунктиром
+                {t('explore.navigator.footNotice', {
+                  meters: Math.round(route.footSegment.distanceKm * 1000),
+                  duration: formatDuration(route.footSegment.durationMin),
+                })}
               </span>
             </div>
           )}
@@ -304,7 +308,7 @@ function Navigator({
           fontFamily: "'Manrope', sans-serif",
         }}
       >
-        {loading ? 'Будуємо маршрут…' : route ? 'Перебудувати маршрут' : 'Побудувати маршрут'}
+        {loading ? t('explore.navigator.building') : route ? t('explore.navigator.rebuildRoute') : t('explore.navigator.buildRoute')}
       </button>
     </div>
   );

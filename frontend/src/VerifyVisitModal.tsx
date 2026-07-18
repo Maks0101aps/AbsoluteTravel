@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Place } from './data/places';
 import { fileToCompressedDataUrl } from './data/imageUtils';
 import { verifyCheckmark, type VerifyCheckmarkResult } from './api';
@@ -19,6 +20,7 @@ interface VerifyVisitModalProps {
 type Coords = { lat: number; lng: number };
 
 function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerified }: VerifyVisitModalProps) {
+  const { t } = useTranslation();
   const [coords, setCoords] = useState<Coords | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
@@ -32,7 +34,7 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
 
   const useMyLocation = () => {
     if (!('geolocation' in navigator)) {
-      setError('Геолокація недоступна у цьому браузері');
+      setError(t('forms.verifyVisit.errorGeoUnavailable'));
       return;
     }
     setGeoLoading(true);
@@ -46,7 +48,7 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
         setGeoLoading(false);
       },
       () => {
-        setError('Не вдалося отримати геолокацію. Дозволь доступ і спробуй ще раз.');
+        setError(t('forms.verifyVisit.errorGeoFailed'));
         setGeoLoading(false);
       },
       { enableHighAccuracy: true, timeout: 8000 },
@@ -61,7 +63,7 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
     try {
       setPhoto(await fileToCompressedDataUrl(file));
     } catch {
-      setError('Не вдалося обробити фото. Спробуй інше зображення.');
+      setError(t('forms.verifyVisit.errorPhotoFailed'));
     } finally {
       setPhotoBusy(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -70,11 +72,11 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
 
   const submit = async () => {
     if (!coords) {
-      setError('Спершу поділись своєю геолокацією');
+      setError(t('forms.verifyVisit.errorNeedLocation'));
       return;
     }
     if (!photo) {
-      setError('Спершу зроби або завантаж фото місця');
+      setError(t('forms.verifyVisit.errorNeedPhoto'));
       return;
     }
     setSubmitting(true);
@@ -91,7 +93,7 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
       setResult(res);
       if (res.verified) onVerified(res);
     } catch (e: any) {
-      setError(e?.message || 'Не вдалося перевірити відвідування');
+      setError(e?.message || t('forms.verifyVisit.errorVerifyFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -143,7 +145,7 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
             </h2>
             <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.5)', marginTop: '4px' }}>{place.region}</div>
           </div>
-          <button onClick={onClose} aria-label="Закрити" style={iconBtn}>
+          <button onClick={onClose} aria-label={t('forms.verifyVisit.closeAria')} style={iconBtn}>
             <Icon name="close" size={18} />
           </button>
         </div>
@@ -171,14 +173,14 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
                   <Icon name="check" size={30} strokeWidth={2.4} />
                 </div>
                 <h3 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '22px', margin: '0 0 8px' }}>
-                  Місце зараховано!
+                  {t('forms.verifyVisit.successTitle')}
                 </h3>
                 <p style={{ fontSize: '13.5px', lineHeight: 1.6, color: 'rgba(244,241,232,0.7)', margin: '0 0 18px' }}>
                   {result.reason}
                 </p>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '10px', flexWrap: 'wrap' }}>
-                  <RewardPill label="Досвід" value={`+${result.xpAwarded} XP`} color={accent} />
-                  <RewardPill label="Монети" value={`+${result.coinsAwarded}`} color="#F0C64B" />
+                  <RewardPill label={t('forms.verifyVisit.xpReward')} value={`+${result.xpAwarded} XP`} color={accent} />
+                  <RewardPill label={t('forms.verifyVisit.coinsReward')} value={`+${result.coinsAwarded}`} color="#F0C64B" />
                 </div>
                 {result.leveledUp && (
                   <div
@@ -198,12 +200,12 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
                     }}
                   >
                     <Icon name="star" size={15} strokeWidth={2} />
-                    Новий рівень: {result.newLevel}!
+                    {t('forms.verifyVisit.newLevel', { level: result.newLevel })}
                   </div>
                 )}
                 <div style={{ marginTop: '22px' }}>
                   <button onClick={onClose} style={{ ...primaryBtn(accent), width: '100%' }}>
-                    Чудово
+                    {t('forms.verifyVisit.greatBtn')}
                   </button>
                 </div>
               </>
@@ -226,13 +228,13 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
                   <Icon name="close" size={30} strokeWidth={2.4} />
                 </div>
                 <h3 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '22px', margin: '0 0 8px' }}>
-                  Не зараховано
+                  {t('forms.verifyVisit.failTitle')}
                 </h3>
                 <p style={{ fontSize: '13.5px', lineHeight: 1.6, color: 'rgba(244,241,232,0.7)', margin: '0 0 20px' }}>
                   {result.reason}
                 </p>
                 <button onClick={retry} style={{ ...primaryBtn(accent), width: '100%' }}>
-                  Спробувати ще раз
+                  {t('forms.verifyVisit.retryBtn')}
                 </button>
               </>
             )}
@@ -241,16 +243,15 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
           /* --- Input screen --- */
           <>
             <p style={{ fontSize: '13.5px', lineHeight: 1.6, color: 'rgba(244,241,232,0.65)', margin: '0 0 20px' }}>
-              Щоб зарахувати місце, будь поруч із точкою й зроби фото. Штучний інтелект перевірить, чи фото
-              справді знято тут.
+              {t('forms.verifyVisit.intro')}
             </p>
 
             {/* Step 1: geolocation */}
             <div style={{ marginBottom: '18px' }}>
-              <div style={fieldLabel}>1. Твоє місцезнаходження</div>
+              <div style={fieldLabel}>{t('forms.verifyVisit.step1Label')}</div>
               <button onClick={useMyLocation} disabled={geoLoading} style={secondaryBtn(accent)}>
                 <Icon name="target" size={16} strokeWidth={1.9} />
-                {geoLoading ? 'Визначаємо…' : coords ? 'Оновити місцезнаходження' : 'Поділитися геолокацією'}
+                {geoLoading ? t('forms.verifyVisit.locatingBtn') : coords ? t('forms.verifyVisit.updateLocationBtn') : t('forms.verifyVisit.shareLocationBtn')}
               </button>
               {coords && (
                 <div style={{ fontSize: '12px', color: accent, marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
@@ -262,7 +263,7 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
 
             {/* Step 2: photo */}
             <div style={{ marginBottom: '20px' }}>
-              <div style={fieldLabel}>2. Фото місця</div>
+              <div style={fieldLabel}>{t('forms.verifyVisit.step2Label')}</div>
               <input
                 ref={fileRef}
                 type="file"
@@ -273,7 +274,7 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
               />
               {photo ? (
                 <div style={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)' }}>
-                  <img src={photo} alt="Фото місця" style={{ width: '100%', display: 'block', maxHeight: '260px', objectFit: 'cover' }} />
+                  <img src={photo} alt={t('forms.verifyVisit.photoAlt')} style={{ width: '100%', display: 'block', maxHeight: '260px', objectFit: 'cover' }} />
                   <button
                     onClick={() => fileRef.current?.click()}
                     style={{
@@ -291,20 +292,20 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
                       fontFamily: "'Manrope', sans-serif",
                     }}
                   >
-                    Змінити фото
+                    {t('forms.verifyVisit.changePhotoBtn')}
                   </button>
                 </div>
               ) : (
                 <button onClick={() => fileRef.current?.click()} disabled={photoBusy} style={secondaryBtn(accent)}>
                   <Icon name="camera" size={16} strokeWidth={1.9} />
-                  {photoBusy ? 'Обробка…' : 'Зробити / завантажити фото'}
+                  {photoBusy ? t('forms.verifyVisit.processingBtn') : t('forms.verifyVisit.takePhotoBtn')}
                 </button>
               )}
             </div>
 
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'rgba(244,241,232,0.75)', marginBottom: '18px', cursor: 'pointer' }}>
               <input type="checkbox" checked={shareToWall} onChange={(e) => setShareToWall(e.target.checked)} />
-              Опублікувати фото на стіні
+              {t('forms.verifyVisit.shareToWallLabel')}
             </label>
 
             {error && (
@@ -323,7 +324,7 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
                 cursor: submitting || !coords || !photo ? 'not-allowed' : 'pointer',
               }}
             >
-              {submitting ? 'Перевіряємо…' : 'Перевірити'}
+              {submitting ? t('forms.verifyVisit.submittingBtn') : t('forms.verifyVisit.submitBtn')}
             </button>
           </>
         )}

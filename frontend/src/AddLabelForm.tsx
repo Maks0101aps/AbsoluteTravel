@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { isInUkraine } from './data/geo';
 import { fileToCompressedDataUrl } from './data/imageUtils';
 import { createFriendLabel, type FriendLabel } from './api';
@@ -20,6 +21,7 @@ interface CustomParamRow {
 }
 
 function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLabelFormProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [lat, setLat] = useState<number | null>(null);
@@ -38,7 +40,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
 
   const useMyLocation = () => {
     if (!('geolocation' in navigator)) {
-      setError('Геолокація недоступна у цьому браузері');
+      setError(t('forms.addLabel.errorGeoUnavailable'));
       return;
     }
     setGeoLoading(true);
@@ -48,7 +50,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
         const la = Number(pos.coords.latitude.toFixed(5));
         const lo = Number(pos.coords.longitude.toFixed(5));
         if (!isInUkraine(la, lo)) {
-          setError('Твоя геолокація поза межами України — познач місце на карті вручну');
+          setError(t('forms.addLabel.errorOutsideUkraine'));
         } else {
           setLat(la);
           setLng(lo);
@@ -56,7 +58,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
         setGeoLoading(false);
       },
       () => {
-        setError('Не вдалося отримати геолокацію. Познач місце на карті.');
+        setError(t('forms.addLabel.errorGeoFailed'));
         setGeoLoading(false);
       },
       { enableHighAccuracy: true, timeout: 8000 },
@@ -72,7 +74,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
       const dataUrl = await fileToCompressedDataUrl(files[0]);
       setPhoto(dataUrl);
     } catch {
-      setError('Не вдалося обробити зображення');
+      setError(t('forms.addLabel.errorPhotoFailed'));
     } finally {
       setPhotoBusy(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -104,7 +106,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
 
   const handleSubmit = async () => {
     setError('');
-    if (lat == null || lng == null) return setError('Познач геолокацію мітки');
+    if (lat == null || lng == null) return setError(t('forms.addLabel.errorNeedLocation'));
     setSubmitting(true);
     try {
       // Build parameters object
@@ -133,7 +135,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
       onCreated(result);
       onClose();
     } catch (e: any) {
-      setError(e?.message ?? 'Не вдалося створити мітку');
+      setError(e?.message ?? t('forms.addLabel.errorSubmitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -174,29 +176,29 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
           <div>
             <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: 0 }}>
-              Додати локальну мітку
+              {t('forms.addLabel.title')}
             </h2>
           </div>
-          <button onClick={onClose} aria-label="Закрити" style={iconBtn}>
+          <button onClick={onClose} aria-label={t('forms.addLabel.closeAria')} style={iconBtn}>
             <Icon name="close" size={18} />
           </button>
         </div>
 
         <p style={{ fontSize: '13.5px', lineHeight: 1.6, color: 'rgba(244,241,232,0.62)', margin: '0 0 20px' }}>
-          Створи власну мітку на карті. Ти можеш налаштувати її параметри, додати фото (опціонально), зробити її видимою тільки для друзів або для всіх.
+          {t('forms.addLabel.description')}
         </p>
 
         {/* name */}
-        <Field label="Назва мітки *">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Напр. Зручне місце для намету" style={input} maxLength={80} />
+        <Field label={t('forms.addLabel.nameLabel')}>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('forms.addLabel.namePlaceholder')} style={input} maxLength={80} />
         </Field>
 
         {/* description */}
-        <Field label="Опис *">
+        <Field label={t('forms.addLabel.descriptionLabel')}>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Опиши деталі про це місце..."
+            placeholder={t('forms.addLabel.descriptionPlaceholder')}
             rows={3}
             style={{ ...input, resize: 'vertical', lineHeight: 1.5 }}
             maxLength={500}
@@ -204,7 +206,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
         </Field>
 
         {/* Visibility toggle */}
-        <Field label="Спосіб відображення">
+        <Field label={t('forms.addLabel.visibilityLabel')}>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               onClick={() => setFriendsOnly(true)}
@@ -216,7 +218,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
               }}
             >
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffffff' }} />
-              Тільки для друзів (біла мітка)
+              {t('forms.addLabel.visibilityFriends')}
             </button>
             <button
               onClick={() => setFriendsOnly(false)}
@@ -228,13 +230,13 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
               }}
             >
               <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: accent }} />
-              Для всіх (світло-жовта мітка)
+              {t('forms.addLabel.visibilityEveryone')}
             </button>
           </div>
         </Field>
 
         {/* Expiration toggle */}
-        <Field label="Час дії мітки">
+        <Field label={t('forms.addLabel.durationLabel')}>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               onClick={() => setIsTemporary(false)}
@@ -245,7 +247,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
                 color: !isTemporary ? CREAM : 'rgba(244,241,232,0.6)',
               }}
             >
-              Постійна мітка
+              {t('forms.addLabel.durationPermanent')}
             </button>
             <button
               onClick={() => setIsTemporary(true)}
@@ -256,33 +258,33 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
                 color: isTemporary ? CREAM : 'rgba(244,241,232,0.6)',
               }}
             >
-              Тимчасова (24 години)
+              {t('forms.addLabel.durationTemporary')}
             </button>
           </div>
         </Field>
 
         {/* custom params */}
-        <Field label="Додаткові параметри (необов’язково)">
+        <Field label={t('forms.addLabel.customParamsLabel')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
             {customParams.map((row, i) => (
               <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <input
                   value={row.key}
                   onChange={(e) => updateParamRow(i, 'key', e.target.value)}
-                  placeholder="Параметр (напр. WiFi)"
+                  placeholder={t('forms.addLabel.paramKeyPlaceholder')}
                   style={{ ...input, flex: 1 }}
                   maxLength={40}
                 />
                 <input
                   value={row.value}
                   onChange={(e) => updateParamRow(i, 'value', e.target.value)}
-                  placeholder="Значення (напр. Є)"
+                  placeholder={t('forms.addLabel.paramValuePlaceholder')}
                   style={{ ...input, flex: 1 }}
                   maxLength={60}
                 />
                 <button
                   onClick={() => removeParamRow(i)}
-                  aria-label="Видалити параметр"
+                  aria-label={t('forms.addLabel.removeParamAria')}
                   style={{ ...iconBtn, background: 'rgba(224,90,90,0.12)', borderColor: 'rgba(224,90,90,0.3)', color: '#F0A5A5' }}
                 >
                   <Icon name="close" size={14} />
@@ -292,22 +294,22 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
           </div>
           <button onClick={addParamRow} style={secondaryBtn}>
             <Icon name="plus" size={14} />
-            Додати параметр
+            {t('forms.addLabel.addParamBtn')}
           </button>
         </Field>
 
         {/* geolocation */}
-        <Field label="Геолокація (обов’язково) *">
+        <Field label={t('forms.addLabel.geoLabel')}>
           <LocationPicker lat={lat} lng={lng} onPick={(la, lo) => { setLat(la); setLng(lo); }} accent={accent} />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px', alignItems: 'center' }}>
             <button onClick={useMyLocation} disabled={geoLoading} style={{ ...secondaryBtn, opacity: geoLoading ? 0.6 : 1 }}>
               <Icon name="target" size={15} strokeWidth={1.9} />
-              {geoLoading ? 'Визначаю…' : 'Моя геолокація'}
+              {geoLoading ? t('forms.addLabel.myLocationLoading') : t('forms.addLabel.myLocationBtn')}
             </button>
             <input
               value={lat ?? ''}
               onChange={(e) => setLat(e.target.value === '' ? null : Number(e.target.value))}
-              placeholder="Широта"
+              placeholder={t('forms.addLabel.latPlaceholder')}
               type="number"
               step="0.00001"
               style={{ ...input, width: '120px' }}
@@ -315,7 +317,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
             <input
               value={lng ?? ''}
               onChange={(e) => setLng(e.target.value === '' ? null : Number(e.target.value))}
-              placeholder="Довгота"
+              placeholder={t('forms.addLabel.lngPlaceholder')}
               type="number"
               step="0.00001"
               style={{ ...input, width: '120px' }}
@@ -324,12 +326,12 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
         </Field>
 
         {/* photo */}
-        <Field label="Фотографія (необов’язково)">
+        <Field label={t('forms.addLabel.photoLabel')}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
             {photo ? (
               <div style={{ position: 'relative', width: '120px', height: '90px', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.14)' }}>
-                <img src={photo} alt="Мітка" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                <button onClick={removePhoto} aria-label="Видалити фото" style={{ position: 'absolute', top: '4px', right: '4px', width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(4,16,11,0.8)', border: 'none', color: CREAM, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src={photo} alt={t('forms.addLabel.photoAlt')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <button onClick={removePhoto} aria-label={t('forms.addLabel.removePhotoAria')} style={{ position: 'absolute', top: '4px', right: '4px', width: '22px', height: '22px', borderRadius: '50%', background: 'rgba(4,16,11,0.8)', border: 'none', color: CREAM, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Icon name="close" size={12} />
                 </button>
               </div>
@@ -340,7 +342,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
                 style={{ width: '120px', height: '90px', borderRadius: '10px', border: '1px dashed rgba(255,255,255,0.28)', background: 'transparent', color: 'rgba(244,241,232,0.6)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px', fontSize: '12px', fontFamily: "'Manrope', sans-serif" }}
               >
                 <Icon name={photoBusy ? 'image' : 'plus'} size={18} />
-                {photoBusy ? 'Обробка…' : 'Додати фото'}
+                {photoBusy ? t('forms.addLabel.processing') : t('forms.addLabel.addPhotoBtn')}
               </button>
             )}
           </div>
@@ -354,7 +356,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
         )}
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
-          <button onClick={onClose} style={{ ...secondaryBtn, flex: '0 0 auto' }}>Скасувати</button>
+          <button onClick={onClose} style={{ ...secondaryBtn, flex: '0 0 auto' }}>{t('forms.addLabel.cancelBtn')}</button>
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
@@ -371,7 +373,7 @@ function AddLabelForm({ accent = '#3FA66B', userId, onClose, onCreated }: AddLab
               fontFamily: "'Manrope', sans-serif",
             }}
           >
-            {submitting ? 'Створення мітки...' : 'Створити мітку'}
+            {submitting ? t('forms.addLabel.submittingBtn') : t('forms.addLabel.submitBtn')}
           </button>
         </div>
       </div>

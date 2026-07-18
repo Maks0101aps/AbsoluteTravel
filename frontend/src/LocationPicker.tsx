@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import LeafletMap from './LeafletMap';
 
 interface LocationPickerProps {
@@ -10,6 +11,7 @@ interface LocationPickerProps {
 // Real OpenStreetMap picker: tap/click anywhere in Ukraine to drop a pin, or
 // drag the pin once placed. Works well on mobile (pinch-zoom, tap-to-pick).
 function LocationPicker({ lat, lng, onPick, accent = '#3FA66B' }: LocationPickerProps) {
+  const { t } = useTranslation();
   const hasPin = lat != null && lng != null;
 
   return (
@@ -31,8 +33,8 @@ function LocationPicker({ lat, lng, onPick, accent = '#3FA66B' }: LocationPicker
       />
       <div style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.5)', marginTop: '6px', textAlign: 'center' }}>
         {hasPin
-          ? `Обрано: ${lat!.toFixed(4)}, ${lng!.toFixed(4)} — перетягни мітку, щоб уточнити`
-          : 'Торкнись карти, щоб позначити місце'}
+          ? t('explore.locationPicker.picked', { lat: lat!.toFixed(4), lng: lng!.toFixed(4) })
+          : t('explore.locationPicker.tapToPick')}
       </div>
     </div>
   );

@@ -1,4 +1,6 @@
 // Road-following route geometry via OSRM's public HTTP API.
+import i18n from '../i18n';
+
 export interface RoutePoint {
   lat: number;
   lng: number;
@@ -37,7 +39,7 @@ const OSRM_HOSTS: Record<TravelProfile, { base: string; profile: string }> = {
 /** Fetch a real road-following route through `points`, in order. */
 export async function fetchRoute(points: RoutePoint[], profile: TravelProfile): Promise<RouteResult> {
   if (points.length < 2) {
-    throw new Error('Потрібно щонайменше дві точки для маршруту');
+    throw new Error(i18n.t('explore.routing.needTwoPoints'));
   }
 
   const { base, profile: osrmProfile } = OSRM_HOSTS[profile];
@@ -48,15 +50,15 @@ export async function fetchRoute(points: RoutePoint[], profile: TravelProfile): 
   try {
     res = await fetch(url);
   } catch {
-    throw new Error('Не вдалося з’єднатися із сервісом маршрутів');
+    throw new Error(i18n.t('explore.routing.connectFailed'));
   }
   if (!res.ok) {
-    throw new Error('Не вдалося побудувати маршрут');
+    throw new Error(i18n.t('explore.routing.buildFailed'));
   }
 
   const data = await res.json();
   if (data.code !== 'Ok' || !Array.isArray(data.routes) || data.routes.length === 0) {
-    throw new Error('Маршрут між цими точками не знайдено');
+    throw new Error(i18n.t('explore.routing.noRoute'));
   }
 
   const route = data.routes[0];
@@ -113,8 +115,10 @@ export async function fetchNavigatorRoute(points: RoutePoint[], profile: TravelP
 /** "42 хв" under an hour, "1 год 20 хв" at/above it. */
 export function formatDuration(minutes: number): string {
   const total = Math.round(minutes);
-  if (total < 60) return `${total} хв`;
+  if (total < 60) return i18n.t('explore.duration.minutes', { count: total });
   const h = Math.floor(total / 60);
   const m = total % 60;
-  return m > 0 ? `${h} год ${m} хв` : `${h} год`;
+  return m > 0
+    ? i18n.t('explore.duration.hoursMinutes', { hours: h, mins: m })
+    : i18n.t('explore.duration.hoursOnly', { count: h });
 }

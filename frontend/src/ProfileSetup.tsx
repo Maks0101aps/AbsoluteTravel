@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { type AuthUser, type ProfileCustomization } from './api';
 import ProfileAvatar from './ProfileAvatar';
 import XpBar from './XpBar';
@@ -129,6 +130,7 @@ function Editable({
 // ---- main -----------------------------------------------------------------
 
 function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
+  const { t } = useTranslation();
   const init = user.profile;
   const [avatarId, setAvatarId] = useState(init?.avatarId ?? AVATARS[0].id);
   const [customAvatar, setCustomAvatar] = useState<string | undefined>(init?.customAvatar);
@@ -195,21 +197,21 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
 
   // rail category → element to anchor & editor to open
   const rail: { key: EditorKey; icon: IconName; label: string; ref: React.RefObject<HTMLDivElement | null> }[] = [
-    { key: 'background', icon: 'image', label: 'Фон', ref: cardRef },
-    { key: 'avatar', icon: 'user', label: 'Аватар', ref: avatarRef },
-    { key: 'frame', icon: 'target', label: 'Рамка', ref: avatarRef },
-    { key: 'badges', icon: 'star', label: 'Значки', ref: badgesRef },
-    { key: 'effects', icon: 'sparkle', label: 'Ефекти', ref: cardRef },
+    { key: 'background', icon: 'image', label: t('core.profileSetup.railBackground'), ref: cardRef },
+    { key: 'avatar', icon: 'user', label: t('core.profileSetup.railAvatar'), ref: avatarRef },
+    { key: 'frame', icon: 'target', label: t('core.profileSetup.railFrame'), ref: avatarRef },
+    { key: 'badges', icon: 'star', label: t('core.profileSetup.railBadges'), ref: badgesRef },
+    { key: 'effects', icon: 'sparkle', label: t('core.profileSetup.railEffects'), ref: cardRef },
   ];
 
   return (
     <div className="at-ps-page" style={{ fontFamily: "'Manrope', sans-serif", background: BG, color: CREAM, minHeight: '100dvh', padding: '48px 20px 72px' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(26px,3.4vw,38px)', margin: '0 0 6px' }}>
-          {init ? 'Твій профіль' : 'Створи свій профіль'}
+          {init ? t('core.profileSetup.titleEdit') : t('core.profileSetup.titleCreate')}
         </h1>
         <p style={{ fontSize: '14.5px', color: 'rgba(244,241,232,0.55)', margin: '0 0 30px', maxWidth: '540px' }}>
-          Натисни на будь-який елемент картки, щоб змінити його. Категорії праворуч підсвічують потрібну частину.
+          {t('core.profileSetup.subtitle')}
         </p>
 
         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
@@ -252,7 +254,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                 {/* dedicated frame trigger */}
                 <button
                   data-editable
-                  title="Змінити рамку"
+                  title={t('core.profileSetup.changeFrame')}
                   onClick={(e) => {
                     e.stopPropagation();
                     openAt('frame', avatarRef.current);
@@ -285,10 +287,10 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
                   <Editable accent={color} active={active === 'level'} radius={999} pencil={false} onOpen={(el) => openAt('level', el)}>
                     <span style={{ display: 'inline-block', fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.12em', color: BG, background: color, padding: '5px 11px', borderRadius: '999px', transition: 'background 0.25s ease' }}>
-                      РІВЕНЬ {user.level}
+                      {t('core.profileSetup.levelBadge', { level: user.level })}
                     </span>
                   </Editable>
-                  <span title="Монети" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 700, color: '#F0C64B', background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.3)', padding: '4px 10px', borderRadius: '999px' }}>
+                  <span title={t('core.profileSetup.coinsTitle')} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 700, color: '#F0C64B', background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.3)', padding: '4px 10px', borderRadius: '999px' }}>
                     <Icon name="coin" size={14} strokeWidth={1.9} />
                     {coins}
                   </span>
@@ -301,7 +303,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                           </span>
                         ))
                       ) : (
-                        <span style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.5)' }}>Значки</span>
+                        <span style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.5)' }}>{t('core.profileSetup.badgesEmpty')}</span>
                       )}
                     </div>
                   </Editable>
@@ -327,7 +329,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                 {/* bio */}
                 <Editable accent={color} active={active === 'bio'} radius={8} onOpen={(el) => openAt('bio', el)} style={{ display: 'block' }}>
                   <div style={{ fontSize: '13.5px', color: bio.trim() ? 'rgba(244,241,232,0.8)' : 'rgba(244,241,232,0.45)', lineHeight: 1.5, padding: '4px', maxWidth: '440px', minHeight: '20px' }}>
-                    {bio.trim() || 'Додай короткий опис про себе…'}
+                    {bio.trim() || t('core.profileSetup.bioPlaceholder')}
                   </div>
                 </Editable>
               </div>
@@ -387,10 +389,10 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
         {/* ============ ACTIONS ============ */}
         <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center', marginTop: '32px' }}>
           <button onClick={finish} style={{ background: color, color: BG, fontFamily: "'Manrope', sans-serif", fontSize: '14.5px', fontWeight: 700, border: 'none', borderRadius: '12px', padding: '15px 32px', cursor: 'pointer', transition: 'background 0.2s' }}>
-            Зберегти профіль
+            {t('core.profileSetup.saveProfile')}
           </button>
           <button onClick={onSkip} style={{ background: 'transparent', color: 'rgba(244,241,232,0.6)', fontFamily: "'Manrope', sans-serif", fontSize: '14px', fontWeight: 600, border: '1px solid rgba(255,255,255,0.14)', borderRadius: '12px', padding: '15px 24px', cursor: 'pointer' }}>
-            {init ? 'Скасувати' : 'Пропустити поки що'}
+            {init ? t('core.profileSetup.cancel') : t('core.profileSetup.skip')}
           </button>
         </div>
       </div>
@@ -407,15 +409,15 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
           width={active === 'name' || active === 'bio' || active === 'level' ? 300 : 320}
           title={
             {
-              avatar: 'Аватар',
-              frame: 'Рамка',
-              background: 'Фон картки',
-              name: 'Відображуване імʼя',
-              bio: 'Короткий опис',
-              level: 'Твій рівень',
-              color: 'Колір акценту',
-              badges: 'Значки',
-              effects: 'Ефекти картки',
+              avatar: t('core.profileSetup.popoverAvatar'),
+              frame: t('core.profileSetup.popoverFrame'),
+              background: t('core.profileSetup.popoverBackground'),
+              name: t('core.profileSetup.popoverName'),
+              bio: t('core.profileSetup.popoverBio'),
+              level: t('core.profileSetup.popoverLevel'),
+              color: t('core.profileSetup.popoverColor'),
+              badges: t('core.profileSetup.popoverBadges'),
+              effects: t('core.profileSetup.popoverEffects'),
             }[active]
           }
         >
@@ -430,7 +432,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                 ) : (
                   <>
                     <Icon name="plus" size={18} stroke={color} strokeWidth={2} />
-                    <span style={{ fontSize: '8.5px', color: 'rgba(244,241,232,0.6)' }}>Свій</span>
+                    <span style={{ fontSize: '8.5px', color: 'rgba(244,241,232,0.6)' }}>{t('core.profileSetup.custom')}</span>
                   </>
                 )}
               </div>
@@ -526,7 +528,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
               maxLength={32}
               onChange={(e) => setDisplayName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') close(); }}
-              placeholder="Твоє імʼя"
+              placeholder={t('core.profileSetup.namePlaceholder')}
               style={{ width: '100%', padding: '11px 13px', fontSize: '14px', fontFamily: "'Manrope', sans-serif", color: CREAM, background: 'rgba(255,255,255,0.05)', border: `1px solid ${color}`, borderRadius: '10px', outline: 'none' }}
             />
           )}
@@ -538,7 +540,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                 value={bio}
                 maxLength={160}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="Люблю гори, каву та несподівані маршрути…"
+                placeholder={t('core.profileSetup.bioTextareaPlaceholder')}
                 style={{ width: '100%', minHeight: '80px', resize: 'vertical', padding: '11px 13px', fontSize: '13.5px', fontFamily: "'Manrope', sans-serif", color: CREAM, background: 'rgba(255,255,255,0.05)', border: `1px solid ${color}`, borderRadius: '10px', outline: 'none' }}
               />
               <div style={{ textAlign: 'right', fontSize: '11px', color: 'rgba(244,241,232,0.45)', marginTop: '5px' }}>{bio.length}/160</div>
@@ -551,14 +553,14 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                 <XpBar xp={user.xp} accent={color} />
               </div>
               <p style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.6)', lineHeight: 1.5, margin: 0 }}>
-                Досліджуй місця, проходь маршрути та виконуй завдання, щоб отримувати XP і відкривати нові аватари, рамки й ефекти. Максимальний рівень — {MAX_LEVEL}.
+                {t('core.profileSetup.levelDescription', { maxLevel: MAX_LEVEL })}
               </p>
             </div>
           )}
 
           {active === 'badges' && (
             <>
-              <p style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.5)', margin: '0 0 10px' }}>Обери значки, які показувати на картці.</p>
+              <p style={{ fontSize: '11.5px', color: 'rgba(244,241,232,0.5)', margin: '0 0 10px' }}>{t('core.profileSetup.badgesHint')}</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '9px' }}>
                 {BADGES.map((b) => {
                   const locked = !canUse(b.lock, b.id);

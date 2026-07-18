@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   acceptFriendRequest,
   getFriendRequests,
@@ -67,6 +68,7 @@ function SmallButton({
 }
 
 function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onRequestsChange }: FriendsPageProps) {
+  const { t } = useTranslation();
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [requests, setRequests] = useState<FriendRequest[]>([]);
   const [query, setQuery] = useState('');
@@ -82,14 +84,14 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
     // localStorage makes both endpoints 400).
     getFriends(userId)
       .then(setFriends)
-      .catch((e) => setError(e?.message ?? 'Не вдалося завантажити друзів'));
+      .catch((e) => setError(e?.message ?? t('social.friends.loadFriendsError')));
     getFriendRequests(userId)
       .then((reqs) => {
         setRequests(reqs);
         onRequestsChange?.(reqs.length);
       })
-      .catch((e) => setError(e?.message ?? 'Не вдалося завантажити запити'));
-  }, [userId, onRequestsChange]);
+      .catch((e) => setError(e?.message ?? t('social.friends.loadRequestsError')));
+  }, [userId, onRequestsChange, t]);
 
   useEffect(() => {
     reload();
@@ -158,7 +160,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
     setError(null);
     try {
       await sendFriendRequest(userId, { targetUserId: target.id });
-      flash(`Запит надіслано користувачу ${target.name}`);
+      flash(t('social.friends.requestSent', { name: target.name }));
       setResults((prev) => prev.map((r) => (r.id === target.id ? { ...r, relation: 'outgoing' } : r)));
       reload();
     } catch (e: any) {
@@ -170,7 +172,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
     setError(null);
     try {
       await acceptFriendRequest(req.id, userId);
-      flash(`Тепер ви друзі з ${req.sender.name}!`);
+      flash(t('social.friends.nowFriends', { name: req.sender.name }));
       reload();
     } catch (e: any) {
       setError(e.message);
@@ -188,7 +190,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
   };
 
   const handleUnfriend = async (friend: FriendEntry) => {
-    if (!window.confirm(`Видалити ${friend.name} з друзів?`)) return;
+    if (!window.confirm(t('social.friends.confirmUnfriend', { name: friend.name }))) return;
     setError(null);
     try {
       await removeFriend(friend.friendshipId, userId);
@@ -203,10 +205,10 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
   return (
     <div style={{ fontFamily: "'Manrope', sans-serif", color: CREAM }}>
       <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 3vw, 34px)', margin: '0 0 8px' }}>
-        Твоє коло мандрівників
+        {t('social.friends.heading')}
       </h2>
       <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'rgba(244,241,232,0.62)', margin: '0 0 24px', maxWidth: '560px' }}>
-        Додавай друзів, слідкуй за їхніми рівнями та спілкуйся в чаті. Онлайн зараз: {onlineCount} із {friends.length}.
+        {t('social.friends.subheading', { online: onlineCount, total: friends.length })}
       </p>
 
       {(error || notice) && (
@@ -230,12 +232,12 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
         {/* left: friends list */}
         <div className="at-col" style={{ flex: '1 1 380px', minWidth: '300px' }}>
           <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px' }}>
-            Мої друзі <span style={{ color: 'rgba(244,241,232,0.4)' }}>({friends.length})</span>
+            {t('social.friends.myFriends')} <span style={{ color: 'rgba(244,241,232,0.4)' }}>({friends.length})</span>
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {friends.length === 0 && (
               <div style={{ background: PANEL, borderRadius: '14px', border: '1px dashed rgba(255,255,255,0.15)', padding: '24px', fontSize: '13.5px', color: 'rgba(244,241,232,0.55)' }}>
-                Поки що порожньо. Знайди друзів через пошук праворуч!
+                {t('social.friends.emptyFriends')}
               </div>
             )}
             {friends.map((f, i) => (
@@ -247,8 +249,8 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
                 onClick={onOpenProfile ? () => onOpenProfile(f.id) : undefined}
                 actions={
                   <>
-                    <SmallButton label="Написати" color={accent} onClick={() => onMessage?.(f.id)} />
-                    <SmallButton label="Видалити" color="#D9534F" outline onClick={() => handleUnfriend(f)} />
+                    <SmallButton label={t('social.friends.message')} color={accent} onClick={() => onMessage?.(f.id)} />
+                    <SmallButton label={t('social.friends.remove')} color="#D9534F" outline onClick={() => handleUnfriend(f)} />
                   </>
                 }
               />
@@ -262,7 +264,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
               gives no way to tell "no requests" from "something broke". */}
           <div>
             <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px' }}>
-              Вхідні запити{' '}
+              {t('social.friends.incomingRequests')}{' '}
               {requests.length > 0 && (
                 <span style={{ color: '#071F16', background: accent, borderRadius: '999px', padding: '1px 8px', fontSize: '12px', fontWeight: 800 }}>
                   {requests.length}
@@ -271,7 +273,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
             </h3>
             {requests.length === 0 ? (
               <div style={{ background: PANEL, borderRadius: '14px', border: '1px dashed rgba(255,255,255,0.15)', padding: '18px', fontSize: '13px', color: 'rgba(244,241,232,0.55)', lineHeight: 1.5 }}>
-                Нових запитів немає. Коли хтось захоче додати тебе в друзі — запит з’явиться тут.
+                {t('social.friends.emptyRequests')}
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -285,8 +287,8 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
                     onClick={onOpenProfile ? () => onOpenProfile(req.sender.id) : undefined}
                     actions={
                       <>
-                        <SmallButton label="Прийняти" color={accent} onClick={() => handleAccept(req)} />
-                        <SmallButton label="Відхилити" color="#D9534F" outline onClick={() => handleDecline(req)} />
+                        <SmallButton label={t('social.friends.accept')} color={accent} onClick={() => handleAccept(req)} />
+                        <SmallButton label={t('social.friends.decline')} color="#D9534F" outline onClick={() => handleDecline(req)} />
                       </>
                     }
                   />
@@ -296,7 +298,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
           </div>
 
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px' }}>Знайти мандрівників</h3>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px' }}>{t('social.friends.findTravelers')}</h3>
             <div style={{ position: 'relative', marginBottom: '10px' }}>
               <span style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(244,241,232,0.4)', display: 'inline-flex' }}>
                 <Icon name="target" size={15} strokeWidth={1.9} />
@@ -304,7 +306,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ім’я користувача…"
+                placeholder={t('social.friends.searchPlaceholder')}
                 style={{
                   width: '100%',
                   boxSizing: 'border-box',
@@ -320,9 +322,9 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
               />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {searching && <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.5)' }}>Пошук…</div>}
+              {searching && <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.5)' }}>{t('social.friends.searching')}</div>}
               {!searching && query.trim().length >= 2 && results.length === 0 && (
-                <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.5)' }}>Нікого не знайдено.</div>
+                <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.5)' }}>{t('social.friends.noResults')}</div>
               )}
               {results.map((r, i) => (
                 <UserCard
@@ -334,17 +336,17 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
                   onClick={onOpenProfile ? () => onOpenProfile(r.id) : undefined}
                   actions={
                     r.relation === 'friends' ? (
-                      <SmallButton label="Написати" color={accent} onClick={() => onMessage?.(r.id)} />
+                      <SmallButton label={t('social.friends.message')} color={accent} onClick={() => onMessage?.(r.id)} />
                     ) : r.relation === 'outgoing' ? (
-                      <SmallButton label="Запит надіслано" color={accent} outline disabled onClick={() => {}} />
+                      <SmallButton label={t('social.friends.requestSentButton')} color={accent} outline disabled onClick={() => {}} />
                     ) : r.relation === 'incoming' ? (
                       <SmallButton
-                        label="Прийняти запит"
+                        label={t('social.friends.acceptRequest')}
                         color={accent}
                         onClick={() => handleAccept({ id: r.friendshipId!, createdAt: '', sender: r })}
                       />
                     ) : (
-                      <SmallButton label="Додати" color={accent} onClick={() => handleSend(r)} />
+                      <SmallButton label={t('social.friends.add')} color={accent} onClick={() => handleSend(r)} />
                     )
                   }
                 />

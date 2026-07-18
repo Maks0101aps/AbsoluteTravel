@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getPlaces, type AuthUser } from './api';
 import {
   PLACES,
@@ -181,6 +182,7 @@ interface WalkIntroProps {
 }
 
 function WalkIntro({ user, accent, onClose, onOpenPlace }: WalkIntroProps) {
+  const { t } = useTranslation();
   const [places, setPlaces] = useState<Place[]>(PLACES);
   const [mounted, setMounted] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -238,12 +240,12 @@ function WalkIntro({ user, accent, onClose, onOpenPlace }: WalkIntroProps) {
 
   const lead =
     scope === 'city'
-      ? 'Зібрали три найкращі локації прямо у твоєму місті — саме час вибратись на прогулянку.'
+      ? t('explore.walkIntro.leadCity')
       : scope === 'region'
-        ? 'У твоєму місті поки затишно, тож ось три найкращі маршрути з твоєї області.'
+        ? t('explore.walkIntro.leadRegion')
         : scope === 'nearby'
-          ? 'Поруч небагато місць, тому ми додали найближчі цікаві локації із сусідніх міст.'
-          : 'Ось три наші улюблені місця для прогулянки, з яких приємно почати подорож Україною.';
+          ? t('explore.walkIntro.leadNearby')
+          : t('explore.walkIntro.leadCountry');
 
   return (
     <div
@@ -334,7 +336,7 @@ function WalkIntro({ user, accent, onClose, onOpenPlace }: WalkIntroProps) {
         >
           <button
             onClick={close}
-            aria-label="Закрити"
+            aria-label={t('explore.walkIntro.close')}
             style={{
               position: 'absolute',
               top: '16px',
@@ -374,7 +376,7 @@ function WalkIntro({ user, accent, onClose, onOpenPlace }: WalkIntroProps) {
             <span style={{ display: 'inline-flex', animation: 'atWalkFloat 2.6s ease-in-out infinite' }}>
               <Icon name="sparkle" size={14} strokeWidth={1.9} />
             </span>
-            Вітаємо в Absolute Travel
+            {t('explore.walkIntro.badge')}
           </div>
 
           <h2
@@ -386,9 +388,9 @@ function WalkIntro({ user, accent, onClose, onOpenPlace }: WalkIntroProps) {
               margin: '0 0 10px',
             }}
           >
-            Топ-3 місця, куди сходити
+            {t('explore.walkIntro.titleLine1')}
             <br />
-            погуляти
+            {t('explore.walkIntro.titleLine2')}
           </h2>
           {locationLabel && (
             <div
@@ -431,7 +433,7 @@ function WalkIntro({ user, accent, onClose, onOpenPlace }: WalkIntroProps) {
                 className="at-walk-card"
                 role="button"
                 tabIndex={0}
-                title={`Відкрити «${p.name}» на мапі`}
+                title={t('explore.walkIntro.openOnMap', { name: t(`places.${p.id}.name`, { defaultValue: p.name }) })}
                 onClick={() => onOpenPlace?.(p.id)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -489,7 +491,7 @@ function WalkIntro({ user, accent, onClose, onOpenPlace }: WalkIntroProps) {
                   {photo ? (
                     <img
                       src={photo}
-                      alt={p.name}
+                      alt={t(`places.${p.id}.name`, { defaultValue: p.name })}
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).style.display = 'none';
                       }}
@@ -525,7 +527,7 @@ function WalkIntro({ user, accent, onClose, onOpenPlace }: WalkIntroProps) {
                 {/* text */}
                 <div style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
-                    <span style={{ fontFamily: "'Lora', serif", fontSize: '17px', fontWeight: 600 }}>{p.name}</span>
+                    <span style={{ fontFamily: "'Lora', serif", fontSize: '17px', fontWeight: 600 }}>{t(`places.${p.id}.name`, { defaultValue: p.name })}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                     <span
@@ -543,7 +545,7 @@ function WalkIntro({ user, accent, onClose, onOpenPlace }: WalkIntroProps) {
                       }}
                     >
                       <Icon name={CATEGORY_ICON[p.category]} size={11} strokeWidth={1.9} />
-                      {meta.label}
+                      {t(`category.${p.category}`, { defaultValue: meta.label })}
                     </span>
                     <span
                       style={{
@@ -559,7 +561,7 @@ function WalkIntro({ user, accent, onClose, onOpenPlace }: WalkIntroProps) {
                         padding: '2px 8px',
                       }}
                     >
-                      {diff.label}
+                      {t(`difficulty.${p.difficulty ?? 1}`, { defaultValue: diff.label })}
                     </span>
                   </div>
                   <p
@@ -574,7 +576,7 @@ function WalkIntro({ user, accent, onClose, onOpenPlace }: WalkIntroProps) {
                       overflow: 'hidden',
                     }}
                   >
-                    {p.description}
+                    {t(`places.${p.id}.description`, { defaultValue: p.description })}
                   </p>
                 </div>
               </div>
@@ -612,7 +614,7 @@ function WalkIntro({ user, accent, onClose, onOpenPlace }: WalkIntroProps) {
                 animation: 'atWalkSheen 2.8s ease-in-out 0.9s infinite',
               }}
             />
-            <span style={{ position: 'relative' }}>Погнали досліджувати мапу</span>
+            <span style={{ position: 'relative' }}>{t('explore.walkIntro.cta')}</span>
           </button>
         </div>
       </div>

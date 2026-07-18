@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { FriendUser } from './api';
 import { AVATARS } from './data/profileOptions';
 import { Icon } from './icons';
@@ -18,9 +19,10 @@ interface UserCardProps {
 }
 
 export function OnlineDot({ online, size = 10 }: { online: boolean; size?: number }) {
+  const { t } = useTranslation();
   return (
     <span
-      title={online ? 'Онлайн' : 'Офлайн'}
+      title={online ? t('social.userCard.online') : t('social.userCard.offline')}
       style={{
         width: `${size}px`,
         height: `${size}px`,
@@ -77,6 +79,7 @@ export function UserAvatar({ user, size = 44 }: { user: Pick<FriendUser, 'avatar
 }
 
 function UserCard({ user, accent = '#3FA66B', subtitle, actions, onClick, compact, index }: UserCardProps) {
+  const { t } = useTranslation();
   return (
     <div
       onClick={onClick}
@@ -113,7 +116,7 @@ function UserCard({ user, accent = '#3FA66B', subtitle, actions, onClick, compac
               flex: '0 0 auto',
             }}
           >
-            РІВЕНЬ {user.level}
+            {t('social.userCard.level', { level: user.level })}
           </span>
         </div>
         <div style={{ fontSize: '12px', color: 'rgba(244,241,232,0.55)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

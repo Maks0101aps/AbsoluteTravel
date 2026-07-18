@@ -1,0 +1,182 @@
+{
+  "shop": {
+    "wall": {
+      "title": "СТІНА МАНДРІВНИКА",
+      "loading": "Завантаження…",
+      "loadMore": "Завантажити ще",
+      "emptySelf": "Тут поки порожньо. Досліджуй мапу, і твої нові місця з'являться тут!",
+      "emptyOther": "Цей мандрівник ще не поділився жодною подорожжю.",
+      "loadFailed": "Не вдалося завантажити стіну",
+      "loadMoreFailed": "Не вдалося завантажити ще",
+      "photoAlt": "Фото відвідування",
+      "newPlaceVisited": "Нове місце відвідано",
+      "newRegionUnlocked": "Відкрито новий регіон!",
+      "newCellUnlocked": "Розблоковано нову клітинку території",
+      "timeJustNow": "щойно",
+      "timeMinutesAgo": "{{count}} хв тому",
+      "timeHoursAgo": "{{count}} год тому",
+      "timeDaysAgo": "{{count}} дн тому"
+    },
+    "categories": {
+      "avatars": "Аватари",
+      "backgrounds": "Фони",
+      "frames": "Рамки",
+      "colors": "Кольори",
+      "badges": "Значки",
+      "effects": "Ефекти"
+    },
+    "header": {
+      "title": "Крамниця мандрівника",
+      "subtitle": "Обмінюй зароблені монети на аватари, фони та інші прикраси профілю."
+    },
+    "genericAvatar": "Аватар",
+    "avatarNames": {
+      "compass": "Компас",
+      "mountain": "Вершина",
+      "pine": "Хвоя",
+      "tent": "Намет",
+      "map": "Мапа",
+      "signpost": "Дороговказ",
+      "binoculars": "Розвідник",
+      "flame": "Вогонь",
+      "backpack": "Рюкзак",
+      "feather": "Перо",
+      "shield": "Щит",
+      "moon": "Місяць",
+      "sun": "Сонце",
+      "crown": "Корона",
+      "star": "Зірка",
+      "trophy": "Трофей",
+      "sparkle": "Сяйво"
+    },
+    "slotLabels": {
+      "avatar": "Аватар",
+      "background": "Фон профілю",
+      "frame": "Рамка",
+      "color": "Колір",
+      "accentColor": "Колір акценту",
+      "badges": "Значок",
+      "effect": "Ефект"
+    },
+    "purchase": {
+      "select": "Обрати",
+      "selected": "Обрано",
+      "buying": "Купуємо…",
+      "fromCase": "З кейсу",
+      "level": "Рівень {{count}}",
+      "missingCoins_one": "Не вистачає {{count}} монети",
+      "missingCoins_few": "Не вистачає {{count}} монет",
+      "missingCoins_many": "Не вистачає {{count}} монет",
+      "missingCoins_other": "Не вистачає {{count}} монет"
+    },
+    "caseOpener": {
+      "title": "Скриня мандрівника",
+      "back": "Назад",
+      "openFailed": "Не вдалося відкрити кейс",
+      "done": "Готово",
+      "openAgain": "Відкрити ще",
+      "opening": "Відкриваємо…",
+      "alreadyOpened": "Вже відкрито",
+      "openFree": "Відкрити безкоштовно",
+      "openFor": "Відкрити за {{count}}",
+      "notEnoughCoins": "Не вистачає монет",
+      "possibleRewards": "МОЖЛИВІ ПРИЗИ",
+      "duplicate": "ПОВТОРКА",
+      "duplicateRefund": "Повторка · повернуто +{{count}} монет",
+      "applied": "Застосовано",
+      "apply": "Застосувати",
+      "select": "Обрати",
+      "alreadyOwned": "Вже у тебе",
+      "free": "FREE"
+    },
+    "xp": {
+      "howToLevel": "Як отримати рівень",
+      "howToLevelTitle": "ЯК ОТРИМАТИ РІВЕНЬ",
+      "level": "РІВЕНЬ {{count}}",
+      "maxLevel": "Максимальний рівень",
+      "close": "Закрити",
+      "sources": {
+        "cell": "Відвідати нову клітинку карти",
+        "easy": "Підтвердити відвідування місця — Легко",
+        "medium": "Підтвердити відвідування місця — Середньо",
+        "hard": "Підтвердити відвідування місця — Складно",
+        "extreme": "Підтвердити відвідування місця — Екстремально"
+      }
+    },
+    "lock": {
+      "level": "Рівень {{count}}",
+      "case": "З кейсу",
+      "coins": "{{count}} монет"
+    },
+    "items": {
+      "background": {
+        "forest": { "name": "Ліс" },
+        "scenic1": { "name": "Гори" },
+        "scenic2": { "name": "Долина" },
+        "emerald": { "name": "Смарагд" },
+        "scenic3": { "name": "Захід сонця" },
+        "ocean": { "name": "Океан" },
+        "ember": { "name": "Багаття" },
+        "midnight": { "name": "Опівніч" },
+        "aurora": { "name": "Аврора" },
+        "sakura": { "name": "Сакура" },
+        "cosmos": { "name": "Космос" },
+        "glacier": { "name": "Льодовик" },
+        "volcano": { "name": "Вулкан" },
+        "nebula": { "name": "Туманність" },
+        "mirage": { "name": "Міраж" }
+      },
+      "frame": {
+        "none": { "name": "Без рамки" },
+        "solid": { "name": "Класична" },
+        "glow": { "name": "Сяйво" },
+        "gold": { "name": "Золота" },
+        "gem": { "name": "Самоцвіт" },
+        "frost": { "name": "Іній" },
+        "magma": { "name": "Магма" },
+        "prism": { "name": "Призма" },
+        "blackhole": { "name": "Чорна діра" }
+      },
+      "badges": {
+        "newcomer": { "name": "Новачок" },
+        "hiker": { "name": "Турист" },
+        "photographer": { "name": "Фотограф" },
+        "explorer": { "name": "Дослідник" },
+        "mountaineer": { "name": "Підкорювач вершин" },
+        "legend": { "name": "Легенда" },
+        "voyager": { "name": "Вояжер" },
+        "pathfinder": { "name": "Шукач шляхів" }
+      },
+      "effect": {
+        "none": { "name": "Без ефекту" },
+        "glow": { "name": "Мʼяке сяйво" },
+        "aurora": { "name": "Аврора" },
+        "sparkle": { "name": "Іскри" },
+        "fireflies": { "name": "Світлячки" },
+        "matrix": { "name": "Неоновий дощ" },
+        "vortex": { "name": "Космічний вир" }
+      }
+    },
+    "rarity": {
+      "common": "Звичайний",
+      "uncommon": "Незвичайний",
+      "rare": "Рідкісний",
+      "epic": "Епічний",
+      "legendary": "Легендарний"
+    },
+    "cases": {
+      "starter": {
+        "name": "Кейс початківця",
+        "tagline": "Недорогий кейс для перших прикрас профілю."
+      },
+      "wanderer": {
+        "name": "Кейс мандрівника",
+        "tagline": "Фони, аватари й рамки з усіх куточків світу."
+      },
+      "legendary": {
+        "name": "Легендарний кейс",
+        "tagline": "Найрідкісніші прикраси. Високий ризик — висока нагорода."
+      }
+    }
+  }
+}

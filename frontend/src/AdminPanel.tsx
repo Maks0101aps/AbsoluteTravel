@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   adminListPlaces,
   adminPlaceCounts,
@@ -30,17 +31,21 @@ const DEFAULT_ACCENT = '#3FA66B';
 type StatusFilter = 'pending' | 'approved' | 'rejected' | 'all';
 type Section = 'moderation' | 'admins';
 
-const STATUS_META: Record<string, { label: string; color: string }> = {
-  pending: { label: 'Очікує', color: '#D9B44A' },
-  approved: { label: 'Схвалено', color: '#3FA66B' },
-  rejected: { label: 'Відхилено', color: '#E05A5A' },
-};
+function statusMeta(t: (key: string) => string): Record<string, { label: string; color: string }> {
+  return {
+    pending: { label: t('forms.admin.status.pending'), color: '#D9B44A' },
+    approved: { label: t('forms.admin.status.approved'), color: '#3FA66B' },
+    rejected: { label: t('forms.admin.status.rejected'), color: '#E05A5A' },
+  };
+}
 
-const DECISION_LABEL: Record<string, string> = {
-  approve: 'ШІ: схвалити',
-  reject: 'ШІ: відхилити',
-  review: 'ШІ: на перевірку',
-};
+function decisionLabel(t: (key: string) => string): Record<string, string> {
+  return {
+    approve: t('forms.admin.aiDecision.approve'),
+    reject: t('forms.admin.aiDecision.reject'),
+    review: t('forms.admin.aiDecision.review'),
+  };
+}
 
 interface AdminMenuProps {
   session: AdminSession;
@@ -51,6 +56,7 @@ interface AdminMenuProps {
 // Full-page admin menu. Login happens through the shared participant login
 // form; this is only ever rendered once an admin session exists.
 function AdminMenu({ session, onLogout, accent = DEFAULT_ACCENT }: AdminMenuProps) {
+  const { t } = useTranslation();
   const [view, setView] = useState<'dashboard' | 'profile'>('dashboard');
 
   return (
@@ -63,11 +69,11 @@ function AdminMenu({ session, onLogout, accent = DEFAULT_ACCENT }: AdminMenuProp
             style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.04em', color: view === 'profile' ? '#071F16' : accent, background: view === 'profile' ? accent : `${accent}18`, border: `1px solid ${accent}44`, borderRadius: '999px', padding: '8px 15px', cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}
           >
             <Icon name={view === 'profile' ? 'arrowLeft' : 'user'} size={14} strokeWidth={2} />
-            {view === 'profile' ? 'До панелі' : 'Кастомізувати профіль'}
+            {view === 'profile' ? t('forms.admin.backToDashboard') : t('forms.admin.customizeProfile')}
           </button>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', color: accent, background: `${accent}18`, border: `1px solid ${accent}44`, borderRadius: '999px', padding: '6px 13px' }}>
             <Icon name="lock" size={14} strokeWidth={2} />
-            ПАНЕЛЬ АДМІНІСТРАТОРА
+            {t('forms.admin.adminPanelBadge')}
           </span>
         </div>
       </nav>
@@ -150,6 +156,7 @@ function AdminProfileEditor({ admin, onDone }: { admin: AdminAccount; onDone: ()
 }
 
 function AdminDashboard({ accent, session, onLogout }: { accent: string; session: AdminSession; onLogout: () => void }) {
+  const { t } = useTranslation();
   const [section, setSection] = useState<Section>('moderation');
 
   return (
@@ -157,26 +164,26 @@ function AdminDashboard({ accent, session, onLogout }: { accent: string; session
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '20px' }}>
         <div>
           <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(24px, 3vw, 32px)', margin: 0 }}>
-            {section === 'moderation' ? 'Модерація місць' : 'Адміністратори'}
+            {section === 'moderation' ? t('forms.admin.sectionModeration') : t('forms.admin.sectionAdmins')}
           </h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ textAlign: 'right', lineHeight: 1.3 }}>
             <div style={{ fontSize: '13px', fontWeight: 700 }}>{session.admin.name}</div>
             <div style={{ fontSize: '11px', color: session.admin.isSuper ? accent : 'rgba(244,241,232,0.5)' }}>
-              {session.admin.isSuper ? 'Головний адміністратор' : `@${session.admin.login}`}
+              {session.admin.isSuper ? t('forms.admin.superAdmin') : `@${session.admin.login}`}
             </div>
           </div>
           <button onClick={onLogout} style={{ background: 'transparent', color: 'rgba(244,241,232,0.7)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: '11px', padding: '10px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}>
-            Вийти
+            {t('forms.admin.logoutBtn')}
           </button>
         </div>
       </div>
 
       {/* section switch */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '22px', flexWrap: 'wrap' }}>
-        <SectionTab active={section === 'moderation'} onClick={() => setSection('moderation')} accent={accent} icon="map" label="Модерація місць" />
-        <SectionTab active={section === 'admins'} onClick={() => setSection('admins')} accent={accent} icon="user" label="Адміністратори" />
+        <SectionTab active={section === 'moderation'} onClick={() => setSection('moderation')} accent={accent} icon="map" label={t('forms.admin.sectionModeration')} />
+        <SectionTab active={section === 'admins'} onClick={() => setSection('admins')} accent={accent} icon="user" label={t('forms.admin.sectionAdmins')} />
       </div>
 
       {section === 'moderation' ? (
@@ -216,6 +223,7 @@ function SectionTab({ active, onClick, accent, icon, label }: { active: boolean;
 // --- Moderation ------------------------------------------------------------
 
 function ModerationSection({ accent, token }: { accent: string; token: string }) {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<StatusFilter>('pending');
   const [places, setPlaces] = useState<AdminPlace[]>([]);
   const [counts, setCounts] = useState({ pending: 0, approved: 0, rejected: 0 });
@@ -233,11 +241,11 @@ function ModerationSection({ accent, token }: { accent: string; token: string })
       setPlaces(list);
       setCounts(c);
     } catch (e: any) {
-      setError(e?.message ?? 'Не вдалося завантажити список');
+      setError(e?.message ?? t('forms.admin.errorLoadFailed'));
     } finally {
       setLoading(false);
     }
-  }, [token, filter]);
+  }, [token, filter, t]);
 
   useEffect(() => {
     refresh();
@@ -249,17 +257,17 @@ function ModerationSection({ accent, token }: { accent: string; token: string })
       await fn();
       await refresh();
     } catch (e: any) {
-      setError(e?.message ?? 'Дію не виконано');
+      setError(e?.message ?? t('forms.admin.errorActionFailed'));
     } finally {
       setBusyId(null);
     }
   };
 
   const FILTERS: { id: StatusFilter; label: string; count?: number }[] = [
-    { id: 'pending', label: 'Очікують', count: counts.pending },
-    { id: 'approved', label: 'Схвалені', count: counts.approved },
-    { id: 'rejected', label: 'Відхилені', count: counts.rejected },
-    { id: 'all', label: 'Усі' },
+    { id: 'pending', label: t('forms.admin.filterPending'), count: counts.pending },
+    { id: 'approved', label: t('forms.admin.filterApproved'), count: counts.approved },
+    { id: 'rejected', label: t('forms.admin.filterRejected'), count: counts.rejected },
+    { id: 'all', label: t('forms.admin.filterAll') },
   ];
 
   return (
@@ -298,16 +306,16 @@ function ModerationSection({ accent, token }: { accent: string; token: string })
           })}
         </div>
         <button onClick={() => setShowAdd(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: accent, color: '#071F16', border: 'none', borderRadius: '11px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}>
-          <Icon name="plus" size={16} strokeWidth={2} /> Додати місце
+          <Icon name="plus" size={16} strokeWidth={2} /> {t('forms.admin.addPlaceBtn')}
         </button>
       </div>
 
       {error && <div style={errorBox}>{error}</div>}
 
       {loading ? (
-        <div style={{ color: 'rgba(244,241,232,0.55)', padding: '40px 0', textAlign: 'center' }}>Завантаження…</div>
+        <div style={{ color: 'rgba(244,241,232,0.55)', padding: '40px 0', textAlign: 'center' }}>{t('forms.admin.loading')}</div>
       ) : places.length === 0 ? (
-        <div style={{ color: 'rgba(244,241,232,0.5)', padding: '40px 0', textAlign: 'center', fontSize: '14px' }}>Немає місць у цій категорії.</div>
+        <div style={{ color: 'rgba(244,241,232,0.5)', padding: '40px 0', textAlign: 'center', fontSize: '14px' }}>{t('forms.admin.emptyCategory')}</div>
       ) : (
         <div style={{ display: 'grid', gap: '16px' }}>
           {places.map((place) => (
@@ -325,7 +333,7 @@ function ModerationSection({ accent, token }: { accent: string; token: string })
         <AddPlaceForm
           accent={accent}
           adminToken={token}
-          submitterName="Адміністратор"
+          submitterName={t('forms.admin.adminSubmitterName')}
           onClose={() => setShowAdd(false)}
           onApproved={() => { setShowAdd(false); refresh(); }}
         />
@@ -353,8 +361,9 @@ function PlaceCard({ place, accent, busy, onApprove, onReject, onDelete, onEdit 
   onDelete: () => void;
   onEdit: () => void;
 }) {
+  const { t } = useTranslation();
   const meta = CATEGORY_META[place.category as PlaceCategory] ?? { label: place.category, color: accent };
-  const status = STATUS_META[place.status] ?? { label: place.status, color: accent };
+  const status = statusMeta(t)[place.status] ?? { label: place.status, color: accent };
   const difficulty = DIFFICULTY_META[place.difficulty ?? 1] ?? DIFFICULTY_META[1];
 
   return (
@@ -379,7 +388,7 @@ function PlaceCard({ place, accent, busy, onApprove, onReject, onDelete, onEdit 
         </div>
         <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.5)', marginBottom: '10px' }}>
           {place.region} · {place.lat.toFixed(3)}, {place.lng.toFixed(3)}
-          {place.submittedBy ? ` · від ${place.submittedBy}` : ''}
+          {place.submittedBy ? t('forms.admin.submittedBy', { name: place.submittedBy }) : ''}
         </div>
         <p style={{ fontSize: '13px', lineHeight: 1.55, color: 'rgba(244,241,232,0.78)', margin: '0 0 12px' }}>{place.description}</p>
 
@@ -388,7 +397,7 @@ function PlaceCard({ place, accent, busy, onApprove, onReject, onDelete, onEdit 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
               <Icon name="sparkle" size={14} stroke={accent} strokeWidth={1.9} />
               <span style={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.05em', color: 'rgba(244,241,232,0.75)' }}>
-                {DECISION_LABEL[place.aiDecision] ?? place.aiDecision}
+                {decisionLabel(t)[place.aiDecision] ?? place.aiDecision}
               </span>
               {place.aiScore != null && <span style={{ fontSize: '11px', color: 'rgba(244,241,232,0.45)' }}>({Math.round(place.aiScore * 100)}%)</span>}
             </div>
@@ -397,10 +406,10 @@ function PlaceCard({ place, accent, busy, onApprove, onReject, onDelete, onEdit 
         )}
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {place.status !== 'approved' && <ActionBtn onClick={onApprove} disabled={busy} color="#3FA66B" icon="check" label="Схвалити" />}
-          {place.status !== 'rejected' && <ActionBtn onClick={onReject} disabled={busy} color="#E05A5A" icon="close" label="Відхилити" />}
-          <ActionBtn onClick={onEdit} disabled={busy} color="#7FC4A0" icon="pencil" label="Редагувати" />
-          <ActionBtn onClick={onDelete} disabled={busy} color="rgba(244,241,232,0.6)" icon="close" label="Видалити" ghost />
+          {place.status !== 'approved' && <ActionBtn onClick={onApprove} disabled={busy} color="#3FA66B" icon="check" label={t('forms.admin.actionApprove')} />}
+          {place.status !== 'rejected' && <ActionBtn onClick={onReject} disabled={busy} color="#E05A5A" icon="close" label={t('forms.admin.actionReject')} />}
+          <ActionBtn onClick={onEdit} disabled={busy} color="#7FC4A0" icon="pencil" label={t('forms.admin.actionEdit')} />
+          <ActionBtn onClick={onDelete} disabled={busy} color="rgba(244,241,232,0.6)" icon="close" label={t('forms.admin.actionDelete')} ghost />
         </div>
       </div>
     </div>
@@ -410,6 +419,7 @@ function PlaceCard({ place, accent, busy, onApprove, onReject, onDelete, onEdit 
 // --- Admins management -----------------------------------------------------
 
 function AdminsSection({ accent, session }: { accent: string; session: AdminSession }) {
+  const { t } = useTranslation();
   const token = session.token;
   const [admins, setAdmins] = useState<AdminAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -429,11 +439,11 @@ function AdminsSection({ accent, session }: { accent: string; session: AdminSess
     try {
       setAdmins(await adminListAccounts(token));
     } catch (e: any) {
-      setError(e?.message ?? 'Не вдалося завантажити адміністраторів');
+      setError(e?.message ?? t('forms.admin.errorLoadAdminsFailed'));
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, t]);
 
   useEffect(() => {
     refresh();
@@ -441,15 +451,15 @@ function AdminsSection({ accent, session }: { accent: string; session: AdminSess
 
   const create = async () => {
     setFormMsg('');
-    if (login.trim().length < 3) return setFormMsg('Логін — щонайменше 3 символи');
-    if (password.length < 6) return setFormMsg('Пароль — щонайменше 6 символів');
+    if (login.trim().length < 3) return setFormMsg(t('forms.admin.errorLoginLength'));
+    if (password.length < 6) return setFormMsg(t('forms.admin.errorPasswordLength'));
     setCreating(true);
     try {
       await adminCreateAccount(token, { login: login.trim(), password, name: name.trim() || login.trim() });
       setLogin(''); setName(''); setPassword('');
       await refresh();
     } catch (e: any) {
-      setFormMsg(e?.message ?? 'Не вдалося створити адміністратора');
+      setFormMsg(e?.message ?? t('forms.admin.errorCreateFailed'));
     } finally {
       setCreating(false);
     }
@@ -462,7 +472,7 @@ function AdminsSection({ accent, session }: { accent: string; session: AdminSess
       await adminDeleteAccount(token, id);
       await refresh();
     } catch (e: any) {
-      setError(e?.message ?? 'Не вдалося видалити');
+      setError(e?.message ?? t('forms.admin.errorDeleteFailed'));
     } finally {
       setBusyId(null);
     }
@@ -472,13 +482,13 @@ function AdminsSection({ accent, session }: { accent: string; session: AdminSess
     <div>
       {/* create form */}
       <div style={{ background: PANEL, border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '20px', marginBottom: '22px' }}>
-        <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '14px', color: 'rgba(244,241,232,0.85)' }}>Додати нового адміністратора</div>
+        <div style={{ fontSize: '13px', fontWeight: 700, marginBottom: '14px', color: 'rgba(244,241,232,0.85)' }}>{t('forms.admin.addNewAdmin')}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-start' }}>
-          <input value={login} onChange={(e) => setLogin(e.target.value)} placeholder="Логін" style={{ ...loginInput, flex: '1 1 140px', margin: 0 }} />
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ім'я (необов'язково)" style={{ ...loginInput, flex: '1 1 160px', margin: 0 }} />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Пароль" style={{ ...loginInput, flex: '1 1 140px', margin: 0 }} />
+          <input value={login} onChange={(e) => setLogin(e.target.value)} placeholder={t('forms.admin.loginPlaceholder')} style={{ ...loginInput, flex: '1 1 140px', margin: 0 }} />
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('forms.admin.namePlaceholder')} style={{ ...loginInput, flex: '1 1 160px', margin: 0 }} />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('forms.admin.passwordPlaceholder')} style={{ ...loginInput, flex: '1 1 140px', margin: 0 }} />
           <button onClick={create} disabled={creating} style={{ background: accent, color: '#071F16', border: 'none', borderRadius: '10px', padding: '12px 20px', fontSize: '13.5px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Manrope', sans-serif", flex: '0 0 auto', opacity: creating ? 0.6 : 1 }}>
-            {creating ? 'Створення…' : 'Створити'}
+            {creating ? t('forms.admin.creatingBtn') : t('forms.admin.createBtn')}
           </button>
         </div>
         {formMsg && <div style={{ color: '#F0A5A5', fontSize: '12.5px', marginTop: '10px' }}>{formMsg}</div>}
@@ -487,7 +497,7 @@ function AdminsSection({ accent, session }: { accent: string; session: AdminSess
       {error && <div style={errorBox}>{error}</div>}
 
       {loading ? (
-        <div style={{ color: 'rgba(244,241,232,0.55)', padding: '30px 0', textAlign: 'center' }}>Завантаження…</div>
+        <div style={{ color: 'rgba(244,241,232,0.55)', padding: '30px 0', textAlign: 'center' }}>{t('forms.admin.loading')}</div>
       ) : (
         <div style={{ display: 'grid', gap: '10px' }}>
           {admins.map((a) => {
@@ -501,15 +511,15 @@ function AdminsSection({ accent, session }: { accent: string; session: AdminSess
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '14.5px', fontWeight: 700 }}>{a.name}</span>
-                    {a.isSuper && <Pill color={accent} label="Головний" filled />}
-                    {isSelf && <Pill color="#7FC4A0" label="Це ви" />}
+                    {a.isSuper && <Pill color={accent} label={t('forms.admin.superAdminShort')} filled />}
+                    {isSelf && <Pill color="#7FC4A0" label={t('forms.admin.you')} />}
                   </div>
                   <div style={{ fontSize: '12px', color: 'rgba(244,241,232,0.5)' }}>@{a.login}</div>
                 </div>
                 <button
                   onClick={() => canDelete && remove(a.id)}
                   disabled={!canDelete || busyId === a.id}
-                  title={a.isSuper ? 'Головного адміністратора видалити не можна' : isSelf ? 'Не можна видалити власний акаунт' : 'Видалити'}
+                  title={a.isSuper ? t('forms.admin.deleteSuperTitle') : isSelf ? t('forms.admin.deleteSelfTitle') : t('forms.admin.deleteTitle')}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -527,7 +537,7 @@ function AdminsSection({ accent, session }: { accent: string; session: AdminSess
                   }}
                 >
                   <Icon name="close" size={13} strokeWidth={2} />
-                  Видалити
+                  {t('forms.admin.deleteTitle')}
                 </button>
               </div>
             );

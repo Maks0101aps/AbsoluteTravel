@@ -1,0 +1,180 @@
+{
+  "shop": {
+    "wall": {
+      "title": "TRAVELER'S WALL",
+      "loading": "Loading…",
+      "loadMore": "Load more",
+      "emptySelf": "Nothing here yet. Explore the map and your new places will show up here!",
+      "emptyOther": "This traveler hasn't shared any trips yet.",
+      "loadFailed": "Couldn't load the wall",
+      "loadMoreFailed": "Couldn't load more",
+      "photoAlt": "Visit photo",
+      "newPlaceVisited": "New place visited",
+      "newRegionUnlocked": "New region unlocked!",
+      "newCellUnlocked": "New territory cell unlocked",
+      "timeJustNow": "just now",
+      "timeMinutesAgo": "{{count}}m ago",
+      "timeHoursAgo": "{{count}}h ago",
+      "timeDaysAgo": "{{count}}d ago"
+    },
+    "categories": {
+      "avatars": "Avatars",
+      "backgrounds": "Backgrounds",
+      "frames": "Frames",
+      "colors": "Colors",
+      "badges": "Badges",
+      "effects": "Effects"
+    },
+    "header": {
+      "title": "Traveler's shop",
+      "subtitle": "Trade the coins you've earned for avatars, backgrounds and other profile flair."
+    },
+    "genericAvatar": "Avatar",
+    "avatarNames": {
+      "compass": "Compass",
+      "mountain": "Peak",
+      "pine": "Pine",
+      "tent": "Tent",
+      "map": "Map",
+      "signpost": "Signpost",
+      "binoculars": "Scout",
+      "flame": "Flame",
+      "backpack": "Backpack",
+      "feather": "Feather",
+      "shield": "Shield",
+      "moon": "Moon",
+      "sun": "Sun",
+      "crown": "Crown",
+      "star": "Star",
+      "trophy": "Trophy",
+      "sparkle": "Sparkle"
+    },
+    "slotLabels": {
+      "avatar": "Avatar",
+      "background": "Profile background",
+      "frame": "Frame",
+      "color": "Color",
+      "accentColor": "Accent color",
+      "badges": "Badge",
+      "effect": "Effect"
+    },
+    "purchase": {
+      "select": "Select",
+      "selected": "Selected",
+      "buying": "Buying…",
+      "fromCase": "From a case",
+      "level": "Level {{count}}",
+      "missingCoins_one": "Need {{count}} more coin",
+      "missingCoins_other": "Need {{count}} more coins"
+    },
+    "caseOpener": {
+      "title": "Traveler's chest",
+      "back": "Back",
+      "openFailed": "Couldn't open the case",
+      "done": "Done",
+      "openAgain": "Open another",
+      "opening": "Opening…",
+      "alreadyOpened": "Already opened",
+      "openFree": "Open for free",
+      "openFor": "Open for {{count}}",
+      "notEnoughCoins": "Not enough coins",
+      "possibleRewards": "POSSIBLE REWARDS",
+      "duplicate": "DUPLICATE",
+      "duplicateRefund": "Duplicate · refunded +{{count}} coins",
+      "applied": "Equipped",
+      "apply": "Equip",
+      "select": "Select",
+      "alreadyOwned": "Already owned",
+      "free": "FREE"
+    },
+    "xp": {
+      "howToLevel": "How to level up",
+      "howToLevelTitle": "HOW TO LEVEL UP",
+      "level": "LEVEL {{count}}",
+      "maxLevel": "Max level",
+      "close": "Close",
+      "sources": {
+        "cell": "Visit a new map cell",
+        "easy": "Confirm a place visit — Easy",
+        "medium": "Confirm a place visit — Medium",
+        "hard": "Confirm a place visit — Hard",
+        "extreme": "Confirm a place visit — Extreme"
+      }
+    },
+    "lock": {
+      "level": "Level {{count}}",
+      "case": "From a case",
+      "coins": "{{count}} coins"
+    },
+    "items": {
+      "background": {
+        "forest": { "name": "Forest" },
+        "scenic1": { "name": "Mountains" },
+        "scenic2": { "name": "Valley" },
+        "emerald": { "name": "Emerald" },
+        "scenic3": { "name": "Sunset" },
+        "ocean": { "name": "Ocean" },
+        "ember": { "name": "Campfire" },
+        "midnight": { "name": "Midnight" },
+        "aurora": { "name": "Aurora" },
+        "sakura": { "name": "Sakura" },
+        "cosmos": { "name": "Cosmos" },
+        "glacier": { "name": "Glacier" },
+        "volcano": { "name": "Volcano" },
+        "nebula": { "name": "Nebula" },
+        "mirage": { "name": "Mirage" }
+      },
+      "frame": {
+        "none": { "name": "No frame" },
+        "solid": { "name": "Classic" },
+        "glow": { "name": "Glow" },
+        "gold": { "name": "Golden" },
+        "gem": { "name": "Gemstone" },
+        "frost": { "name": "Frost" },
+        "magma": { "name": "Magma" },
+        "prism": { "name": "Prism" },
+        "blackhole": { "name": "Black hole" }
+      },
+      "badges": {
+        "newcomer": { "name": "Newcomer" },
+        "hiker": { "name": "Hiker" },
+        "photographer": { "name": "Photographer" },
+        "explorer": { "name": "Explorer" },
+        "mountaineer": { "name": "Mountaineer" },
+        "legend": { "name": "Legend" },
+        "voyager": { "name": "Voyager" },
+        "pathfinder": { "name": "Pathfinder" }
+      },
+      "effect": {
+        "none": { "name": "No effect" },
+        "glow": { "name": "Soft glow" },
+        "aurora": { "name": "Aurora" },
+        "sparkle": { "name": "Sparkles" },
+        "fireflies": { "name": "Fireflies" },
+        "matrix": { "name": "Neon rain" },
+        "vortex": { "name": "Cosmic vortex" }
+      }
+    },
+    "rarity": {
+      "common": "Common",
+      "uncommon": "Uncommon",
+      "rare": "Rare",
+      "epic": "Epic",
+      "legendary": "Legendary"
+    },
+    "cases": {
+      "starter": {
+        "name": "Starter case",
+        "tagline": "A cheap case for your first profile flair."
+      },
+      "wanderer": {
+        "name": "Wanderer's case",
+        "tagline": "Backgrounds, avatars and frames from every corner of the world."
+      },
+      "legendary": {
+        "name": "Legendary case",
+        "tagline": "The rarest cosmetics. High risk — high reward."
+      }
+    }
+  }
+}

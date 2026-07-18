@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { levelProgress, MAX_LEVEL } from './data/leveling';
 
 interface XpBarProps {
@@ -9,17 +10,18 @@ interface XpBarProps {
 }
 
 // Ways to earn XP, shown in the level info popover.
-const XP_SOURCES: { label: string; xp: string }[] = [
-  { label: 'Відвідати нову клітинку карти', xp: '+10 XP' },
-  { label: 'Підтвердити відвідування місця — Легко', xp: '+20 XP' },
-  { label: 'Підтвердити відвідування місця — Середньо', xp: '+50 XP' },
-  { label: 'Підтвердити відвідування місця — Складно', xp: '+100 XP' },
-  { label: 'Підтвердити відвідування місця — Екстремально', xp: '+250 XP' },
+const XP_SOURCES: { labelKey: string; xp: string }[] = [
+  { labelKey: 'shop.xp.sources.cell', xp: '+10 XP' },
+  { labelKey: 'shop.xp.sources.easy', xp: '+20 XP' },
+  { labelKey: 'shop.xp.sources.medium', xp: '+50 XP' },
+  { labelKey: 'shop.xp.sources.hard', xp: '+100 XP' },
+  { labelKey: 'shop.xp.sources.extreme', xp: '+250 XP' },
 ];
 
 // Full-width XP progress bar toward the next level, capped at MAX_LEVEL.
 // Clicking the level label reveals a summary of how XP is earned.
 function XpBar({ xp, accent, compact = false }: XpBarProps) {
+  const { t } = useTranslation();
   const { level, xpIntoLevel, xpForNextLevel, progress, maxed } = levelProgress(xp);
   const [showInfo, setShowInfo] = useState(false);
 
@@ -29,7 +31,7 @@ function XpBar({ xp, accent, compact = false }: XpBarProps) {
         <button
           type="button"
           onClick={() => setShowInfo((v) => !v)}
-          title="Як отримати рівень"
+          title={t('shop.xp.howToLevel')}
           style={{
             fontSize: compact ? '10.5px' : '11.5px',
             fontWeight: 700,
@@ -44,11 +46,11 @@ function XpBar({ xp, accent, compact = false }: XpBarProps) {
             gap: '5px',
           }}
         >
-          РІВЕНЬ {level} <span style={{ opacity: 0.5, fontWeight: 600 }}>/ {MAX_LEVEL}</span>
+          {t('shop.xp.level', { count: level })} <span style={{ opacity: 0.5, fontWeight: 600 }}>/ {MAX_LEVEL}</span>
           <span style={{ opacity: 0.5, fontSize: '9px' }}>ⓘ</span>
         </button>
         <span style={{ fontSize: compact ? '10px' : '11px', fontWeight: 600, color: 'rgba(244,241,232,0.55)', whiteSpace: 'nowrap' }}>
-          {maxed ? 'Максимальний рівень' : `${xpIntoLevel} / ${xpForNextLevel} XP`}
+          {maxed ? t('shop.xp.maxLevel') : `${xpIntoLevel} / ${xpForNextLevel} XP`}
         </span>
       </div>
       <div
@@ -89,12 +91,12 @@ function XpBar({ xp, accent, compact = false }: XpBarProps) {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
             <span style={{ fontSize: '11.5px', fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(244,241,232,0.85)' }}>
-              ЯК ОТРИМАТИ РІВЕНЬ
+              {t('shop.xp.howToLevelTitle')}
             </span>
             <button
               type="button"
               onClick={() => setShowInfo(false)}
-              aria-label="Закрити"
+              aria-label={t('shop.xp.close')}
               style={{ background: 'none', border: 'none', color: 'rgba(244,241,232,0.5)', cursor: 'pointer', fontSize: '13px', padding: 0 }}
             >
               ✕
@@ -102,8 +104,8 @@ function XpBar({ xp, accent, compact = false }: XpBarProps) {
           </div>
           <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '7px' }}>
             {XP_SOURCES.map((s) => (
-              <li key={s.label} style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', fontSize: '12px', color: 'rgba(244,241,232,0.7)' }}>
-                <span>{s.label}</span>
+              <li key={s.labelKey} style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', fontSize: '12px', color: 'rgba(244,241,232,0.7)' }}>
+                <span>{t(s.labelKey)}</span>
                 <span style={{ fontWeight: 700, color: accent, whiteSpace: 'nowrap' }}>{s.xp}</span>
               </li>
             ))}

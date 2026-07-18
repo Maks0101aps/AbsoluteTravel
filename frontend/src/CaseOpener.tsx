@@ -1,4 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+type TFunction = (key: string, opts?: any) => string;
 import { Icon } from './icons';
 import CaseArt from './CaseArt';
 import { itemVisual, equipValue } from './itemVisuals';
@@ -49,6 +52,7 @@ function pickWeighted(rewards: CaseReward[]): CaseReward {
 }
 
 function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: CaseOpenerProps) {
+  const { t } = useTranslation();
   const [caseId, setCaseId] = useState<string>(CASES[0].id);
   const def = caseById(caseId)!;
 
@@ -87,7 +91,7 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
     try {
       res = await onOpen(def.id);
     } catch (e: any) {
-      setError(e?.message ?? 'Не вдалося відкрити кейс');
+      setError(e?.message ?? t('shop.caseOpener.openFailed'));
       setPhase('idle');
       return;
     }
@@ -128,10 +132,10 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
             onClick={onBack}
             style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(244,241,232,0.85)', borderRadius: '10px', padding: '8px 13px', fontSize: '12.5px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Manrope', sans-serif" }}
           >
-            <Icon name="arrowLeft" size={15} strokeWidth={2} /> Назад
+            <Icon name="arrowLeft" size={15} strokeWidth={2} /> {t('shop.caseOpener.back')}
           </button>
           <div style={{ textAlign: 'center', flex: 1 }}>
-            <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(18px,2.4vw,24px)', margin: '2px 0 0' }}>Скриня мандрівника</h2>
+            <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(18px,2.4vw,24px)', margin: '2px 0 0' }}>{t('shop.caseOpener.title')}</h2>
           </div>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '14px', fontWeight: 800, color: GOLD, background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.35)', padding: '8px 14px', borderRadius: '999px' }}>
             <Icon name="coin" size={17} strokeWidth={1.9} /> {coins}
@@ -150,6 +154,7 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
                 selected={on}
                 used={used}
                 onClick={() => switchCase(c.id)}
+                t={t}
               />
             );
           })}
@@ -208,6 +213,7 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
                 onEquip(slot, equipValue(slot, result.itemId));
                 setEquipped(true);
               }}
+              t={t}
             />
           )}
         </div>
@@ -226,7 +232,7 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
               style={openBtnStyle(def.accent, true)}
             >
               <Icon name="gift" size={18} strokeWidth={1.9} stroke={BG} />
-              {isFree ? 'Готово' : 'Відкрити ще'}
+              {isFree ? t('shop.caseOpener.done') : t('shop.caseOpener.openAgain')}
             </button>
           ) : (
             <button
@@ -235,15 +241,15 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
               style={openBtnStyle(def.accent, affordable && phase !== 'spinning')}
             >
               {phase === 'spinning' ? (
-                'Відкриваємо…'
+                t('shop.caseOpener.opening')
               ) : locked ? (
-                <>Вже відкрито</>
+                <>{t('shop.caseOpener.alreadyOpened')}</>
               ) : isFree ? (
-                <><Icon name="gift" size={18} strokeWidth={1.9} stroke={BG} /> Відкрити безкоштовно</>
+                <><Icon name="gift" size={18} strokeWidth={1.9} stroke={BG} /> {t('shop.caseOpener.openFree')}</>
               ) : affordable ? (
-                <><Icon name="coin" size={17} strokeWidth={1.9} stroke={BG} /> Відкрити за {def.cost}</>
+                <><Icon name="coin" size={17} strokeWidth={1.9} stroke={BG} /> {t('shop.caseOpener.openFor', { count: def.cost })}</>
               ) : (
-                <>Не вистачає монет</>
+                <>{t('shop.caseOpener.notEnoughCoins')}</>
               )}
             </button>
           )}
@@ -255,7 +261,7 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
             {odds.map(({ rarity, pct }) => (
               <div
                 key={rarity}
-                title={`${RARITY_META[rarity].label} · ${pct}%`}
+                title={`${t(`shop.rarity.${rarity}`, { defaultValue: RARITY_META[rarity].label })} · ${pct}%`}
                 style={{ width: `${pct}%`, background: RARITY_META[rarity].color, boxShadow: `inset 0 0 8px ${RARITY_META[rarity].glow}` }}
               />
             ))}
@@ -264,7 +270,7 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
             {odds.map(({ rarity, pct }) => (
               <span key={rarity} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: 'rgba(244,241,232,0.7)' }}>
                 <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: RARITY_META[rarity].color, boxShadow: `0 0 8px ${RARITY_META[rarity].glow}` }} />
-                {RARITY_META[rarity].label} · {pct}%
+                {t(`shop.rarity.${rarity}`, { defaultValue: RARITY_META[rarity].label })} · {pct}%
               </span>
             ))}
           </div>
@@ -274,7 +280,7 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
         <div style={{ marginTop: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.16em', color: 'rgba(244,241,232,0.5)' }}>
-              МОЖЛИВІ ПРИЗИ
+              {t('shop.caseOpener.possibleRewards')}
             </div>
             <div style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(244,241,232,0.4)' }}>
               {def.rewards.length}
@@ -284,7 +290,7 @@ function CaseOpener({ coins, owned, openedCaseIds, onOpen, onEquip, onBack }: Ca
             {[...def.rewards]
               .sort((a, b) => RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity))
               .map((r, i) => (
-                <DropCard key={`${r.slot}-${r.id}-${i}`} reward={r} owned={owned.includes(r.id)} />
+                <DropCard key={`${r.slot}-${r.id}-${i}`} reward={r} owned={owned.includes(r.id)} t={t} />
               ))}
           </div>
         </div>
@@ -314,13 +320,14 @@ function openBtnStyle(accent: string, enabled: boolean): React.CSSProperties {
 // ---- case selector card -------------------------------------------------------
 
 function CaseTab({
-  def, selected, used, onClick, index,
+  def, selected, used, onClick, index, t,
 }: {
   def: CaseDef;
   selected: boolean;
   used: boolean;
   onClick: () => void;
   index?: number;
+  t: TFunction;
 }) {
   const isFree = def.cost === 0;
   return (
@@ -362,9 +369,9 @@ function CaseTab({
           boxShadow: used ? 'none' : `0 4px 12px -4px ${isFree ? 'rgba(123,214,162,0.7)' : GOLD}`,
         }}>
           {used ? (
-            <><Icon name="check" size={12} strokeWidth={2.6} stroke="#7BD6A2" /> Відкрито</>
+            <><Icon name="check" size={12} strokeWidth={2.6} stroke="#7BD6A2" /> {t('shop.caseOpener.alreadyOpened')}</>
           ) : isFree ? (
-            'FREE'
+            t('shop.caseOpener.free')
           ) : (
             <><Icon name="coin" size={12} strokeWidth={2} stroke={BG} /> {def.cost}</>
           )}
@@ -380,7 +387,7 @@ function CaseTab({
           color: selected ? CREAM : 'rgba(244,241,232,0.86)',
         }}>
           <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: def.accent, boxShadow: `0 0 8px ${def.accent}`, flex: '0 0 auto' }} />
-          {def.name}
+          {t(`shop.cases.${def.id}.name`, { defaultValue: def.name })}
         </div>
       </div>
     </button>
@@ -427,7 +434,7 @@ function ReelTile({ reward }: { reward: CaseReward }) {
 // ---- reveal -------------------------------------------------------------------
 
 function Reveal({
-  visual, rarity, duplicate, compensation, equipped, onEquip,
+  visual, rarity, duplicate, compensation, equipped, onEquip, t,
 }: {
   visual: ReturnType<typeof itemVisual>;
   rarity: Rarity;
@@ -435,6 +442,7 @@ function Reveal({
   compensation: number;
   equipped: boolean;
   onEquip: () => void;
+  t: TFunction;
 }) {
   const meta = RARITY_META[rarity];
   return (
@@ -446,35 +454,35 @@ function Reveal({
         {visual.node}
         {duplicate && (
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: GOLD, color: BG, fontSize: '10px', fontWeight: 800, letterSpacing: '0.1em', textAlign: 'center', padding: '3px 0' }}>
-            ПОВТОРКА
+            {t('shop.caseOpener.duplicate')}
           </div>
         )}
       </div>
 
       <div style={{ position: 'relative', maxWidth: '260px' }}>
         <div style={{ display: 'inline-block', fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.14em', color: BG, background: meta.color, padding: '4px 11px', borderRadius: '999px', boxShadow: `0 0 16px ${meta.glow}` }}>
-          {meta.label.toUpperCase()}
+          {t(`shop.rarity.${rarity}`, { defaultValue: meta.label }).toUpperCase()}
         </div>
         <div style={{ fontFamily: "'Lora', serif", fontSize: '24px', fontWeight: 500, margin: '10px 0 2px' }}>{visual.label}</div>
         <div style={{ fontSize: '12px', color: 'rgba(244,241,232,0.6)', marginBottom: '12px' }}>{visual.slotLabel}</div>
 
         {duplicate && (
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12.5px', fontWeight: 800, color: GOLD, background: 'rgba(240,198,75,0.14)', border: '1px solid rgba(240,198,75,0.4)', borderRadius: '999px', padding: '6px 12px', marginBottom: '12px' }}>
-            <Icon name="coin" size={15} strokeWidth={1.9} /> Повторка · повернуто +{compensation} монет
+            <Icon name="coin" size={15} strokeWidth={1.9} /> {t('shop.caseOpener.duplicateRefund', { count: compensation })}
           </div>
         )}
 
         <div>
           {equipped ? (
             <div style={{ fontSize: '13px', fontWeight: 700, color: '#7BD6A2', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-              <Icon name="check" size={15} strokeWidth={2.4} stroke="#7BD6A2" /> Застосовано
+              <Icon name="check" size={15} strokeWidth={2.4} stroke="#7BD6A2" /> {t('shop.caseOpener.applied')}
             </div>
           ) : (
             <button
               onClick={onEquip}
               style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: meta.color, color: BG, border: 'none', borderRadius: '11px', padding: '11px 20px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', fontFamily: "'Manrope', sans-serif", boxShadow: `0 8px 22px -8px ${meta.glow}` }}
             >
-              <Icon name="check" size={15} strokeWidth={2.4} stroke={BG} /> {duplicate ? 'Обрати' : 'Застосувати'}
+              <Icon name="check" size={15} strokeWidth={2.4} stroke={BG} /> {duplicate ? t('shop.caseOpener.select') : t('shop.caseOpener.apply')}
             </button>
           )}
         </div>
@@ -485,7 +493,7 @@ function Reveal({
 
 // ---- drop list card -----------------------------------------------------------
 
-function DropCard({ reward, owned }: { reward: CaseReward; owned: boolean }) {
+function DropCard({ reward, owned, t }: { reward: CaseReward; owned: boolean; t: TFunction }) {
   const meta = RARITY_META[reward.rarity];
   const v = itemVisual(reward.slot, reward.id, 30);
   return (
@@ -493,7 +501,7 @@ function DropCard({ reward, owned }: { reward: CaseReward; owned: boolean }) {
       <div style={{ position: 'relative', height: '58px', overflow: 'hidden' }}>
         {v.node}
         {owned && (
-          <div title="Вже у тебе" style={{ position: 'absolute', top: '6px', right: '6px', width: '20px', height: '20px', borderRadius: '50%', background: '#3FA66B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div title={t('shop.caseOpener.alreadyOwned')} style={{ position: 'absolute', top: '6px', right: '6px', width: '20px', height: '20px', borderRadius: '50%', background: '#3FA66B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="check" size={12} strokeWidth={3} stroke={BG} />
           </div>
         )}
@@ -501,7 +509,7 @@ function DropCard({ reward, owned }: { reward: CaseReward; owned: boolean }) {
       <div style={{ height: '3px', background: meta.color }} />
       <div style={{ padding: '7px 9px' }}>
         <div style={{ fontSize: '11.5px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.label}</div>
-        <div style={{ fontSize: '10px', fontWeight: 700, color: meta.color, marginTop: '2px' }}>{meta.label}</div>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: meta.color, marginTop: '2px' }}>{t(`shop.rarity.${reward.rarity}`, { defaultValue: meta.label })}</div>
       </div>
     </div>
   );

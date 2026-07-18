@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   acceptFriendRequest,
   getUserProfile,
@@ -35,6 +36,7 @@ interface UserProfilePageProps {
 // when the server says `canSeeWall`. The overlay owns no user state beyond the
 // fetched profile — closing it returns to whatever tab was underneath.
 function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePageProps) {
+  const { t } = useTranslation();
   const [data, setData] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -52,7 +54,7 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
         if (!cancelled) setData(p);
       })
       .catch((e) => {
-        if (!cancelled) setError(e?.message || 'Не вдалося завантажити профіль');
+        if (!cancelled) setError(e?.message || t('social.profile.loadError'));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -89,7 +91,7 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
       await fn();
       await refresh();
     } catch (e: any) {
-      setActionError(e?.message || 'Не вдалося виконати дію');
+      setActionError(e?.message || t('social.profile.actionFailed'));
     } finally {
       setActing(false);
     }
@@ -98,12 +100,12 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
   const handleAddFriend = () => runAction(() => sendFriendRequest(viewerId, { targetUserId: userId }));
   const handleAccept = () =>
     runAction(() => {
-      if (data?.friendshipId == null) throw new Error('Запит не знайдено');
+      if (data?.friendshipId == null) throw new Error(t('social.profile.requestNotFound'));
       return acceptFriendRequest(data.friendshipId, viewerId);
     });
   const handleCancel = () =>
     runAction(() => {
-      if (data?.friendshipId == null) throw new Error('Запит не знайдено');
+      if (data?.friendshipId == null) throw new Error(t('social.profile.requestNotFound'));
       return removeFriend(data.friendshipId, viewerId);
     });
 
@@ -111,7 +113,7 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
   // confirm first, matching how FriendsPage guards unfriending.
   const handleUnfriend = () => {
     const who = data?.profile?.displayName ?? data?.name ?? '';
-    if (!window.confirm(`Видалити ${who} з друзів?`)) return;
+    if (!window.confirm(t('social.profile.confirmUnfriend', { name: who }))) return;
     return handleCancel();
   };
 
@@ -119,7 +121,7 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Профіль мандрівника"
+      aria-label={t('social.profile.dialogLabel')}
       style={{
         position: 'fixed',
         inset: 0,
@@ -170,12 +172,12 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
             }}
           >
             <Icon name="arrowLeft" size={15} strokeWidth={2} />
-            Назад
+            {t('social.profile.back')}
           </button>
 
           {loading && (
             <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(244,241,232,0.5)', fontSize: '14px' }}>
-              Завантаження профілю…
+              {t('social.profile.loading')}
             </div>
           )}
 
@@ -213,7 +215,7 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
                   <div style={{ flex: '1 1 240px', minWidth: '220px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
                       <span style={{ display: 'inline-block', fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.12em', color: BG, background: accent, padding: '4px 10px', borderRadius: '999px' }}>
-                        РІВЕНЬ {data.level}
+                        {t('social.profile.level', { level: data.level })}
                       </span>
                       {p && BADGES.filter((b) => p.badges?.includes(b.id)).map((b) => (
                         <span key={b.id} title={b.label} style={{ display: 'inline-flex', color: 'rgba(244,241,232,0.85)' }}>
@@ -225,7 +227,7 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
                       {p?.displayName ?? data.name}
                     </div>
                     <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.7)', marginBottom: '8px' }}>
-                      @{data.username}{data.city ? ` · ${data.city}` : ''} · {presenceLabel(data)}
+                      @{data.username}{data.city ? ` · ${data.city}` : ''} · {presenceLabel(data, t)}
                     </div>
                     {p?.bio && (
                       <div style={{ fontSize: '13.5px', color: 'rgba(244,241,232,0.78)', lineHeight: 1.5, maxWidth: '440px' }}>
@@ -253,9 +255,9 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
                 )}
 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  <StatChip icon="map" label="клітинок" value={data.stats.cells} accent={accent} />
-                  <StatChip icon="check" label="місць" value={data.stats.places} accent={accent} />
-                  <StatChip icon="users" label="друзів" value={data.stats.friends} accent={accent} />
+                  <StatChip icon="map" label={t('social.profile.statCells')} value={data.stats.cells} accent={accent} />
+                  <StatChip icon="check" label={t('social.profile.statPlaces')} value={data.stats.places} accent={accent} />
+                  <StatChip icon="users" label={t('social.profile.statFriends')} value={data.stats.friends} accent={accent} />
                   <StatChip icon="star" label="XP" value={data.xp} accent={accent} />
                 </div>
               </div>
@@ -264,7 +266,7 @@ function UserProfilePage({ userId, viewerId, onClose, onMessage }: UserProfilePa
                 <ProfileWall userId={data.id} viewerId={viewerId} accent={accent} />
               ) : (
                 <div style={{ maxWidth: '720px', margin: '0 auto', textAlign: 'center', padding: '36px 20px', border: '1px dashed rgba(255,255,255,0.16)', borderRadius: '16px', color: 'rgba(244,241,232,0.55)', fontSize: '13.5px', lineHeight: 1.6 }}>
-                  Стіна мандрівника відкрита лише друзям. Додай {p?.displayName ?? data.name} у друзі, щоб побачити подорожі.
+                  {t('social.profile.wallLocked', { name: p?.displayName ?? data.name })}
                 </div>
               )}
             </>
@@ -297,6 +299,7 @@ function ProfileAction({
   onCancel: () => void;
   onUnfriend: () => void;
 }) {
+  const { t } = useTranslation();
   const primary = (label: string, icon: Parameters<typeof Icon>[0]['name'], onClick: () => void) => (
     <button
       onClick={onClick}
@@ -354,19 +357,19 @@ function ProfileAction({
     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flex: '0 0 auto' }}>
       {data.relation === 'friends' && (
         <>
-          {primary('Написати', 'messageSquare', onMessage)}
-          {secondary('Видалити з друзів', onUnfriend)}
+          {primary(t('social.profile.message'), 'messageSquare', onMessage)}
+          {secondary(t('social.profile.removeFriend'), onUnfriend)}
         </>
       )}
       {(data.relation === 'none' || data.relation === 'declined') &&
-        primary('Додати в друзі', 'plus', onAdd)}
+        primary(t('social.profile.addFriend'), 'plus', onAdd)}
       {data.relation === 'incoming' && (
         <>
-          {primary('Прийняти запит', 'check', onAccept)}
-          {secondary('Відхилити', onCancel)}
+          {primary(t('social.profile.acceptRequest'), 'check', onAccept)}
+          {secondary(t('social.profile.declineRequest'), onCancel)}
         </>
       )}
-      {data.relation === 'outgoing' && secondary('Скасувати запит', onCancel)}
+      {data.relation === 'outgoing' && secondary(t('social.profile.cancelRequest'), onCancel)}
     </div>
   );
 }
@@ -402,15 +405,15 @@ function StatChip({
   );
 }
 
-function presenceLabel(user: PublicProfile): string {
-  if (user.online) return 'онлайн';
-  if (!user.lastSeenAt) return 'офлайн';
+function presenceLabel(user: PublicProfile, t: (key: string, opts?: Record<string, unknown>) => string): string {
+  if (user.online) return t('social.profile.presenceOnline');
+  if (!user.lastSeenAt) return t('social.profile.presenceOffline');
   const minutes = Math.floor((Date.now() - Date.parse(user.lastSeenAt)) / 60000);
-  if (minutes < 1) return 'щойно був онлайн';
-  if (minutes < 60) return `був ${minutes} хв тому`;
+  if (minutes < 1) return t('social.profile.presenceJustNow');
+  if (minutes < 60) return t('social.profile.presenceAgo', { time: t('social.timeAgo.minutes', { count: minutes }) });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `був ${hours} год тому`;
-  return `був ${Math.floor(hours / 24)} дн тому`;
+  if (hours < 24) return t('social.profile.presenceAgo', { time: t('social.timeAgo.hours', { count: hours }) });
+  return t('social.profile.presenceAgo', { time: t('social.timeAgo.days', { count: Math.floor(hours / 24) }) });
 }
 
 export default UserProfilePage;

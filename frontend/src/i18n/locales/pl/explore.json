@@ -1,0 +1,139 @@
+{
+  "explore": {
+    "heading": "Dokąd wybrać się na Ukrainie",
+    "subheading": "Najedź lub dotknij punktu na mapie, aby dowiedzieć się, co warto zobaczyć. Znasz fajne miejsce? Dodaj je!",
+    "addPlace": "Dodaj miejsce",
+    "selectModal": {
+      "title": "Co chcesz dodać?",
+      "close": "Zamknij",
+      "publicPlace": {
+        "title": "Miejsce publiczne",
+        "desc": "Ciekawa lokalizacja dla wszystkich podróżników po Ukrainie (moderowane przez AI)."
+      },
+      "friendLabel": {
+        "title": "Etykieta dla znajomych",
+        "desc": "Lokalna etykieta z własnymi parametrami — dla ciebie i znajomych.",
+        "loginRequired": "Zaloguj się, aby tworzyć etykiety"
+      }
+    },
+    "detail": {
+      "selectPrompt": "Wybierz punkt na mapie, aby zobaczyć szczegóły.",
+      "addedBy": "Dodał: {{name}}",
+      "verifyVisit": "Zweryfikuj wizytę",
+      "navigate": "Nawiguj",
+      "opened": "Odwiedzone"
+    },
+    "nearby": {
+      "heading": "Najbliższe miejsca w pobliżu"
+    },
+    "distance": {
+      "meters": "{{value}} m",
+      "km": "{{value}} km"
+    },
+    "live": {
+      "youHere": "{{name}} (Jesteś tutaj)",
+      "youFallback": "Ty",
+      "staleSuffix": " · dawno nie aktualizowano",
+      "staleLong": "Dawno nie aktualizowano",
+      "geoOn": "Udostępnianie lokalizacji włączone — znajomi cię widzą",
+      "geoOff": "Udostępnianie lokalizacji wyłączone",
+      "friendsCount_one": "Znajomych na mapie: {{count}} · Odblokowanych komórek: {{cells}}",
+      "friendsCount_few": "Znajomych na mapie: {{count}} · Odblokowanych komórek: {{cells}}",
+      "friendsCount_many": "Znajomych na mapie: {{count}} · Odblokowanych komórek: {{cells}}",
+      "friendsCount_other": "Znajomych na mapie: {{count}} · Odblokowanych komórek: {{cells}}",
+      "level": "Poziom {{level}} · {{xp}} XP",
+      "updatedAt": "Zaktualizowano {{time}}",
+      "message": "Napisz",
+      "close": "Zamknij",
+      "profileOf": "Profil {{name}}"
+    },
+    "xp": {
+      "newRegion": " · Nowy region!",
+      "newCell": " · Nowa komórka"
+    },
+    "hud": {
+      "cells": "Komórki",
+      "regions": "Regiony"
+    },
+    "label": {
+      "friendsOnly": "Tylko dla znajomych",
+      "public": "Publiczna",
+      "temporary": "Tymczasowa · {{time}}",
+      "permanent": "Etykieta stała",
+      "timeLeft": "Pozostało: {{hours}} godz {{mins}} min",
+      "expired": "Czas minął",
+      "addedBy": "Dodał: {{name}}",
+      "coordinates": "Współrzędne: {{lat}}, {{lng}}",
+      "delete": "Usuń",
+      "report": "Zgłoś",
+      "reportReasonLabel": "Powód zgłoszenia:",
+      "reportPlaceholder": "Podaj, dlaczego ta etykieta jest niewłaściwa...",
+      "submitReport": "Wyślij zgłoszenie",
+      "aiChecking": "AI sprawdza...",
+      "cancel": "Anuluj",
+      "reportDeletedTitle": "Etykieta usunięta przez moderatora AI",
+      "reportRejectedTitle": "Zgłoszenie odrzucone przez moderatora AI",
+      "gotIt": "Rozumiem",
+      "loginToReport": "Zaloguj się",
+      "reportError": "Błąd zgłoszenia"
+    },
+    "tooltip": {
+      "difficultyCluster": "Trudność: {{difficulty}} ({{count}} miejsc)",
+      "andMore": " i jeszcze {{count}}...",
+      "friendsOnly": "Tylko dla znajomych",
+      "public": "Publiczna",
+      "addedBy": " · Dodał {{name}}"
+    },
+    "map": {
+      "myLocationTitle": "Moja lokalizacja",
+      "gridToggleTitle": "Pokaż/ukryj siatkę mgły"
+    },
+    "locationPicker": {
+      "picked": "Wybrano: {{lat}}, {{lng}} — przeciągnij pinezkę, aby doprecyzować",
+      "tapToPick": "Dotknij mapy, aby zaznaczyć miejsce"
+    },
+    "navigator": {
+      "label": "NAWIGATOR · przeciągnij, aby przesunąć",
+      "close": "Zamknij",
+      "start": "START",
+      "change": "Zmień",
+      "pickStartButton": "Wybierz punkt startowy na mapie",
+      "picking": "Kliknij na mapie…",
+      "waypoints": "PUNKTY POŚREDNIE",
+      "addWaypoint": "Dodaj punkt po drodze",
+      "waypointDone": "Klikaj na mapie, aby dodać · Gotowe",
+      "removeWaypoint": "Usuń punkt",
+      "driving": "Samochód",
+      "walking": "Pieszo",
+      "buildRoute": "Wyznacz trasę",
+      "rebuildRoute": "Przelicz trasę",
+      "building": "Wyznaczanie trasy…",
+      "footNotice": "Dalej wjazd zabroniony — {{meters}} m pieszo (~{{duration}}), oznaczone kreską",
+      "startRequired": "Najpierw wybierz punkt startowy na mapie",
+      "buildFailed": "Nie udało się wyznaczyć trasy"
+    },
+    "walkIntro": {
+      "badge": "Witamy w Absolute Travel",
+      "titleLine1": "Top 3 miejsca na",
+      "titleLine2": "spacer",
+      "leadCity": "Zebraliśmy trzy najlepsze lokalizacje wprost w twoim mieście — czas na spacer.",
+      "leadRegion": "W twoim mieście jest jeszcze spokojnie, więc oto trzy najlepsze trasy z twojego regionu.",
+      "leadNearby": "W pobliżu jest niewiele miejsc, więc dodaliśmy najbliższe ciekawe lokalizacje z sąsiednich miast.",
+      "leadCountry": "Oto trzy nasze ulubione miejsca na spacer, od których miło zacząć podróż po Ukrainie.",
+      "openOnMap": "Otwórz „{{name}}” na mapie",
+      "cta": "Ruszamy odkrywać mapę",
+      "close": "Zamknij"
+    },
+    "duration": {
+      "minutes": "{{count}} min",
+      "hoursOnly": "{{count}} godz",
+      "hoursMinutes": "{{hours}} godz {{mins}} min"
+    },
+    "routing": {
+      "needTwoPoints": "Potrzebne są co najmniej dwa punkty trasy",
+      "connectFailed": "Nie udało się połączyć z usługą tras",
+      "buildFailed": "Nie udało się wyznaczyć trasy",
+      "noRoute": "Nie znaleziono trasy między tymi punktami"
+    }
+  }
+}

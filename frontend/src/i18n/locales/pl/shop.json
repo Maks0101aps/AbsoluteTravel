@@ -1,0 +1,182 @@
+{
+  "shop": {
+    "wall": {
+      "title": "ŚCIANA PODRÓŻNIKA",
+      "loading": "Ładowanie…",
+      "loadMore": "Wczytaj więcej",
+      "emptySelf": "Tu jeszcze pusto. Odkrywaj mapę, a Twoje nowe miejsca pojawią się tutaj!",
+      "emptyOther": "Ten podróżnik nie podzielił się jeszcze żadną podróżą.",
+      "loadFailed": "Nie udało się załadować ściany",
+      "loadMoreFailed": "Nie udało się wczytać więcej",
+      "photoAlt": "Zdjęcie z wizyty",
+      "newPlaceVisited": "Odwiedzono nowe miejsce",
+      "newRegionUnlocked": "Odblokowano nowy region!",
+      "newCellUnlocked": "Odblokowano nową komórkę terytorium",
+      "timeJustNow": "przed chwilą",
+      "timeMinutesAgo": "{{count}} min temu",
+      "timeHoursAgo": "{{count}} godz. temu",
+      "timeDaysAgo": "{{count}} dni temu"
+    },
+    "categories": {
+      "avatars": "Awatary",
+      "backgrounds": "Tła",
+      "frames": "Ramki",
+      "colors": "Kolory",
+      "badges": "Odznaki",
+      "effects": "Efekty"
+    },
+    "header": {
+      "title": "Sklep podróżnika",
+      "subtitle": "Wymieniaj zdobyte monety na awatary, tła i inne dodatki profilu."
+    },
+    "genericAvatar": "Awatar",
+    "avatarNames": {
+      "compass": "Kompas",
+      "mountain": "Szczyt",
+      "pine": "Sosna",
+      "tent": "Namiot",
+      "map": "Mapa",
+      "signpost": "Drogowskaz",
+      "binoculars": "Zwiadowca",
+      "flame": "Płomień",
+      "backpack": "Plecak",
+      "feather": "Pióro",
+      "shield": "Tarcza",
+      "moon": "Księżyc",
+      "sun": "Słońce",
+      "crown": "Korona",
+      "star": "Gwiazda",
+      "trophy": "Trofeum",
+      "sparkle": "Blask"
+    },
+    "slotLabels": {
+      "avatar": "Awatar",
+      "background": "Tło profilu",
+      "frame": "Ramka",
+      "color": "Kolor",
+      "accentColor": "Kolor akcentu",
+      "badges": "Odznaka",
+      "effect": "Efekt"
+    },
+    "purchase": {
+      "select": "Wybierz",
+      "selected": "Wybrano",
+      "buying": "Kupowanie…",
+      "fromCase": "Ze skrzyni",
+      "level": "Poziom {{count}}",
+      "missingCoins_one": "Brakuje {{count}} monety",
+      "missingCoins_few": "Brakuje {{count}} monet",
+      "missingCoins_many": "Brakuje {{count}} monet",
+      "missingCoins_other": "Brakuje {{count}} monety"
+    },
+    "caseOpener": {
+      "title": "Skrzynia podróżnika",
+      "back": "Wstecz",
+      "openFailed": "Nie udało się otworzyć skrzyni",
+      "done": "Gotowe",
+      "openAgain": "Otwórz kolejną",
+      "opening": "Otwieranie…",
+      "alreadyOpened": "Już otwarto",
+      "openFree": "Otwórz za darmo",
+      "openFor": "Otwórz za {{count}}",
+      "notEnoughCoins": "Za mało monet",
+      "possibleRewards": "MOŻLIWE NAGRODY",
+      "duplicate": "DUPLIKAT",
+      "duplicateRefund": "Duplikat · zwrócono +{{count}} monet",
+      "applied": "Założono",
+      "apply": "Załóż",
+      "select": "Wybierz",
+      "alreadyOwned": "Już posiadasz",
+      "free": "FREE"
+    },
+    "xp": {
+      "howToLevel": "Jak zdobyć poziom",
+      "howToLevelTitle": "JAK ZDOBYĆ POZIOM",
+      "level": "POZIOM {{count}}",
+      "maxLevel": "Maksymalny poziom",
+      "close": "Zamknij",
+      "sources": {
+        "cell": "Odwiedź nową komórkę mapy",
+        "easy": "Potwierdź wizytę w miejscu — Łatwy",
+        "medium": "Potwierdź wizytę w miejscu — Średni",
+        "hard": "Potwierdź wizytę w miejscu — Trudny",
+        "extreme": "Potwierdź wizytę w miejscu — Ekstremalny"
+      }
+    },
+    "lock": {
+      "level": "Poziom {{count}}",
+      "case": "Ze skrzyni",
+      "coins": "{{count}} monet"
+    },
+    "items": {
+      "background": {
+        "forest": { "name": "Las" },
+        "scenic1": { "name": "Góry" },
+        "scenic2": { "name": "Dolina" },
+        "emerald": { "name": "Szmaragd" },
+        "scenic3": { "name": "Zachód słońca" },
+        "ocean": { "name": "Ocean" },
+        "ember": { "name": "Ognisko" },
+        "midnight": { "name": "Północ" },
+        "aurora": { "name": "Zorza" },
+        "sakura": { "name": "Sakura" },
+        "cosmos": { "name": "Kosmos" },
+        "glacier": { "name": "Lodowiec" },
+        "volcano": { "name": "Wulkan" },
+        "nebula": { "name": "Mgławica" },
+        "mirage": { "name": "Miraż" }
+      },
+      "frame": {
+        "none": { "name": "Bez ramki" },
+        "solid": { "name": "Klasyczna" },
+        "glow": { "name": "Blask" },
+        "gold": { "name": "Złota" },
+        "gem": { "name": "Klejnot" },
+        "frost": { "name": "Szron" },
+        "magma": { "name": "Magma" },
+        "prism": { "name": "Pryzmat" },
+        "blackhole": { "name": "Czarna dziura" }
+      },
+      "badges": {
+        "newcomer": { "name": "Nowicjusz" },
+        "hiker": { "name": "Turysta" },
+        "photographer": { "name": "Fotograf" },
+        "explorer": { "name": "Odkrywca" },
+        "mountaineer": { "name": "Zdobywca szczytów" },
+        "legend": { "name": "Legenda" },
+        "voyager": { "name": "Wojażer" },
+        "pathfinder": { "name": "Tropiciel" }
+      },
+      "effect": {
+        "none": { "name": "Bez efektu" },
+        "glow": { "name": "Delikatny blask" },
+        "aurora": { "name": "Zorza" },
+        "sparkle": { "name": "Iskry" },
+        "fireflies": { "name": "Świetliki" },
+        "matrix": { "name": "Neonowy deszcz" },
+        "vortex": { "name": "Kosmiczny wir" }
+      }
+    },
+    "rarity": {
+      "common": "Zwyczajny",
+      "uncommon": "Niezwykły",
+      "rare": "Rzadki",
+      "epic": "Epicki",
+      "legendary": "Legendarny"
+    },
+    "cases": {
+      "starter": {
+        "name": "Skrzynia początkującego",
+        "tagline": "Tania skrzynia z pierwszymi dodatkami profilu."
+      },
+      "wanderer": {
+        "name": "Skrzynia wędrowca",
+        "tagline": "Tła, awatary i ramki z każdego zakątka świata."
+      },
+      "legendary": {
+        "name": "Legendarna skrzynia",
+        "tagline": "Najrzadsze kosmetyki. Wysokie ryzyko — wysoka nagroda."
+      }
+    }
+  }
+}
