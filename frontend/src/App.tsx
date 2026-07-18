@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import './App.css';
-import { UA_PATH, UA_CONTOURS, UA_CITIES } from './data/ukraineMap';
+import { UA_PATH, UA_CITIES } from './data/ukraineMap';
 
 interface Achievement {
   id: number;
@@ -314,9 +314,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
                     <g clipPath="url(#uaClipHero)">
                       <rect x="0" y="0" width="720" height="480" fill="rgba(63,166,107,0.05)"></rect>
                       <rect x="0" y="0" width="720" height="480" fill="url(#heroGlowA)" style={{ pointerEvents: 'none' }}></rect>
-                      {UA_CONTOURS.map((d, i) => (
-                        <path key={i} d={d} fill="none" stroke="rgba(155,216,180,0.16)" strokeWidth="1"></path>
-                      ))}
                     </g>
                     <path d={UA_PATH} fill="none" stroke="rgba(63,166,107,0.4)" strokeWidth="1.5"></path>
                     {/* city dots */}
@@ -487,9 +484,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
                 <rect x="0" y="0" width="720" height="480" fill="url(#bigGlowA)" style={{ pointerEvents: 'none' }}></rect>
                 <rect x="0" y="0" width="720" height="480" fill="url(#bigGlowB)" style={{ pointerEvents: 'none' }}></rect>
                 <rect x="0" y="0" width="720" height="480" fill="url(#bigGlowC)" style={{ pointerEvents: 'none' }}></rect>
-                {UA_CONTOURS.map((d, i) => (
-                  <path key={i} d={d} fill="none" stroke="rgba(155,216,180,0.18)" strokeWidth="1"></path>
-                ))}
               </g>
               <path d={UA_PATH} fill="none" stroke="rgba(63,166,107,0.4)" strokeWidth="1.5"></path>
               {/* city dots */}

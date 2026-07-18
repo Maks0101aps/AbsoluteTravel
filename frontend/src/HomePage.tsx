@@ -24,7 +24,7 @@ import ChatPage from './ChatPage';
 import { getSocket, closeSocket } from './socket';
 import { AVATARS, BACKGROUNDS, BADGES, COLORS, EFFECTS, FRAMES } from './data/profileOptions';
 import { Icon, type IconName } from './icons';
-import { ProfileCardEffect, ProfileCosmosFlourish, ProfileSakuraFlourish } from './itemVisuals';
+import { ProfileCosmosFlourish, ProfileSakuraFlourish } from './itemVisuals';
 import ProfileWall from './ProfileWall';
 import UserProfilePage from './UserProfilePage';
 import WalkIntro from './WalkIntro';
@@ -285,7 +285,6 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
         >
           <ProfileCosmosFlourish backgroundId={p.backgroundId} />
           <ProfileSakuraFlourish backgroundId={p.backgroundId} />
-          <ProfileCardEffect effectId={p.effectId} color={accent} />
         </div>
       )}
 
