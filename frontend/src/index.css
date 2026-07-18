@@ -22,7 +22,7 @@ a:hover {
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -964,4 +964,131 @@ img, svg, video, canvas { max-width: 100%; }
 }
 @media (max-width: 380px) {
   .at-admin-main { padding: 22px 12px 44px !important; }
+}
+
+/* ===================================================================
+   GLOBAL SITE-WIDE ANIMATIONS
+   Only transform/opacity/box-shadow are animated (GPU-friendly, no
+   layout thrash), everything is short (<=320ms) so it stays snappy on
+   mobile, and prefers-reduced-motion turns it all off.
+   =================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* buttons — soft lift + press feedback everywhere, no JSX changes needed */
+  button:not(:disabled),
+  a,
+  .at-hover-lift,
+  input[type="submit"],
+  input[type="button"] {
+    transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+      box-shadow 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+      opacity 0.28s ease,
+      filter 0.28s ease;
+    will-change: transform;
+  }
+
+  button:not(:disabled):hover,
+  input[type="submit"]:hover,
+  input[type="button"]:hover {
+    transform: translateY(-0.5px);
+    filter: brightness(1.025);
+  }
+  button:not(:disabled):active,
+  input[type="submit"]:active,
+  input[type="button"]:active {
+    transform: translateY(0) scale(0.99);
+    filter: brightness(0.98);
+  }
+
+  /* cards / panels — anything opted in with this class gets a gentle hover lift */
+  .at-card,
+  .at-hover-lift {
+    transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1),
+      box-shadow 0.32s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .at-card:hover,
+  .at-hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
+  }
+
+  /* images/icons get a subtle zoom on hover when wrapped in a clipping card */
+  .at-card img,
+  .at-hover-zoom img {
+    transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .at-card:hover img,
+  .at-hover-zoom:hover img {
+    transform: scale(1.025);
+  }
+
+  /* tap/click ripple-free press feedback on touch devices too */
+  @media (hover: none) {
+    button:not(:disabled):active,
+    a:active {
+      transform: scale(0.99);
+      filter: brightness(0.98);
+    }
+  }
+}
+
+/* entrance animations — apply .at-fade-up / .at-fade-in / .at-scale-in as a
+   className, or add data-reveal to animate on scroll via the small observer
+   in main.tsx. Staggering: add style={{ animationDelay: `${i * 60}ms` }}. */
+.at-fade-up {
+  animation: fadeUp 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+.at-fade-in {
+  animation: fadeIn 0.5s ease backwards;
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+.at-scale-in {
+  animation: scaleIn 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+/* scroll-reveal: elements start hidden, main.tsx's IntersectionObserver
+   adds .at-revealed when they enter the viewport */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+[data-reveal].at-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* page/route transition wrapper — App.tsx can toggle this on route swaps */
+.at-page-enter {
+  animation: fadeUp 0.35s cubic-bezier(0.2, 0.9, 0.3, 1) backwards;
+}
+
+/* skeleton / loading shimmer, reused instead of a static spinner */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.at-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

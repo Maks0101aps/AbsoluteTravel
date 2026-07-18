@@ -238,11 +238,12 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
                 Поки що порожньо. Знайди друзів через пошук праворуч!
               </div>
             )}
-            {friends.map((f) => (
+            {friends.map((f, i) => (
               <UserCard
                 key={f.id}
                 user={f}
                 accent={accent}
+                index={i}
                 onClick={onOpenProfile ? () => onOpenProfile(f.id) : undefined}
                 actions={
                   <>
@@ -274,11 +275,12 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {requests.map((req) => (
+                {requests.map((req, i) => (
                   <UserCard
                     key={req.id}
                     user={req.sender}
                     accent={accent}
+                    index={i}
                     compact
                     onClick={onOpenProfile ? () => onOpenProfile(req.sender.id) : undefined}
                     actions={
@@ -322,11 +324,12 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
               {!searching && query.trim().length >= 2 && results.length === 0 && (
                 <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.5)' }}>Нікого не знайдено.</div>
               )}
-              {results.map((r) => (
+              {results.map((r, i) => (
                 <UserCard
                   key={r.id}
                   user={r}
                   accent={accent}
+                  index={i}
                   compact
                   onClick={onOpenProfile ? () => onOpenProfile(r.id) : undefined}
                   actions={

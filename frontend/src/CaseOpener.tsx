@@ -314,17 +314,19 @@ function openBtnStyle(accent: string, enabled: boolean): React.CSSProperties {
 // ---- case selector card -------------------------------------------------------
 
 function CaseTab({
-  def, selected, used, onClick,
+  def, selected, used, onClick, index,
 }: {
   def: CaseDef;
   selected: boolean;
   used: boolean;
   onClick: () => void;
+  index?: number;
 }) {
   const isFree = def.cost === 0;
   return (
     <button
       onClick={onClick}
+      className="at-fade-in"
       style={{
         position: 'relative', display: 'flex', flexDirection: 'column',
         padding: 0, borderRadius: '16px', overflow: 'hidden', cursor: 'pointer',
@@ -336,6 +338,7 @@ function CaseTab({
           : '0 8px 20px -16px rgba(0,0,0,0.9)',
         transform: selected ? 'translateY(-2px)' : 'none',
         transition: 'transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+        animationDelay: index != null ? `${Math.min(index, 10) * 60}ms` : undefined,
       }}
     >
       {/* artwork */}

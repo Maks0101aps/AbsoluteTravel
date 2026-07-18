@@ -14,6 +14,7 @@ interface UserCardProps {
   actions?: ReactNode;
   onClick?: () => void;
   compact?: boolean;
+  index?: number;
 }
 
 export function OnlineDot({ online, size = 10 }: { online: boolean; size?: number }) {
@@ -75,10 +76,11 @@ export function UserAvatar({ user, size = 44 }: { user: Pick<FriendUser, 'avatar
   );
 }
 
-function UserCard({ user, accent = '#3FA66B', subtitle, actions, onClick, compact }: UserCardProps) {
+function UserCard({ user, accent = '#3FA66B', subtitle, actions, onClick, compact, index }: UserCardProps) {
   return (
     <div
       onClick={onClick}
+      className="at-hover-lift at-fade-up"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -90,6 +92,7 @@ function UserCard({ user, accent = '#3FA66B', subtitle, actions, onClick, compac
         cursor: onClick ? 'pointer' : 'default',
         fontFamily: "'Manrope', sans-serif",
         color: CREAM,
+        animationDelay: index != null ? `${Math.min(index, 10) * 45}ms` : undefined,
       }}
     >
       <UserAvatar user={user} size={compact ? 38 : 46} />

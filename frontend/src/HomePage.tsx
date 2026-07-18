@@ -505,7 +505,8 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
           a stacking context capped below the nav's z-index:50, so the header
           area would paint on top and swallow scroll/click meant for the modal. */}
       <main
-        className={`at-home-main ${tab === 'chat' ? 'at-chat-main-tab' : ''}`}
+        key={tab}
+        className={`at-home-main at-page-enter ${tab === 'chat' ? 'at-chat-main-tab' : ''}`}
         style={{
           ...(tab === 'profile' ? { position: 'relative' as const, zIndex: 1 } : {}),
           maxWidth,
