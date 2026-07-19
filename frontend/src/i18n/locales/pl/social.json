@@ -71,11 +71,11 @@
     "leaderboard": {
       "eyebrow": "RANKING",
       "title": "Sala podróżników",
-      "subtitlePrefix": "Chodź, odkrywaj komórki, zdobywaj miejsca. Razem pokonaliście już",
+      "subtitlePrefix": "Nasz wspólny postęp:",
       "subtitleSuffix": "komórek.",
       "you": "ty",
       "level": "Poziom {{level}}",
-      "global": "GLOBALNIE",
+      "global": "NA ŚWIECIE",
       "globalTab": "Globalny",
       "regionTab": "Regionalny",
       "myRegionTab": "Mój region",

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { getMyRank, getXpLeaderboard, type MyRank, type XpLeaderboardRow } from './api';
+import { getXpLeaderboard, type XpLeaderboardRow } from './api';
 import { UserAvatar } from './UserCard';
 import { UKRAINE_REGIONS } from './data/ukraine';
 
@@ -283,7 +283,7 @@ const STYLES = `
   backdrop-filter: blur(6px);
 }
 .lb-me-id { flex: 1 1 160px; min-width: 0; }
-.lb-me-name { font-size: 14.5px; font-weight: 800; }
+.lb-me-name { font-size: 14.5px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lb-me-meta { font-size: 11.5px; color: rgba(244,241,232,0.5); }
 .lb-me-ranks { display: flex; gap: 22px; }
 .lb-me-label { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; color: rgba(244,241,232,0.42); }
@@ -476,14 +476,11 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
   const [tab, setTab] = useState<'global' | 'regional'>('global');
   const [metric, setMetric] = useState<Metric>('xp');
   const [rows, setRows] = useState<XpLeaderboardRow[]>([]);
-  const [me, setMe] = useState<MyRank | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isMobile } = useViewport();
 
-  useEffect(() => {
-    getMyRank(userId).then(setMe).catch(() => {});
-  }, [userId]);
+
 
   useEffect(() => {
     setLoading(true);
@@ -512,7 +509,6 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
   const podium = sorted.slice(0, 3);
   const rest = sorted.slice(3);
   const activeMetric = METRICS.find((m) => m.id === metric)!;
-  const totalCells = useMemo(() => rows.reduce((s, r) => s + r.cells, 0), [rows]);
 
   const cssVars = {
     '--lb-accent': accent,
@@ -524,50 +520,6 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
   return (
     <div className="lb-page" style={cssVars}>
       <style>{STYLES}</style>
-
-      <div className="lb-hero">
-        <div className="lb-blob lb-blob-a" style={{ background: `radial-gradient(circle, ${accent}33, transparent 66%)` }} />
-        <div className="lb-blob lb-blob-b" style={{ background: `radial-gradient(circle, ${GOLD}22, transparent 66%)` }} />
-
-        <div className="lb-hero-inner">
-          <div className="lb-eyebrow">{t('social.leaderboard.eyebrow')}</div>
-          <h2 className="lb-title">{t('social.leaderboard.title')}</h2>
-          <p className="lb-sub">
-            {t('social.leaderboard.subtitlePrefix')}{' '}
-            <strong style={{ color: GOLD }}>{totalCells.toLocaleString('uk-UA')}</strong> {t('social.leaderboard.subtitleSuffix')}
-          </p>
-
-          {me && (
-            <div className="lb-me">
-              <UserAvatar user={{ avatar: me.user.avatarUrl, name: me.user.name, online: true }} size={isMobile ? 38 : 46} />
-              <div className="lb-me-id">
-                <div className="lb-me-name">{me.user.name}</div>
-                <div className="lb-me-meta">
-                  {t('social.leaderboard.level', { level: me.user.level })} · 🧭 {me.user.cells} · 📍 {me.user.places}
-                </div>
-              </div>
-              <div className="lb-me-ranks">
-                <div>
-                  <div className="lb-me-label">{t('social.leaderboard.global')}</div>
-                  <div className="lb-me-rank" style={{ color: GOLD }}>
-                    #{me.global.rank}
-                    <span className="lb-me-total"> / {me.global.total}</span>
-                  </div>
-                </div>
-                {me.regional && (
-                  <div>
-                    <div className="lb-me-label">{localizeRegionName(me.regional.region, t).toUpperCase()}</div>
-                    <div className="lb-me-rank" style={{ color: accent }}>
-                      #{me.regional.rank}
-                      <span className="lb-me-total"> / {me.regional.total}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
 
       <div className="lb-controls">
         <div className="lb-tabs">

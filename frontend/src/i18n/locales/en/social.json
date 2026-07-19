@@ -65,11 +65,11 @@
     "leaderboard": {
       "eyebrow": "LEADERBOARD",
       "title": "Hall of travelers",
-      "subtitlePrefix": "Walk, unlock cells, conquer places. Together you've already covered",
+      "subtitlePrefix": "Our shared progress:",
       "subtitleSuffix": "cells.",
       "you": "you",
       "level": "Level {{level}}",
-      "global": "GLOBAL",
+      "global": "WORLD",
       "globalTab": "Global",
       "regionTab": "Regional",
       "myRegionTab": "My region",

@@ -71,11 +71,11 @@
     "leaderboard": {
       "eyebrow": "РЕЙТИНГ",
       "title": "Зала мандрівників",
-      "subtitlePrefix": "Ходи, відкривай клітинки, підкорюй місця. Разом уже пройдено",
+      "subtitlePrefix": "Наш спільний прогрес:",
       "subtitleSuffix": "клітинок.",
       "you": "ти",
       "level": "Рівень {{level}}",
-      "global": "ГЛОБАЛЬНО",
+      "global": "У СВІТІ",
       "globalTab": "Глобальний",
       "regionTab": "Регіональний",
       "myRegionTab": "Мій регіон",
