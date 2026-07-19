@@ -114,7 +114,12 @@
       "building": "Wyznaczanie trasy…",
       "footNotice": "Dalej wjazd zabroniony — {{meters}} m pieszo (~{{duration}}), oznaczone kreską",
       "startRequired": "Najpierw wybierz punkt startowy na mapie",
-      "buildFailed": "Nie udało się wyznaczyć trasy"
+      "buildFailed": "Nie udało się wyznaczyć trasy",
+      "wakeLockOn": "Ekran nie zgaśnie, dopóki nawigator jest otwarty",
+      "wakeLockOff": "Nie udało się utrzymać ekranu włączonego — trzymaj telefon aktywnym ręcznie",
+      "backgroundNotice": "Zapełnianie komórek terytorium zatrzyma się, jeśli opuścisz lub zwiniesz aplikację — trzymaj ten ekran otwarty podczas spaceru",
+      "enableCompass": "Włącz kompas",
+      "expand": "Rozwiń nawigator"
     },
     "walkIntro": {
       "badge": "Witamy w Absolute Travel",

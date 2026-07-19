@@ -5,7 +5,7 @@ export type IconName =
   | 'flame' | 'backpack' | 'feather' | 'shield' | 'moon' | 'sun' | 'crown'
   | 'leaf' | 'boot' | 'camera' | 'flag' | 'trophy'
   | 'user' | 'users' | 'shoppingBag' | 'image' | 'target' | 'star' | 'sparkle'
-  | 'lock' | 'coin' | 'pencil' | 'close' | 'check' | 'plus' | 'arrowLeft' | 'arrowRight' | 'messageSquare' | 'mic' | 'smile' | 'hexagon' | 'gift' | 'globe' | 'medal';
+  | 'lock' | 'coin' | 'pencil' | 'close' | 'check' | 'plus' | 'arrowLeft' | 'arrowRight' | 'messageSquare' | 'mic' | 'smile' | 'hexagon' | 'gift' | 'globe' | 'medal' | 'alertTriangle' | 'chevronUp';
 
 const PATHS: Record<IconName, React.ReactNode> = {
   compass: <><circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z" /></>,
@@ -21,6 +21,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
   shield: <><path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z" /><path d="M9 12l2 2 4-4" /></>,
   moon: <><path d="M20 14a8 8 0 1 1-9-11 6 6 0 0 0 9 11z" /></>,
   sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19" /></>,
+  alertTriangle: <><path d="M12 3l10 18H2z" /><path d="M12 10v4" /><path d="M12 17.5v.01" /></>,
   crown: <><path d="M4 8l3 4 5-6 5 6 3-4v9H4z" /><path d="M4 20h16" /></>,
   leaf: <><path d="M12 20v-6" /><path d="M12 14c0-3 2-5 6-5 0 4-3 5-6 5z" /><path d="M12 16c0-2-2-4-6-4 0 3 3 4 6 4z" /></>,
   boot: <><path d="M8 3v10l8 4v4H6a2 2 0 0 1-2-2v-3l4-2V3z" /></>,
@@ -49,6 +50,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
   plus: <path d="M12 5v14M5 12h14" />,
   arrowLeft: <><path d="M19 12H5" /><path d="M11 18l-6-6 6-6" /></>,
   arrowRight: <><path d="M5 12h14" /><path d="M13 6l6 6-6 6" /></>,
+  chevronUp: <path d="M6 15l6-6 6 6" />,
   messageSquare: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
   mic: <><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><path d="M12 18v4" /><path d="M8 22h8" /></>,
   smile: <><circle cx="12" cy="12" r="10" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><path d="M9 9h.01" /><path d="M15 9h.01" /></>,

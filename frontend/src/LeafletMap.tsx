@@ -169,6 +169,10 @@ export interface LiveMarker {
   frameId?: string;
   pulse?: boolean;
   dimmed?: boolean;
+  // Compass heading in degrees (0 = north, clockwise) — draws a directional
+  // beam off the self marker, like a real turn-by-turn navigator's arrow.
+  // Only meaningful (and only rendered) for `id === 'self'`.
+  heading?: number | null;
   // Receives the marker's on-screen position (relative to the map container)
   // at click time, so the caller can pop a card up right next to the avatar
   // instead of in a fixed corner.
@@ -252,9 +256,18 @@ function liveIcon(m: LiveMarker) {
 
   const grey = m.dimmed ? 'filter:grayscale(1);opacity:0.55;' : '';
   const frameRing = frameRingCss(m.frameId, m.color);
+  // Directional beam: a wedge extending outward from the marker, rotated to
+  // the compass heading (0deg = up = north, clockwise) — same convention
+  // real turn-by-turn navigators use for "which way am I facing".
+  const beam =
+    m.id === 'self' && m.heading != null
+      ? `<div style="position:absolute;left:0;top:0;width:${size}px;height:${size}px;transform:rotate(${m.heading}deg);pointer-events:none;">
+           <div style="position:absolute;left:50%;bottom:50%;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:28px solid ${m.color};filter:drop-shadow(0 0 5px ${m.color}aa);"></div>
+         </div>`
+      : '';
   return L.divIcon({
     className: '',
-    html: `<div style="position:relative;width:${size}px;height:${size}px;${grey}">${ring}<div style="position:relative;width:100%;height:100%;border-radius:50%;${frameRing}overflow:hidden;background:#0B2B20;">${inner}</div></div>`,
+    html: `<div style="position:relative;width:${size}px;height:${size}px;${grey}">${ring}${beam}<div style="position:relative;width:100%;height:100%;border-radius:50%;${frameRing}overflow:hidden;background:#0B2B20;">${inner}</div></div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
@@ -287,6 +300,10 @@ interface LeafletMapProps {
   hoverId?: string | number | null;
   onSelect?: (id: string | number) => void;
   onHover?: (id: string | number | null) => void;
+  // Hides the floating grid-toggle button (top-right hexagon icon) — used by
+  // the navigator's full-screen map, which has its own top-left back/warning
+  // strip and no room (or need) for it there.
+  hideGridToggle?: boolean;
 
   // Pick mode: click anywhere to drop/move a single draggable pin.
   pickable?: boolean;
@@ -467,6 +484,7 @@ function LeafletMap({
   hoverId,
   onSelect,
   onHover,
+  hideGridToggle,
   pickable,
   pin,
   onPick,
@@ -657,6 +675,17 @@ function LeafletMap({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // The container's CSS size can change without React re-mounting it (e.g.
+  // the navigator switching the map between its embedded height and a
+  // full-screen one) — Leaflet only measures its container once, so it needs
+  // to be told explicitly whenever that size actually changes.
+  useEffect(() => {
+    if (!map || !containerRef.current) return;
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [map]);
 
   // --- fly to the user's own position, once -----------------------------------
   // `focusPosition` starts null and arrives asynchronously once the browser's
@@ -1139,6 +1168,7 @@ function LeafletMap({
         }}
       />
       {/* Floating grid toggle button */}
+      {!hideGridToggle && (
       <button
         onClick={() => setShowGrid((prev) => !prev)}
         style={{
@@ -1163,6 +1193,7 @@ function LeafletMap({
       >
         <Icon name="hexagon" size={18} strokeWidth={2} />
       </button>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Place } from './data/places';
 import { fetchNavigatorRoute, formatDuration, type RoutePoint, type RouteResult, type TravelProfile } from './data/routing';
@@ -19,7 +19,11 @@ interface NavigatorProps {
   onStopPicking: () => void;
   onRemoveWaypoint: (index: number) => void;
   onRouteBuilt: (route: RouteResult | null) => void;
-  onClose: () => void;
+  // iOS only: compass heading needs an explicit user-gesture permission
+  // grant before it'll report anything (see useHeading.ts) — when true, show
+  // a button that calls onRequestHeadingPermission from its own click handler.
+  headingNeedsPermission: boolean;
+  onRequestHeadingPermission: () => void;
 }
 
 // Floating panel for planning a road-following route to `target`, with
@@ -39,16 +43,60 @@ function Navigator({
   onStopPicking,
   onRemoveWaypoint,
   onRouteBuilt,
-  onClose,
+  headingNeedsPermission,
+  onRequestHeadingPermission,
 }: NavigatorProps) {
   const { t } = useTranslation();
   const [profile, setProfile] = useState<TravelProfile>('driving');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Draggable like a floating window: offset from the default bottom-right
-  // anchor, dragged from the header. Starts at (0,0) so first render matches
-  // the original fixed position exactly.
+  // Keep the screen awake for as long as the navigator is open — walking
+  // directions are useless if the phone locks itself mid-route. Released on
+  // unmount (i.e. whenever the panel closes — ExploreMap only renders
+  // <Navigator> while navTarget is set) and re-acquired if the OS drops it
+  // when the tab loses visibility and comes back.
+  const [wakeLockSupported, setWakeLockSupported] = useState(true);
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+
+  useEffect(() => {
+    if (!('wakeLock' in navigator)) {
+      setWakeLockSupported(false);
+      return;
+    }
+    let cancelled = false;
+
+    const acquire = async () => {
+      try {
+        const sentinel = await (navigator as any).wakeLock.request('screen');
+        if (cancelled) {
+          sentinel.release().catch(() => {});
+          return;
+        }
+        wakeLockRef.current = sentinel;
+      } catch {
+        if (!cancelled) setWakeLockSupported(false);
+      }
+    };
+
+    acquire();
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible' && !wakeLockRef.current) acquire();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', onVisibility);
+      wakeLockRef.current?.release().catch(() => {});
+      wakeLockRef.current = null;
+    };
+  }, []);
+
+  // Desktop: draggable like a floating window, offset from the default
+  // bottom-right anchor. Starts at (0,0) so first render matches the
+  // original fixed position exactly.
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragState = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null);
 
@@ -63,6 +111,52 @@ function Navigator({
   };
   const onDragEnd = () => {
     dragState.current = null;
+  };
+
+  // Mobile: a Google-Maps-style bottom sheet instead of a floating window —
+  // dragging the handle down past a threshold collapses it to just a small
+  // "expand" tab, tapping that tab (or dragging up) brings the full sheet
+  // back. `sheetDragY` is the live drag offset while a mobile drag is in
+  // progress (0 once released — the collapse itself is a discrete state).
+  const [isMobile, setIsMobile] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [sheetDragY, setSheetDragY] = useState(0);
+  const sheetDragState = useRef<{ startY: number } | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 860px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  const onHandlePointerDown = (e: React.PointerEvent) => {
+    if (!isMobile) {
+      onDragStart(e);
+      return;
+    }
+    sheetDragState.current = { startY: e.clientY };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const onHandlePointerMove = (e: React.PointerEvent) => {
+    if (!isMobile) {
+      onDragMove(e);
+      return;
+    }
+    if (!sheetDragState.current) return;
+    // Only drag downward (collapsing) from the handle — dragging up while
+    // already expanded has nothing further to reveal.
+    setSheetDragY(Math.max(0, e.clientY - sheetDragState.current.startY));
+  };
+  const onHandlePointerUp = () => {
+    if (!isMobile) {
+      onDragEnd();
+      return;
+    }
+    if (sheetDragY > 70) setCollapsed(true);
+    setSheetDragY(0);
+    sheetDragState.current = null;
   };
 
   const build = async () => {
@@ -84,43 +178,143 @@ function Navigator({
     }
   };
 
+  // Collapsed on mobile: everything shrinks to a small round "expand" tab —
+  // tapping it (or dragging up, but a tap is simpler and matches the ask)
+  // brings the full sheet back. Nothing else of the panel renders while
+  // collapsed, same as Google Maps' minimized route sheet.
+  if (isMobile && collapsed) {
+    return (
+      <button
+        onClick={() => setCollapsed(false)}
+        aria-label={t('explore.navigator.expand')}
+        style={{
+          position: 'fixed',
+          bottom: '18px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 600,
+          width: '56px',
+          height: '40px',
+          borderRadius: '20px',
+          background: PANEL,
+          border: '1px solid rgba(255,255,255,0.15)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: accent,
+          cursor: 'pointer',
+          boxShadow: '0 12px 30px -8px rgba(0,0,0,0.7)',
+        }}
+      >
+        <Icon name="chevronUp" size={20} strokeWidth={2.2} stroke={accent} />
+      </button>
+    );
+  }
+
   return (
     <div
-      style={{
-        position: 'fixed',
-        bottom: `calc(24px - ${dragOffset.y}px)`,
-        right: `calc(24px - ${dragOffset.x}px)`,
-        zIndex: 150,
-        width: 'min(360px, calc(100vw - 48px))',
-        maxHeight: 'calc(100vh - 48px)',
-        overflowY: 'auto',
-        background: PANEL,
-        border: '1px solid rgba(255,255,255,0.12)',
-        borderRadius: '18px',
-        padding: '18px',
-        boxShadow: '0 24px 60px -18px rgba(0,0,0,0.7)',
-        fontFamily: "'Manrope', sans-serif",
-        color: CREAM,
-      }}
+      style={
+        isMobile
+          ? {
+              position: 'fixed',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 600,
+              width: '100%',
+              maxHeight: 'calc(100vh - 24px)',
+              overflowY: 'auto',
+              background: PANEL,
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: '18px 18px 0 0',
+              padding: '10px 18px 18px',
+              boxShadow: '0 -12px 40px -12px rgba(0,0,0,0.7)',
+              fontFamily: "'Manrope', sans-serif",
+              color: CREAM,
+              transform: `translateY(${sheetDragY}px)`,
+              transition: sheetDragState.current ? 'none' : 'transform 0.25s ease',
+              touchAction: 'none',
+            }
+          : {
+              position: 'fixed',
+              bottom: `calc(24px - ${dragOffset.y}px)`,
+              right: `calc(24px - ${dragOffset.x}px)`,
+              // Above the full-screen map wrapper (zIndex:500 in ExploreMap.tsx) —
+              // this panel floats on top of the navigator's dedicated map window.
+              zIndex: 600,
+              width: 'min(360px, calc(100vw - 48px))',
+              maxHeight: 'calc(100vh - 48px)',
+              overflowY: 'auto',
+              background: PANEL,
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: '18px',
+              padding: '18px',
+              boxShadow: '0 24px 60px -18px rgba(0,0,0,0.7)',
+              fontFamily: "'Manrope', sans-serif",
+              color: CREAM,
+            }
+      }
     >
+      {/* Drag handle — a small grabber pill on mobile (Google-Maps-style bottom
+          sheet), the whole header row on desktop (free-floating window). */}
+      {isMobile && (
+        <div
+          onPointerDown={onHandlePointerDown}
+          onPointerMove={onHandlePointerMove}
+          onPointerUp={onHandlePointerUp}
+          onPointerCancel={onHandlePointerUp}
+          style={{ display: 'flex', justifyContent: 'center', padding: '4px 0 10px', cursor: 'grab', touchAction: 'none' }}
+        >
+          <div style={{ width: '36px', height: '4px', borderRadius: '999px', background: 'rgba(255,255,255,0.25)' }} />
+        </div>
+      )}
       <div
-        onPointerDown={onDragStart}
-        onPointerMove={onDragMove}
-        onPointerUp={onDragEnd}
-        onPointerCancel={onDragEnd}
-        style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', marginBottom: '14px', cursor: 'grab', touchAction: 'none' }}
+        onPointerDown={isMobile ? undefined : onHandlePointerDown}
+        onPointerMove={isMobile ? undefined : onHandlePointerMove}
+        onPointerUp={isMobile ? undefined : onHandlePointerUp}
+        onPointerCancel={isMobile ? undefined : onHandlePointerUp}
+        style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', marginBottom: '14px', cursor: isMobile ? 'default' : 'grab', touchAction: 'none' }}
       >
         <div>
           <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: accent, marginBottom: '4px' }}>{t('explore.navigator.label')}</div>
           <div style={{ fontSize: '15px', fontWeight: 700 }}>{t(`places.${target.id}.name`, { defaultValue: target.name })}</div>
         </div>
-        <button
-          onClick={onClose}
-          aria-label={t('explore.navigator.close')}
-          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '9px', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: CREAM, cursor: 'pointer', flex: '0 0 auto' }}
-        >
-          <Icon name="close" size={14} strokeWidth={2} />
-        </button>
+      </div>
+
+      {/* Wake-lock notice — the background/"don't leave the app" warning now
+          lives in the always-visible HUD next to the cell/region counters
+          instead (see ExploreMap.tsx's ExplorationHud), since it stayed
+          hidden whenever this sheet was collapsed down to its handle. Closing
+          the navigator is the HUD's back arrow now too — this sheet has no
+          ✕ of its own anymore. */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '7px', fontSize: '11.5px', lineHeight: 1.4, color: wakeLockSupported ? accent : '#E0A54E' }}>
+          <Icon name={wakeLockSupported ? 'sun' : 'alertTriangle'} size={14} strokeWidth={1.9} />
+          <span>{wakeLockSupported ? t('explore.navigator.wakeLockOn') : t('explore.navigator.wakeLockOff')}</span>
+        </div>
+        {headingNeedsPermission && (
+          <button
+            onClick={onRequestHeadingPermission}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '7px',
+              alignSelf: 'flex-start',
+              background: `${accent}18`,
+              border: `1px solid ${accent}55`,
+              color: accent,
+              borderRadius: '9px',
+              padding: '7px 12px',
+              fontSize: '11.5px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: "'Manrope', sans-serif",
+            }}
+          >
+            <Icon name="compass" size={13} strokeWidth={1.9} />
+            {t('explore.navigator.enableCompass')}
+          </button>
+        )}
       </div>
 
       {/* start point */}
