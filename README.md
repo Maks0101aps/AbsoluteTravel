@@ -11,6 +11,8 @@
 <img src="https://img.shields.io/badge/Socket.IO-realtime-010101?logo=socketdotio&logoColor=white" alt="Socket.IO">
 <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
 
+🌐 [English](README.en.md) | 🌐 [Polski](README.pl.md)
+
 </div>
 
 ---
@@ -62,6 +64,8 @@ graph TD
 
 ## 🚀 Швидкий старт
 
+### 💻 Локальний запуск (без Docker)
+
 ```bash
 # 1. Встановити всі залежності (root + backend + frontend) і підготувати БД
 npm run install:all
@@ -69,6 +73,20 @@ npm run install:all
 # 2. Запустити фронтенд і бекенд одночасно
 npm run dev
 ```
+
+### 🐳 Запуск через Docker
+Файли конфігурації Docker розміщені у спеціальній гілці `docker-test`.
+
+1. Склонуйте репозиторій та перейдіть на гілку `docker-test`:
+   ```bash
+   git checkout docker-test
+   ```
+2. Запустіть контейнери:
+   ```bash
+   docker compose up --build -d
+   ```
+   *Детальніше про порти та налаштування дивіться в описі Docker у гілці [docker-test](https://github.com/Maks0101aps/AbsoluteTravel/tree/docker-test).*
+
 
 <details>
 <summary><b>⚙️ Налаштування `.env`</b></summary>
