@@ -235,6 +235,14 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
           ))}
         </div>
 
+        <GoogleSignInButton onCredential={handleGoogleCredential} disabled={loading} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '22px 0' }}>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.12)' }} />
+          <span style={{ fontSize: '12px', color: 'rgba(244,241,232,0.45)' }}>{t('core.auth.orDivider')}</span>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.12)' }} />
+        </div>
+
         <form onSubmit={handleSubmit} noValidate>
           {mode === 'register' && (
             <div style={fieldWrap}>
@@ -380,14 +388,6 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
             {loading ? t('core.auth.submitLoading') : mode === 'register' ? t('core.auth.submitRegister') : t('core.auth.submitLogin')}
           </button>
         </form>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '22px 0' }}>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.12)' }} />
-          <span style={{ fontSize: '12px', color: 'rgba(244,241,232,0.45)' }}>{t('core.auth.orDivider')}</span>
-          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.12)' }} />
-        </div>
-
-        <GoogleSignInButton onCredential={handleGoogleCredential} disabled={loading} />
 
         <p style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(244,241,232,0.55)', marginTop: '22px', marginBottom: 0 }}>
           {mode === 'register' ? t('core.auth.hasAccount') : t('core.auth.noAccount')}

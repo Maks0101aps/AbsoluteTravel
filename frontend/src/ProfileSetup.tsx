@@ -290,7 +290,7 @@ function ProfileSetup({ user, onComplete, onSkip }: ProfileSetupProps) {
                       {t('core.profileSetup.levelBadge', { level: user.level })}
                     </span>
                   </Editable>
-                  <span title={t('core.profileSetup.coinsTitle')} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 700, color: '#F0C64B', background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.3)', padding: '4px 10px', borderRadius: '999px' }}>
+                  <span title={t('core.profileSetup.coinsTitle')} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 700, color: '#F0C64B', background: 'rgba(240,198,75,0.12)', border: '1px solid rgba(240,198,75,0.3)', padding: '4px 10px', borderRadius: '999px', boxShadow: '0 0 12px rgba(240,198,75,0.15)' }}>
                     <Icon name="coin" size={14} strokeWidth={1.9} />
                     {coins}
                   </span>

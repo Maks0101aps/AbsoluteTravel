@@ -33,7 +33,16 @@ const PATHS: Record<IconName, React.ReactNode> = {
   star: <><path d="M12 3l2.6 5.6L20 9.3l-4 4 1 6-5-3-5 3 1-6-4-4 5.4-.7z" /></>,
   sparkle: <><path d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L5 10l6.5-1.5z" /><path d="M18.5 13l.7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7z" /></>,
   lock: <><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></>,
-  coin: <><circle cx="12" cy="12" r="9" /><path d="M12 7v10M9.5 9.5c0-1 1-1.5 2.5-1.5s2.5.5 2.5 1.5-1 1.5-2.5 1.5-2.5.5-2.5 1.5 1 1.5 2.5 1.5 2.5-.5 2.5-1.5" /></>,
+  coin: (
+    <>
+      <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity={0.15} />
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="7" strokeWidth={1.2} strokeOpacity={0.5} />
+      <path d="M12 6v12" />
+      <path d="M15 9h-4.5a2 2 0 1 0 0 4h3a2 2 0 1 1 0 4H9" />
+      <path d="M19 2q0 2 2 2q-2 0 -2 2q0-2 -2-2q2 0 2-2" fill="currentColor" stroke="none" />
+    </>
+  ),
   pencil: <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></>,
   close: <path d="M6 6l12 12M18 6L6 18" />,
   check: <path d="M4 12l5 5L20 6" />,
