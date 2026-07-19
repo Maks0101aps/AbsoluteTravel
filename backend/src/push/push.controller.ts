@@ -26,16 +26,4 @@ export class PushController {
   unsubscribe(@Body('endpoint') endpoint: string) {
     return this.push.removeSubscription(endpoint);
   }
-
-  /** Dev/self test: pushes a sample notification to the caller's devices. */
-  @Post('test')
-  async test(@Body('userId') userId: number) {
-    await this.push.notify(userId, {
-      title: 'Absolute Travel',
-      body: 'Сповіщення працюють! 🎉',
-      url: '/',
-      tag: 'test',
-    });
-    return { ok: true };
-  }
 }

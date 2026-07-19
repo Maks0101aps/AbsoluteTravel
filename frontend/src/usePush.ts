@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getVapidKey, subscribePush, unsubscribePush, sendTestPush } from './api';
+import { getVapidKey, subscribePush, unsubscribePush } from './api';
 
 // VAPID keys are URL-safe base64; the Push API wants a Uint8Array.
 function urlBase64ToUint8Array(base64: string): Uint8Array {
@@ -25,7 +25,6 @@ export interface PushState {
   error: string | null;
   enable: (userId: number) => Promise<void>;
   disable: (userId: number) => Promise<void>;
-  test: (userId: number) => Promise<void>;
 }
 
 export function usePush(): PushState {
@@ -99,9 +98,5 @@ export function usePush(): PushState {
     }
   }, []);
 
-  const test = useCallback(async (userId: number) => {
-    await sendTestPush(userId).catch(() => {});
-  }, []);
-
-  return { supported: pushSupported, permission, subscribed, busy, error, enable, disable, test };
+  return { supported: pushSupported, permission, subscribed, busy, error, enable, disable };
 }

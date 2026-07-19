@@ -51,7 +51,6 @@
     "working": "Poczekaj…",
     "blocked": "Powiadomienia są zablokowane w ustawieniach przeglądarki. Zezwól na nie dla tej strony.",
     "unsupported": "Twoja przeglądarka nie obsługuje powiadomień.",
-    "testButton": "Wyślij powiadomienie testowe",
     "error": {
       "failed": "Nie udało się włączyć powiadomień. Spróbuj ponownie.",
       "server-disabled": "Powiadomienia są tymczasowo niedostępne na serwerze."

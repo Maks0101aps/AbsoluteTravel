@@ -11,7 +11,7 @@ const CREAM = '#F4F1E8';
  */
 export default function NotificationsSettings({ userId, accent }: { userId: number; accent: string }) {
   const { t } = useTranslation();
-  const { supported, permission, subscribed, busy, error, enable, disable, test } = usePush();
+  const { supported, permission, subscribed, busy, error, enable, disable } = usePush();
 
   const header = (
     <div
@@ -87,20 +87,6 @@ export default function NotificationsSettings({ userId, accent }: { userId: numb
               : t('notifications.enable')}
         </button>
       </div>
-
-      {subscribed && (
-        <button
-          type="button"
-          onClick={() => test(userId)}
-          style={{
-            marginTop: '10px', background: 'none', border: 'none', cursor: 'pointer',
-            color: 'rgba(244,241,232,0.55)', fontFamily: "'Manrope', sans-serif",
-            fontSize: '12.5px', fontWeight: 600, textDecoration: 'underline', padding: 0,
-          }}
-        >
-          {t('notifications.testButton')}
-        </button>
-      )}
     </div>
   );
 }

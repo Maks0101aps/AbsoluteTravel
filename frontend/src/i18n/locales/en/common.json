@@ -51,7 +51,6 @@
     "working": "Please wait…",
     "blocked": "Notifications are blocked in your browser settings. Allow them for this site.",
     "unsupported": "Your browser doesn't support notifications.",
-    "testButton": "Send a test notification",
     "error": {
       "failed": "Couldn't enable notifications. Try again.",
       "server-disabled": "Notifications are temporarily unavailable on the server."

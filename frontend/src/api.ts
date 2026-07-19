@@ -805,9 +805,4 @@ export function unsubscribePush(endpoint: string) {
   return call<{ ok: boolean }>('POST', '/api/push/unsubscribe', { endpoint });
 }
 
-/** Fire a sample notification back to the caller's own devices (self-test). */
-export function sendTestPush(userId: number) {
-  return call<{ ok: boolean }>('POST', '/api/push/test', { userId });
-}
-
 
