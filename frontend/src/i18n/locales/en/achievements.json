@@ -1,0 +1,92 @@
+{
+  "achievements": {
+    "header": {
+      "eyebrow": "ACHIEVEMENTS",
+      "title": "Your rewards",
+      "subtitle": "Complete tasks to earn XP and coins. Weekly achievements reset every Monday — don't miss a fresh batch of rewards.",
+      "claimableCount": "Ready to claim: {{count}}."
+    },
+    "loading": "Loading…",
+    "errors": {
+      "load": "Couldn't load achievements",
+      "claim": "Couldn't claim the reward"
+    },
+    "sections": {
+      "weekly": {
+        "title": "Weekly",
+        "subtitle": "Resets weekly · {{week}}"
+      },
+      "regular": {
+        "title": "Achievements",
+        "subtitle": "{{claimed}} / {{total}} claimed · unlock one level at a time"
+      }
+    },
+    "tier": {
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold"
+    },
+    "chain": {
+      "step": "Level {{step}}/{{total}}",
+      "done": "Completed"
+    },
+    "progress": {
+      "label": "Progress",
+      "done": "Done"
+    },
+    "actions": {
+      "claim": "Claim",
+      "claiming": "…",
+      "claimed": "Claimed"
+    },
+    "toast": {
+      "title": "Reward claimed!"
+    },
+    "items": {
+      "first_steps": { "title": "First steps", "description": "Mark your first visit to a place" },
+      "weekender": { "title": "Weekend traveler", "description": "Visit 3 different places" },
+      "explorer_5": { "title": "Explorer", "description": "Visit 5 places" },
+      "explorer_10": { "title": "Seasoned tourist", "description": "Visit 10 places" },
+      "explorer_20": { "title": "Well-traveled", "description": "Visit 20 places" },
+      "explorer_40": { "title": "Legend of the road", "description": "Visit 40 places" },
+
+      "pathfinder": { "title": "Pathfinder", "description": "Unlock 5 territory cells" },
+      "cartographer": { "title": "Cartographer", "description": "Unlock 25 territory cells" },
+      "surveyor": { "title": "Surveyor", "description": "Unlock 100 territory cells" },
+      "conqueror": { "title": "Conqueror of space", "description": "Unlock 300 territory cells" },
+
+      "region_1": { "title": "Local", "description": "Visit a place in your own region" },
+      "region_3": { "title": "Oblast traveler", "description": "Visit places in 3 oblasts" },
+      "region_6": { "title": "Six oblasts", "description": "Visit places in 6 oblasts" },
+      "region_9": { "title": "Nine oblasts", "description": "Visit places in 9 oblasts" },
+      "region_11": { "title": "Half the country", "description": "Visit places in 11 of 22 oblasts — exactly half the country" },
+      "region_16": { "title": "Sixteen oblasts", "description": "Visit places in 16 oblasts" },
+      "region_19": { "title": "Almost the whole country", "description": "Visit places in 19 oblasts" },
+      "region_22": { "title": "All of Ukraine", "description": "Visit places in all 22 oblasts represented in the game" },
+
+      "sampler": { "title": "A taste of everything", "description": "Visit places in 3 different categories" },
+      "collector": { "title": "Collector of experiences", "description": "Visit places in all 5 categories" },
+
+      "friend_1": { "title": "Not alone", "description": "Add your first friend" },
+      "friend_5": { "title": "Company", "description": "Add 5 friends" },
+      "friend_10": { "title": "Life of the crew", "description": "Add 10 friends" },
+
+      "level_5": { "title": "Rookie no more", "description": "Reach level 5" },
+      "level_10": { "title": "Confident stride", "description": "Reach level 10" },
+      "level_25": { "title": "Veteran", "description": "Reach level 25" },
+
+      "daredevil": { "title": "Daredevil", "description": "Visit a hard place (difficulty 3+)" },
+      "hardcore": { "title": "Hardened", "description": "Visit 5 hard places" },
+      "to_the_limit": { "title": "To the limit", "description": "Visit an extreme place (difficulty 4)" },
+
+      "saver": { "title": "Piggy bank", "description": "Earn 1000 coins over your lifetime" },
+
+      "w_warmup": { "title": "Weekly warm-up", "description": "Visit 1 place this week" },
+      "w_wanderer": { "title": "Weekly wanderer", "description": "Visit 3 places this week" },
+      "w_cartographer": { "title": "Weekly cartographer", "description": "Unlock 15 cells this week" },
+      "w_crossregion": { "title": "Cross-region week", "description": "Visit places in 2 oblasts this week" },
+      "w_earner": { "title": "Weekly earner", "description": "Earn 150 coins this week" },
+      "w_social": { "title": "Sociable week", "description": "Add a friend this week" }
+    }
+  }
+}

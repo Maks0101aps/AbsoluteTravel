@@ -26,6 +26,15 @@ export type Metric =
 
 export type Tier = 'bronze' | 'silver' | 'gold';
 
+// Distinct `Place.region` values across the curated dataset (frontend
+// data/places.ts and backend prisma/seed.ts — kept in sync manually, count
+// verified against both). This is what `regionsVisited` can actually reach in
+// play, so "all of Ukraine"/"half of Ukraine" achievements below are defined
+// against this real ceiling instead of an arbitrary round number. Bump this
+// (and re-check the region chain below) whenever curated places are added in
+// a region that isn't already represented.
+export const UKRAINE_REGIONS_TOTAL = 22;
+
 export interface AchievementDef {
   key: string;
   title: string;
@@ -39,7 +48,7 @@ export interface AchievementDef {
   tier: Tier;
 }
 
-// --- permanent achievements (26) ------------------------------------------
+// --- permanent achievements (30) ------------------------------------------
 export const REGULAR: AchievementDef[] = [
   // places visited (verified with a photo checkmark)
   { key: 'first_steps', title: 'Перші кроки', description: 'Познач свій перший візит до місця', icon: 'boot', metric: 'placesVisited', threshold: 1, xp: 100, coins: 60, tier: 'bronze' },
@@ -55,11 +64,18 @@ export const REGULAR: AchievementDef[] = [
   { key: 'surveyor', title: 'Землемір', description: 'Розблокуй 100 клітинок території', icon: 'compass', metric: 'cellsUnlocked', threshold: 100, xp: 500, coins: 280, tier: 'gold' },
   { key: 'conqueror', title: 'Підкорювач простору', description: 'Розблокуй 300 клітинок території', icon: 'flag', metric: 'cellsUnlocked', threshold: 300, xp: 850, coins: 460, tier: 'gold' },
 
-  // regions
+  // regions — chain length matches UKRAINE_REGIONS_TOTAL below, so the last
+  // tier ("Вся Україна") requires every region actually represented in the
+  // curated place dataset, and "Півкраїни" sits at the real halfway point —
+  // not arbitrary round numbers like the old 6/12-of-however-many.
   { key: 'region_1', title: 'Місцевий', description: 'Відвідай місце у своєму регіоні', icon: 'pine', metric: 'regionsVisited', threshold: 1, xp: 100, coins: 60, tier: 'bronze' },
   { key: 'region_3', title: 'Мандрівник областями', description: 'Відвідай місця у 3 областях', icon: 'signpost', metric: 'regionsVisited', threshold: 3, xp: 260, coins: 150, tier: 'silver' },
-  { key: 'region_6', title: 'Півкраїни', description: 'Відвідай місця у 6 областях', icon: 'map', metric: 'regionsVisited', threshold: 6, xp: 450, coins: 260, tier: 'gold' },
-  { key: 'region_12', title: 'Вся Україна', description: 'Відвідай місця у 12 областях', icon: 'crown', metric: 'regionsVisited', threshold: 12, xp: 800, coins: 440, tier: 'gold' },
+  { key: 'region_6', title: 'Шість областей', description: 'Відвідай місця у 6 областях', icon: 'map', metric: 'regionsVisited', threshold: 6, xp: 380, coins: 220, tier: 'silver' },
+  { key: 'region_9', title: 'Дев’ять областей', description: 'Відвідай місця у 9 областях', icon: 'compass', metric: 'regionsVisited', threshold: 9, xp: 520, coins: 300, tier: 'gold' },
+  { key: 'region_11', title: 'Півкраїни', description: `Відвідай місця у ${Math.ceil(UKRAINE_REGIONS_TOTAL / 2)} з ${UKRAINE_REGIONS_TOTAL} областей — рівно половина країни`, icon: 'flag', metric: 'regionsVisited', threshold: Math.ceil(UKRAINE_REGIONS_TOTAL / 2), xp: 650, coins: 380, tier: 'gold' },
+  { key: 'region_16', title: 'Шістнадцять областей', description: 'Відвідай місця у 16 областях', icon: 'compass', metric: 'regionsVisited', threshold: 16, xp: 850, coins: 480, tier: 'gold' },
+  { key: 'region_19', title: 'Майже вся країна', description: 'Відвідай місця у 19 областях', icon: 'flag', metric: 'regionsVisited', threshold: 19, xp: 1000, coins: 560, tier: 'gold' },
+  { key: 'region_22', title: 'Вся Україна', description: `Відвідай місця у всіх ${UKRAINE_REGIONS_TOTAL} областях, представлених у грі`, icon: 'crown', metric: 'regionsVisited', threshold: UKRAINE_REGIONS_TOTAL, xp: 1400, coins: 750, tier: 'gold' },
 
   // categories (nature / mountains / history / city / coast)
   { key: 'sampler', title: 'Смакота різного', description: 'Відвідай місця 3 різних категорій', icon: 'star', metric: 'categoriesVisited', threshold: 3, xp: 200, coins: 120, tier: 'silver' },
