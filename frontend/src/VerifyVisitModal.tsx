@@ -141,9 +141,11 @@ function VerifyVisitModal({ place, userId, accent = '#3FA66B', onClose, onVerifi
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
           <div>
             <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '23px', margin: 0 }}>
-              {place.name}
+              {t(`places.${place.id}.name`, { defaultValue: place.name })}
             </h2>
-            <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.5)', marginTop: '4px' }}>{place.region}</div>
+            <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.5)', marginTop: '4px' }}>
+              {t(`places.${place.id}.region`, { defaultValue: place.region })}
+            </div>
           </div>
           <button onClick={onClose} aria-label={t('forms.verifyVisit.closeAria')} style={iconBtn}>
             <Icon name="close" size={18} />

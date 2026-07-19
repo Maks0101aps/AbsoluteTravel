@@ -381,16 +381,20 @@ function PlaceCard({ place, accent, busy, onApprove, onReject, onDelete, onEdit 
 
       <div className="at-col" style={{ flex: '1 1 320px', minWidth: '260px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-          <span style={{ fontFamily: "'Lora', serif", fontSize: '19px', fontWeight: 500 }}>{place.name}</span>
+          <span style={{ fontFamily: "'Lora', serif", fontSize: '19px', fontWeight: 500 }}>
+            {t(`places.${place.id}.name`, { defaultValue: place.name })}
+          </span>
           <Pill color={status.color} label={status.label} filled />
-          <Pill color={meta.color} label={meta.label} />
-          <Pill color={difficulty.color} label={`${difficulty.label} · +${difficulty.xp} XP`} />
+          <Pill color={meta.color} label={t(`category.${place.category}`, { defaultValue: meta.label })} />
+          <Pill color={difficulty.color} label={`${t(`difficulty.${place.difficulty}`, { defaultValue: difficulty.label })} · +${difficulty.xp} XP`} />
         </div>
         <div style={{ fontSize: '12.5px', color: 'rgba(244,241,232,0.5)', marginBottom: '10px' }}>
-          {place.region} · {place.lat.toFixed(3)}, {place.lng.toFixed(3)}
+          {t(`places.${place.id}.region`, { defaultValue: place.region })} · {place.lat.toFixed(3)}, {place.lng.toFixed(3)}
           {place.submittedBy ? t('forms.admin.submittedBy', { name: place.submittedBy }) : ''}
         </div>
-        <p style={{ fontSize: '13px', lineHeight: 1.55, color: 'rgba(244,241,232,0.78)', margin: '0 0 12px' }}>{place.description}</p>
+        <p style={{ fontSize: '13px', lineHeight: 1.55, color: 'rgba(244,241,232,0.78)', margin: '0 0 12px' }}>
+          {t(`places.${place.id}.description`, { defaultValue: place.description })}
+        </p>
 
         {place.aiDecision && (
           <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '10px 12px', marginBottom: '14px' }}>

@@ -22,6 +22,7 @@ export interface ChatDto {
   lng?: number;
   city?: string;
   region?: string;
+  locale?: string;
 }
 
 // Base persona shared by every request. Kept in Ukrainian because the whole
@@ -48,7 +49,7 @@ const SYSTEM_PROMPT = `Ти — «Порадник» Absolute Travel, добро
 - Не пояснюй розгорнуто, чому відмовляєш — просто коротко перенаправ розмову.
 
 Правила для дозволених тем:
-- Відповідай українською мовою, тепло і по-дружньому, звертайся на «ти».
+- Відповідай тією мовою, якою користувач звернувся до тебе або яка відповідає обраній локалі (українська, англійська або польська), тепло і по-дружньому, звертайся на «ти» (або відповідним ввічливим/дружнім зверненням у відповідній мові).
 - Будь конкретним: називай реальні місця, міста та регіони України.
 - Форматуй відповідь коротко й читабельно: марковані списки, короткі абзаци.
 - Якщо просять список речей — давай практичний перелік пунктами.
@@ -216,8 +217,18 @@ export class AiService {
       locationContext += `\nВраховуй цю геолокацію при рекомендаціях. Якщо користувач просить поради куди поїхати чи що відвідати поруч, пропонуй варіанти насамперед з його області/міста.`;
     }
 
+    let languageInstruction = '';
+    const targetLocale = (dto.locale || 'uk').toLowerCase();
+    if (targetLocale === 'en') {
+      languageInstruction = `\n\nCRITICAL: Respond ONLY in English. Use a warm, friendly tone. Even though the system prompt is in Ukrainian, the user speaks English, so translate your knowledge and response to English.`;
+    } else if (targetLocale === 'pl') {
+      languageInstruction = `\n\nCRITICAL: Respond ONLY in Polish. Use a warm, friendly tone. Even though the system prompt is in Ukrainian, the user speaks Polish, so translate your knowledge and response to Polish.`;
+    } else {
+      languageInstruction = `\n\nCRITICAL: Respond ONLY in Ukrainian. Use a warm, friendly, and polite tone, addressing the user as "ти".`;
+    }
+
     const body = {
-      system_instruction: { parts: [{ text: `${SYSTEM_PROMPT}${locationContext}` }] },
+      system_instruction: { parts: [{ text: `${SYSTEM_PROMPT}${languageInstruction}${locationContext}` }] },
       contents,
       generationConfig: {
         temperature: 0.6,

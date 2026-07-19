@@ -139,6 +139,15 @@
         "season": "Zasugeruj najlepszy czas na podróż.",
         "safety": "Daj wskazówki dotyczące bezpiecznej podróży."
       }
+    },
+    "friendMap": {
+      "errorLoading": "Nie udało się załadować mapy",
+      "ariaLabel": "Mapa {{name}}",
+      "back": "Wstecz",
+      "title": "Mapa podróży · {{name}}",
+      "loading": "Ładowanie mapy…",
+      "cellsExplored": "komórek odkrytych",
+      "regions": "regionów"
     }
   }
 }

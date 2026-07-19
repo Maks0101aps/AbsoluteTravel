@@ -195,6 +195,7 @@ export function askAdvisor(payload: {
   lng?: number;
   city?: string;
   region?: string;
+  locale?: string;
 }) {
   return call<{ reply: string }>('POST', '/api/ai/chat', payload);
 }

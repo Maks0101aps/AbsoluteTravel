@@ -3,6 +3,13 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { getMyRank, getXpLeaderboard, type MyRank, type XpLeaderboardRow } from './api';
 import { UserAvatar } from './UserCard';
+import { UKRAINE_REGIONS } from './data/ukraine';
+
+const localizeRegionName = (regionName: string | null, t: any) => {
+  if (!regionName) return '';
+  const found = UKRAINE_REGIONS.find((r) => r.region === regionName);
+  return found ? t(`regions.${found.slug}.region`) : regionName;
+};
 
 const CREAM = '#F4F1E8';
 const GOLD = '#F0C64B';
@@ -237,7 +244,7 @@ function Row({
           <span>{t('social.leaderboard.level', { level: row.level })}</span>
           <span>🧭 {row.cells}</span>
           <span>📍 {row.places}</span>
-          {row.region && <span className="lb-row-region">{row.region}</span>}
+          {row.region && <span className="lb-row-region">{localizeRegionName(row.region, t)}</span>}
         </div>
       </div>
 
@@ -549,7 +556,7 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
                 </div>
                 {me.regional && (
                   <div>
-                    <div className="lb-me-label">{me.regional.region.toUpperCase()}</div>
+                    <div className="lb-me-label">{localizeRegionName(me.regional.region, t).toUpperCase()}</div>
                     <div className="lb-me-rank" style={{ color: accent }}>
                       #{me.regional.rank}
                       <span className="lb-me-total"> / {me.regional.total}</span>
@@ -572,7 +579,7 @@ function LeaderboardPage({ userId, userRegion, accent = '#3FA66B', onOpenProfile
                 label: userRegion
                   ? isMobile
                     ? t('social.leaderboard.myRegionTab')
-                    : t('social.leaderboard.regionTabWithName', { region: userRegion })
+                    : t('social.leaderboard.regionTabWithName', { region: localizeRegionName(userRegion, t) })
                   : t('social.leaderboard.regionTab'),
               },
             ] as const
