@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Place } from './data/places';
-import { fetchNavigatorRoute, formatDuration, type RoutePoint, type RouteResult, type TravelProfile } from './data/routing';
+import { buildGoogleMapsUrl, fetchNavigatorRoute, formatDuration, type RoutePoint, type RouteResult, type TravelProfile } from './data/routing';
 import { Icon } from './icons';
 
 const CREAM = '#F4F1E8';
@@ -276,22 +276,24 @@ function Navigator({
         style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px', marginBottom: '14px', cursor: isMobile ? 'default' : 'grab', touchAction: 'none' }}
       >
         <div>
-          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: accent, marginBottom: '4px' }}>{t('explore.navigator.label')}</div>
+          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: accent, marginBottom: '4px' }}>
+            {t('explore.navigator.label')}
+          </div>
           <div style={{ fontSize: '15px', fontWeight: 700 }}>{t(`places.${target.id}.name`, { defaultValue: target.name })}</div>
         </div>
       </div>
 
-      {/* Wake-lock notice — the background/"don't leave the app" warning now
-          lives in the always-visible HUD next to the cell/region counters
-          instead (see ExploreMap.tsx's ExplorationHud), since it stayed
-          hidden whenever this sheet was collapsed down to its handle. Closing
-          the navigator is the HUD's back arrow now too — this sheet has no
-          ✕ of its own anymore. */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '7px', fontSize: '11.5px', lineHeight: 1.4, color: wakeLockSupported ? accent : '#E0A54E' }}>
           <Icon name={wakeLockSupported ? 'sun' : 'alertTriangle'} size={14} strokeWidth={1.9} />
           <span>{wakeLockSupported ? t('explore.navigator.wakeLockOn') : t('explore.navigator.wakeLockOff')}</span>
         </div>
+        {!isMobile && (
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '7px', fontSize: '11.5px', lineHeight: 1.4, color: 'rgba(244,241,232,0.55)' }}>
+            <Icon name="alertTriangle" size={14} strokeWidth={1.9} />
+            <span>{t('explore.navigator.backgroundNotice')}</span>
+          </div>
+        )}
         {headingNeedsPermission && (
           <button
             onClick={onRequestHeadingPermission}
@@ -504,6 +506,36 @@ function Navigator({
       >
         {loading ? t('explore.navigator.building') : route ? t('explore.navigator.rebuildRoute') : t('explore.navigator.buildRoute')}
       </button>
+
+      {/* Alternative to our own OSRM-drawn route: hands the same trip off to
+          the native Google Maps app (mobile) or Maps in a new tab (desktop)
+          via a plain URL — no API key, no billing (see buildGoogleMapsUrl). */}
+      <a
+        href={buildGoogleMapsUrl({ lat: target.lat, lng: target.lng }, profile, waypoints)}
+        target="_blank"
+        rel="noreferrer"
+        style={{
+          marginTop: '8px',
+          width: '100%',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          background: 'transparent',
+          color: CREAM,
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: '12px',
+          padding: '11px 18px',
+          fontSize: '13px',
+          fontWeight: 700,
+          textDecoration: 'none',
+          fontFamily: "'Manrope', sans-serif",
+          boxSizing: 'border-box',
+        }}
+      >
+        {t('explore.navigator.openInGoogleMaps')}
+        <Icon name="externalLink" size={14} strokeWidth={2} />
+      </a>
     </div>
   );
 }

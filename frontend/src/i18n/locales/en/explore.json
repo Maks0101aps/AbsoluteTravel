@@ -95,7 +95,8 @@
       "tapToPick": "Tap the map to mark a spot"
     },
     "navigator": {
-      "label": "NAVIGATOR · drag to move",
+      "label": "NAVIGATOR",
+      "labelDraggable": "NAVIGATOR · drag to move",
       "close": "Close",
       "start": "START",
       "change": "Change",
@@ -109,6 +110,7 @@
       "walking": "Walking",
       "buildRoute": "Build route",
       "rebuildRoute": "Rebuild route",
+      "openInGoogleMaps": "Open in Google Maps",
       "building": "Building route…",
       "footNotice": "Vehicles not allowed beyond this point — {{meters}} m on foot (~{{duration}}), shown dashed",
       "startRequired": "Pick a start point on the map first",

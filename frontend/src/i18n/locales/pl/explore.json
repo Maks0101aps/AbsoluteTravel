@@ -97,7 +97,8 @@
       "tapToPick": "Dotknij mapy, aby zaznaczyć miejsce"
     },
     "navigator": {
-      "label": "NAWIGATOR · przeciągnij, aby przesunąć",
+      "label": "NAWIGATOR",
+      "labelDraggable": "NAWIGATOR · przeciągnij, aby przesunąć",
       "close": "Zamknij",
       "start": "START",
       "change": "Zmień",
@@ -111,6 +112,7 @@
       "walking": "Pieszo",
       "buildRoute": "Wyznacz trasę",
       "rebuildRoute": "Przelicz trasę",
+      "openInGoogleMaps": "Otwórz w Google Maps",
       "building": "Wyznaczanie trasy…",
       "footNotice": "Dalej wjazd zabroniony — {{meters}} m pieszo (~{{duration}}), oznaczone kreską",
       "startRequired": "Najpierw wybierz punkt startowy na mapie",

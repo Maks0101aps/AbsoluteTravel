@@ -112,6 +112,29 @@ export async function fetchNavigatorRoute(points: RoutePoint[], profile: TravelP
   }
 }
 
+// Google Maps' "Universal URL" directions scheme — no API key, no billing,
+// just a plain link (https://developers.google.com/maps/documentation/urls/get-started#directions-action).
+// Opening it hands the whole trip off to the native Google Maps app on
+// mobile (or Maps in a new tab on desktop) as an alternative to our own
+// OSRM-drawn route, for anyone who'd rather navigate there directly.
+export function buildGoogleMapsUrl(destination: RoutePoint, profile: TravelProfile, waypoints?: RoutePoint[]): string {
+  const params = new URLSearchParams({
+    api: '1',
+    destination: `${destination.lat},${destination.lng}`,
+    travelmode: profile === 'walking' ? 'walking' : 'driving',
+  });
+  // `origin` is deliberately never set: leaving it out is what makes Google
+  // Maps show "Your location"/"Поточне місцезнаходження" and use live GPS,
+  // rather than a specific pinned coordinate — even though this app's own
+  // start point (`navStart`) may itself already be the user's live position,
+  // Google Maps re-resolving it live under its own permission is more
+  // reliable than us baking in a coordinate that can drift stale.
+  if (waypoints && waypoints.length > 0) {
+    params.set('waypoints', waypoints.map((w) => `${w.lat},${w.lng}`).join('|'));
+  }
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
 /** "42 хв" under an hour, "1 год 20 хв" at/above it. */
 export function formatDuration(minutes: number): string {
   const total = Math.round(minutes);

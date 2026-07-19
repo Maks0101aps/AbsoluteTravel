@@ -114,6 +114,17 @@ function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): nu
 
 function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, openedPlaceIds, onVerified, onExplored, onMessageFriend, onOpenProfile, focusPlace }: ExploreMapProps) {
   const { t } = useTranslation();
+  // Drives the navigator HUD's mobile-only redesign (back arrow + warning
+  // strip) vs. the desktop plain-counters + Navigator-panel-✕ layout — same
+  // breakpoint Navigator.tsx uses for its own bottom-sheet-vs-window switch.
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 860px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
   const [places, setPlaces] = useState<Place[]>(PLACES);
   const [activeId, setActiveId] = useState<string | number | null>(null);
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; zoom?: number } | null>(null);
@@ -140,12 +151,18 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
   // of the page already uses.
   const [navTarget, setNavTarget] = useState<Place | null>(null);
   const [navStart, setNavStart] = useState<{ lat: number; lng: number } | null>(null);
+  // False while the start point should keep following the live GPS fix (see
+  // the effect below); flipped to true the moment the user picks a start
+  // point themselves, so their manual choice stops being overwritten.
+  const navStartManualRef = useRef(false);
   const [navWaypoints, setNavWaypoints] = useState<{ lat: number; lng: number }[]>([]);
   const [navPicking, setNavPicking] = useState<'start' | 'waypoint' | null>(null);
   const [navRoute, setNavRoute] = useState<RouteResult | null>(null);
 
   const openNavigator = (place: Place) => {
     setNavTarget(place);
+    setActiveId(place.id); // keeps the destination pin visually highlighted
+    navStartManualRef.current = false;
     setNavStart(selfPosition ?? null);
     setNavWaypoints([]);
     setNavRoute(null);
@@ -195,6 +212,19 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
   // Compass heading for the self marker's "which way am I facing" arrow —
   // only requested while the navigator is open, matching what it's for.
   const { heading, needsPermission: headingNeedsPermission, requestPermission: requestHeadingPermission } = useHeading(navTarget != null);
+
+  // Keep the navigator's start point tracking the live GPS fix as it
+  // refines, instead of freezing on whatever `selfPosition` happened to be
+  // the instant the navigator opened. That first value is often a stale fix
+  // read back from localStorage (see useLiveGps' `at-last-known-gps` cache,
+  // shown immediately so the dot doesn't pop in empty) — routes were
+  // starting from wherever that old cached fix was instead of here, until a
+  // real GPS update replaces it. Stops the moment the user picks a start
+  // point themselves (navStartManualRef).
+  useEffect(() => {
+    if (!navTarget || navStartManualRef.current) return;
+    setNavStart(selfPosition ?? null);
+  }, [navTarget, selfPosition]);
 
   // While following a friend, re-center the map on them each time their dot
   // moves. `flyTarget` is the same "fly here" channel the welcome-screen
@@ -437,6 +467,15 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
             activeId={activeId}
             hoverId={hoverId}
             onSelect={(id) => {
+              // In navigator mode the detail panel is hidden behind the
+              // full-screen map anyway, so a marker tap re-targets the trip
+              // instead — otherwise there was no way to navigate somewhere
+              // else without backing all the way out first.
+              if (navTarget) {
+                const picked = visiblePlaces.find((p) => p.id === id);
+                if (picked && picked.id !== navTarget.id) openNavigator(picked);
+                return;
+              }
               setActiveId(id);
               setActiveLabelId(null);
             }}
@@ -460,6 +499,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
             pickable={navPicking !== null}
             onPick={(lat, lng) => {
               if (navPicking === 'start') {
+                navStartManualRef.current = true;
                 setNavStart({ lat, lng });
                 setNavPicking(null);
               } else if (navPicking === 'waypoint') {
@@ -487,6 +527,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
                 totalRegions={totalRegions}
                 accent={accent}
                 onBack={navTarget ? closeNavigator : undefined}
+                isMobile={isMobile}
               />
               <div
                 style={{
@@ -1112,24 +1153,28 @@ function ExplorationHud({
   totalRegions,
   accent,
   onBack,
+  isMobile,
 }: {
   totalCells: number;
   totalRegions: number;
   accent: string;
   // Set only while the navigator's full-screen map is open — turns this HUD
-  // into that screen's exit control (replacing the ✕ that used to live in
-  // the bottom sheet) and surfaces the "don't leave the app" warning right
-  // next to the counters it's warning you about, instead of buried in a
-  // sheet that can be collapsed out of view.
+  // into that screen's exit control (replacing the Navigator panel's own ✕)
+  // and, on mobile, surfaces the "don't leave the app" warning right next to
+  // where the counters normally sit instead of buried in a sheet that can be
+  // collapsed out of view. Desktop gets a plain back button in the same spot
+  // — no counters, no warning banner (that stays in the panel body there).
   onBack?: () => void;
+  isMobile: boolean;
 }) {
   const { t: hudT } = useTranslation();
 
-  // Navigator mode: just a single strip — back arrow on the left, the
-  // "don't leave the app" warning next to it. No cell/region counters here
-  // at all; they're what the plain exploration HUD (below) shows outside
-  // the navigator.
-  if (onBack) {
+  // Navigator mode, phones only: a single strip — back arrow on the left,
+  // the "don't leave the app" warning next to it. No cell/region counters
+  // here at all; they're what the plain exploration HUD (below) shows
+  // outside the navigator, and what desktop keeps showing even while
+  // navigating (its own window has the ✕ instead of this strip).
+  if (onBack && isMobile) {
     return (
       <div
         style={{
@@ -1172,6 +1217,36 @@ function ExplorationHud({
         <span style={{ fontSize: '11.5px', lineHeight: 1.4, fontWeight: 600, color: '#F4D9A8' }}>
           {hudT('explore.navigator.backgroundNotice')}
         </span>
+      </div>
+    );
+  }
+
+  // Navigator mode, desktop: the cell/region counters aren't relevant while
+  // navigating — a back button takes their place instead.
+  if (onBack) {
+    return (
+      <div style={{ position: 'absolute', top: '22px', left: '22px', zIndex: 900 }}>
+        <button
+          onClick={onBack}
+          aria-label={hudT('explore.navigator.close')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '38px',
+            height: '38px',
+            borderRadius: '12px',
+            background: 'rgba(8,26,18,0.82)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.10)',
+            boxShadow: '0 8px 24px -10px rgba(0,0,0,0.6)',
+            color: CREAM,
+            cursor: 'pointer',
+          }}
+        >
+          <Icon name="arrowLeft" size={18} strokeWidth={2.1} />
+        </button>
       </div>
     );
   }
