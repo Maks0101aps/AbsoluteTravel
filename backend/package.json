@@ -73,6 +73,11 @@
       "ts"
     ],
     "rootDir": ".",
+    "roots": [
+      "<rootDir>/src",
+      "<rootDir>/../tests/be-tests"
+    ],
+    "resolver": "<rootDir>/jest-resolver.js",
     "testRegex": "(\\.|/)(spec|test)\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"

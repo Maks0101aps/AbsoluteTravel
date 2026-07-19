@@ -157,7 +157,6 @@ function App({ onStart }: { onStart?: () => void } = {}) {
 
   const navLinks = [
     { href: '#features', label: t('core.landing.navHowItWorks') },
-    { href: '#features', label: t('core.landing.navFeatures') },
     { href: '#map', label: t('core.landing.navMap') },
     { href: '#progress', label: t('core.landing.navAchievements') },
     { href: '#cta', label: t('core.landing.navContact') },
@@ -201,16 +200,18 @@ function App({ onStart }: { onStart?: () => void } = {}) {
       
       {/* ============ NAVBAR ============ */}
       <nav className="at-nav" style={{ position: 'sticky', top: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', padding: '14px 40px', background: 'rgba(7,31,22,0.8)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <a href="#top" style={{ display: 'flex', alignItems: 'center', flex: '0 0 auto' }}>
-          <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '42px', width: 'auto', display: 'block' }} />
-        </a>
-        <div className="at-nav-links" style={{ display: 'flex', alignItems: 'center', gap: '36px', flexWrap: 'wrap', justifyContent: 'center', fontSize: '13.5px', fontWeight: 500, color: 'rgba(244,241,232,0.85)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flex: '1 0 0' }}>
+          <a href="#top" style={{ display: 'flex', alignItems: 'center' }}>
+            <img src="/assets/logo.svg" alt="Absolute Travel" style={{ height: '42px', width: 'auto', display: 'block' }} />
+          </a>
+        </div>
+        <div className="at-nav-links" style={{ display: 'flex', alignItems: 'center', gap: '36px', flexWrap: 'wrap', justifyContent: 'center', fontSize: '13.5px', fontWeight: 500, color: 'rgba(244,241,232,0.85)', flex: '0 0 auto' }}>
           {navLinks.map((l, i) => (
             <a key={i} href={l.href} style={{ transition: 'color 0.2s' }}>{l.label}</a>
           ))}
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }} className="at-nav-right">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: '1 0 0', justifyContent: 'flex-end' }} className="at-nav-right">
           {/* Language Dropdown Switcher */}
           <div style={{ position: 'relative' }}>
             <button
