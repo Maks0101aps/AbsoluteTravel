@@ -84,35 +84,7 @@ const DEFAULT_USER: User = {
   ],
 };
 
-const DEFAULT_FRIENDS: User[] = [
-  {
-    id: 2,
-    name: 'Марія',
-    avatar: '/assets/avatar_mariya.avif',
-    level: 18,
-    xp: 1200,
-    currentDestination: 'Синевир',
-    achievements: [],
-  },
-  {
-    id: 3,
-    name: 'Дмитро',
-    avatar: '/assets/avatar_dmytro.avif',
-    level: 21,
-    xp: 1850,
-    currentDestination: 'Говерла',
-    achievements: [],
-  },
-  {
-    id: 4,
-    name: 'Ірина',
-    avatar: '/assets/avatar_iryna.avif',
-    level: 15,
-    xp: 950,
-    currentDestination: 'Бакота',
-    achievements: [],
-  },
-];
+const DEFAULT_FRIENDS: User[] = [];
 
 const DEFAULT_DESTINATIONS: Destination[] = [
   {
@@ -157,8 +129,14 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
   },
 ];
 
+const LANGUAGES = [
+  { code: 'uk', label: 'UA' },
+  { code: 'en', label: 'EN' },
+  { code: 'pl', label: 'PL' },
+] as const;
+
 function App({ onStart }: { onStart?: () => void } = {}) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [currentUser, setCurrentUser] = useState<User>(DEFAULT_USER);
   const [friends, setFriends] = useState<User[]>(DEFAULT_FRIENDS);
   const [, setDestinations] = useState<Destination[]>(DEFAULT_DESTINATIONS);
@@ -167,6 +145,15 @@ function App({ onStart }: { onStart?: () => void } = {}) {
   const [showToast, setShowToast] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [, setLoading] = useState(true);
+  const [showProjectModal, setShowProjectModal] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+
+  useEffect(() => {
+    if (!langOpen) return;
+    const handleClose = () => setLangOpen(false);
+    window.addEventListener('click', handleClose);
+    return () => window.removeEventListener('click', handleClose);
+  }, [langOpen]);
 
   const navLinks = [
     { href: '#features', label: t('core.landing.navHowItWorks') },
@@ -222,9 +209,110 @@ function App({ onStart }: { onStart?: () => void } = {}) {
             <a key={i} href={l.href} style={{ transition: 'color 0.2s' }}>{l.label}</a>
           ))}
         </div>
-        <button className="at-nav-cta" onClick={onStart} style={{ flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#9BD8B4', fontFamily: "'Manrope', sans-serif", fontSize: '13.5px', fontWeight: 700, padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', cursor: 'pointer', transition: 'all 0.2s' }}>
-          {t('core.landing.startExploring')}
-        </button>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }} className="at-nav-right">
+          {/* Language Dropdown Switcher */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setLangOpen(!langOpen);
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '10px',
+                padding: '9px 14px',
+                color: 'rgba(244,241,232,0.85)',
+                fontFamily: "'Manrope', sans-serif",
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              <span>{LANGUAGES.find((lang) => lang.code === i18n.resolvedLanguage)?.label || 'UA'}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: langOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+
+            {langOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '115%',
+                  right: 0,
+                  background: 'rgba(11,43,32,0.98)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: '10px',
+                  padding: '6px',
+                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.6), 0 0 30px rgba(63,166,107,0.05)',
+                  minWidth: '100px',
+                  zIndex: 100,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '2px',
+                  animation: 'fadeIn 0.15s ease both',
+                }}
+              >
+                {LANGUAGES.map((lang) => {
+                  const on = i18n.resolvedLanguage === lang.code;
+                  return (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        i18n.changeLanguage(lang.code);
+                        setLangOpen(false);
+                      }}
+                      style={{
+                        background: on ? 'rgba(63,166,107,0.22)' : 'transparent',
+                        color: on ? '#9BD8B4' : 'rgba(244,241,232,0.75)',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        fontSize: '12.5px',
+                        fontWeight: 700,
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        fontFamily: "'Manrope', sans-serif",
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!on) {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                          e.currentTarget.style.color = '#F4F1E8';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!on) {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = 'rgba(244,241,232,0.75)';
+                        }
+                      }}
+                    >
+                      <span>{lang.label}</span>
+                      {on && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <button className="at-nav-cta" onClick={onStart} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'transparent', color: '#9BD8B4', fontFamily: "'Manrope', sans-serif", fontSize: '13.5px', fontWeight: 700, padding: '11px 22px', borderRadius: '10px', border: '1px solid rgba(63,166,107,0.45)', cursor: 'pointer', transition: 'all 0.2s' }}>
+            {t('core.landing.startExploring')}
+          </button>
+        </div>
 
         {/* mobile hamburger */}
         <button className="at-burger" aria-label={t('core.landing.menuAria')} aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}>
@@ -238,6 +326,33 @@ function App({ onStart }: { onStart?: () => void } = {}) {
         {/* mobile dropdown menu */}
         {menuOpen && (
           <div className="at-mobile-menu" style={{ position: 'absolute', top: '100%', left: 0, right: 0, flexDirection: 'column', gap: '2px', padding: '10px 14px 18px', background: 'rgba(7,31,22,0.98)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 40px -12px rgba(0,0,0,0.6)' }}>
+            {/* Language Switcher on mobile */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '4px', margin: '4px 12px 10px' }}>
+              {LANGUAGES.map((lang) => {
+                const on = i18n.resolvedLanguage === lang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    onClick={() => i18n.changeLanguage(lang.code)}
+                    style={{
+                      flex: 1,
+                      background: on ? '#3FA66B' : 'transparent',
+                      color: on ? '#071F16' : 'rgba(244,241,232,0.7)',
+                      border: 'none',
+                      borderRadius: '7px',
+                      padding: '8px',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      fontFamily: "'Manrope', sans-serif",
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {lang.label}
+                  </button>
+                );
+              })}
+            </div>
             {navLinks.map((l, i) => (
               <a key={i} href={l.href} onClick={() => setMenuOpen(false)} style={{ padding: '14px 12px', fontSize: '15px', fontWeight: 600, color: 'rgba(244,241,232,0.9)', borderRadius: '10px' }}>
                 {l.label}
@@ -573,25 +688,45 @@ function App({ onStart }: { onStart?: () => void } = {}) {
         </div>
       </section>
 
-      {/* ============ FRIENDS ============ */}
+      {/* ============ PROJECT DETAILS ============ */}
       <section className="at-sec" style={{ maxWidth: '1240px', margin: '0 auto', padding: '20px 40px 40px' }}>
-        <div className="at-panel" style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '32px 36px', display: 'flex', flexWrap: 'wrap', gap: '28px', alignItems: 'stretch' }}>
-          <div style={{ flex: '0 1 220px', minWidth: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '16px' }}>
-            <div style={{ fontFamily: "'Lora', serif", fontSize: '23px', fontWeight: 500, lineHeight: 1.35 }}>{t('core.landing.friendsSectionTitle')}</div>
+        <div className="at-panel" style={{ background: '#0B2B20', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '32px 36px', display: 'flex', flexWrap: 'wrap', gap: '28px', alignItems: 'center' }}>
+          <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ fontFamily: "'Lora', serif", fontSize: '24px', fontWeight: 500, lineHeight: 1.3 }}>{t('core.landing.friendsSectionTitle') || 'Дізнайтеся більше про Absolute Travel'}</div>
+            <div style={{ fontSize: '14.5px', color: 'rgba(244,241,232,0.65)', lineHeight: 1.6 }}>
+              Absolute Travel — це інтерактивна соціальна платформа для дослідження України. Ознайомтеся з можливостями проєкту, нашою метою та командою, що створила цей застосунок.
+            </div>
           </div>
-          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '14px' }}>
-            {friends.map((friend) => (
-              <div key={friend.id} style={{ background: '#081E15', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
-                  <img src={friend.avatar} alt={friend.name} style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.15)', flex: '0 0 auto' }} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 700 }}>{friend.name}</div>
-                    <div style={{ fontSize: '11px', color: 'rgba(244,241,232,0.5)', lineHeight: 1.4 }}>{t('core.landing.friendCardExploring')}<br />{friend.currentDestination || t('core.landing.friendCardFallback')}</div>
-                  </div>
-                </div>
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '11px', textAlign: 'center', fontSize: '12px', fontWeight: 600, color: 'rgba(244,241,232,0.75)', cursor: 'pointer' }}>{t('core.landing.friendCardView')}</div>
-              </div>
-            ))}
+          <div style={{ flex: '0 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', minWidth: '220px' }}>
+            <button
+              onClick={() => setShowProjectModal(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '10px',
+                background: '#3FA66B',
+                color: '#071F16',
+                fontFamily: "'Manrope', sans-serif",
+                fontSize: '14px',
+                fontWeight: 700,
+                padding: '15px 30px',
+                borderRadius: '12px',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.25s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(63, 166, 107, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'none';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <span>Ознайомитися з проектом</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            </button>
           </div>
         </div>
       </section>
@@ -609,6 +744,138 @@ function App({ onStart }: { onStart?: () => void } = {}) {
           </button>
         </div>
       </section>
+
+      {/* ============ PROJECT MODAL ============ */}
+      {showProjectModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(7, 31, 22, 0.85)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px',
+            animation: 'fadeIn 0.25s ease both',
+          }}
+          onClick={() => setShowProjectModal(false)}
+        >
+          <div
+            style={{
+              background: '#0B2B20',
+              border: '1px solid rgba(63, 166, 107, 0.25)',
+              borderRadius: '20px',
+              padding: '36px',
+              width: '100%',
+              maxWidth: '540px',
+              maxHeight: '90dvh',
+              overflowY: 'auto',
+              boxShadow: '0 30px 60px rgba(0,0,0,0.8), 0 0 50px rgba(63, 166, 107, 0.15)',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '24px', margin: 0, color: '#F4F1E8' }}>
+                Про проєкт Absolute Travel
+              </h2>
+              <button
+                onClick={() => setShowProjectModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'rgba(244, 241, 232, 0.5)',
+                  cursor: 'pointer',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', fontSize: '14px', lineHeight: 1.6, color: 'rgba(244, 241, 232, 0.8)' }}>
+              <div>
+                <strong style={{ color: '#3FA66B', display: 'block', marginBottom: '6px', fontSize: '15px' }}>Що це за проєкт?</strong>
+                <p style={{ margin: 0 }}>
+                  <strong>Absolute Travel</strong> — це гейміфікована соціальна платформа для дослідження України. Вона об'єднує інтерактивну мапу пам'яток, соціальні функції та ігрову механіку подорожей, щоб перетворити будь-яку поїздку на захоплюючий квест.
+                </p>
+              </div>
+
+              <div>
+                <strong style={{ color: '#3FA66B', display: 'block', marginBottom: '6px', fontSize: '15px' }}>Яку проблему ми вирішуємо?</strong>
+                <p style={{ margin: 0, marginBottom: '8px' }}>
+                  Багато людей хочуть подорожувати Україною та відкривати для себе нові куточки, але стикаються з трьома основними труднощами:
+                </p>
+                <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <li>🗺️ <strong>Брак ідей та одноманітність:</strong> Важко знайти цікаві, нетипові та перевірені локації за межами кількох найпопулярніших туристичних міст.</li>
+                  <li>📉 <strong>Відсутність мотивації:</strong> Прості мандрівки без інтерактиву з часом набридають, мандрівникам не вистачає азарту та відчуття пригод.</li>
+                  <li>🔒 <strong>Соціальна ізоляція:</strong> Складно ділитися досвідом і корисними нотатками у звичайних соціальних мережах, які перевантажені зайвим інформаційним шумом.</li>
+                </ul>
+              </div>
+
+              <div>
+                <strong style={{ color: '#3FA66B', display: 'block', marginBottom: '6px', fontSize: '15px' }}>Як проєкт вирішує ці проблеми?</strong>
+                <p style={{ margin: 0, marginBottom: '8px' }}>
+                  Absolute Travel перетворює вивчення країни на інтерактивну гру. Завдяки нашому додатку користувачі отримують:
+                </p>
+                <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <li>📍 <strong>Базу курованих локацій:</strong> Досліджуйте тисячі цікавих місць — від таємничих замків та каньйонів до затишних панорам у Карпатах.</li>
+                  <li>📸 <strong>AI-верифікацію подорожей:</strong> Завантажуйте фотографії з подорожей — наш штучний інтелект перевірить фото, підтвердить ваше відвідання та нарахує бали досвіду (XP).</li>
+                  <li>🏆 <strong>Рівні та досягнення:</strong> Отримуйте досвід, відкривайте нові рівні та збирайте унікальні нагороди і значки за виконання квестів.</li>
+                  <li>💬 <strong>Спільноту мандрівників:</strong> Додавайте друзів, спілкуйтеся у чаті, діліться своїми досягненнями та стежте за активністю інших користувачів у реальному часі.</li>
+                </ul>
+              </div>
+
+              <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '20px' }}>
+                <strong style={{ color: '#3FA66B', display: 'block', marginBottom: '10px', fontSize: '15px' }}>Команда розробників:</strong>
+                <p style={{ margin: 0, marginBottom: '10px', fontSize: '13.5px', color: 'rgba(244, 241, 232, 0.65)' }}>
+                  Цей проєкт був спроєктований, розроблений та втілений у життя командою з 4 талановитих розробників:
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: '#F4F1E8' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>👨‍✈️ <strong>Лисак Максим</strong></span>
+                    <span style={{ color: '#9BD8B4', fontSize: '12px', fontWeight: 600, background: 'rgba(63, 166, 107, 0.16)', padding: '2px 8px', borderRadius: '6px' }}>Капітан команди</span>
+                  </div>
+                  <div>👨‍💻 Ніколайчук Максим</div>
+                  <div>👨‍💻 Осьмак Ярослав</div>
+                  <div>👨‍💻 Пилипчук Дмитро</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer button */}
+            <button
+              onClick={() => setShowProjectModal(false)}
+              style={{
+                width: '100%',
+                padding: '13px',
+                background: 'rgba(63, 166, 107, 0.14)',
+                border: '1px solid rgba(63, 166, 107, 0.4)',
+                color: '#9BD8B4',
+                fontFamily: "'Manrope', sans-serif",
+                fontSize: '13.5px',
+                fontWeight: 700,
+                borderRadius: '10px',
+                cursor: 'pointer',
+                marginTop: '28px',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(63, 166, 107, 0.25)')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(63, 166, 107, 0.14)')}
+            >
+              Закрити
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

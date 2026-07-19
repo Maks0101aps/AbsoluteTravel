@@ -97,67 +97,11 @@ async function main() {
     },
   });
 
-  const mariya = await prisma.user.create({
-    data: {
-      username: 'mariya',
-      email: 'mariya@example.com',
-      password: DEMO_PASSWORD_HASH,
-      isVerified: true,
-      city: 'Ужгород',
-      region: 'Закарпатська область',
-      name: 'Марія',
-      friendCode: await generateUniqueFriendCode(prisma),
-      avatar: '/assets/avatar_mariya.avif',
-      level: 10,
-      xp: 1200,
-      coins: 900,
-      currentDestination: 'Синевир',
-    },
-  });
-
-  const dmytro = await prisma.user.create({
-    data: {
-      username: 'dmytro',
-      email: 'dmytro@example.com',
-      password: DEMO_PASSWORD_HASH,
-      isVerified: true,
-      city: 'Івано-Франківськ',
-      region: 'Івано-Франківська область',
-      name: 'Дмитро',
-      friendCode: await generateUniqueFriendCode(prisma),
-      avatar: '/assets/avatar_dmytro.avif',
-      level: 12,
-      xp: 1850,
-      coins: 1200,
-      currentDestination: 'Говерла',
-    },
-  });
-
-  const iryna = await prisma.user.create({
-    data: {
-      username: 'iryna',
-      email: 'iryna@example.com',
-      password: DEMO_PASSWORD_HASH,
-      isVerified: true,
-      city: 'Кам’янець-Подільський',
-      region: 'Хмельницька область',
-      name: 'Ірина',
-      friendCode: await generateUniqueFriendCode(prisma),
-      avatar: '/assets/avatar_iryna.avif',
-      level: 8,
-      xp: 950,
-      coins: 450,
-      currentDestination: 'Бакота',
-    },
-  });
 
   // Give the demo accounts explored territory around their home city, so the
   // leaderboard's walking metric lines up with the XP they were seeded with.
   const EXPLORED: { userId: number; lat: number; lng: number; rings: number }[] = [
     { userId: oleksiy.id, lat: 49.8397, lng: 24.0297, rings: 4 }, // Львів
-    { userId: dmytro.id, lat: 48.9226, lng: 24.7111, rings: 3 }, // Івано-Франківськ
-    { userId: mariya.id, lat: 48.6208, lng: 22.2879, rings: 3 }, // Ужгород
-    { userId: iryna.id, lat: 48.6845, lng: 26.5854, rings: 2 }, // Кам’янець-Подільський
   ];
   for (const spot of EXPLORED) {
     const cells = gridDisk(latLngToCell(spot.lat, spot.lng, EXPLORE_RESOLUTION), spot.rings);
@@ -201,26 +145,14 @@ async function main() {
     },
   });
 
-  // Demo friendships: the seeded travellers already know each other, and one
-  // pending request is left for the demo of the requests inbox.
+  // Demo friendships
   await prisma.friend.createMany({
-    data: [
-      { senderId: oleksiy.id, receiverId: mariya.id, status: 'ACCEPTED' },
-      { senderId: dmytro.id, receiverId: oleksiy.id, status: 'ACCEPTED' },
-      { senderId: mariya.id, receiverId: dmytro.id, status: 'ACCEPTED' },
-      { senderId: iryna.id, receiverId: oleksiy.id, status: 'PENDING' },
-    ],
+    data: [],
   });
 
   // A short demo conversation between friends.
-  const now = Date.now();
   await prisma.message.createMany({
-    data: [
-      { senderId: mariya.id, receiverId: oleksiy.id, text: 'Привіт! Ти вже був на Синевирі?', createdAt: new Date(now - 1000 * 60 * 60 * 5), readAt: new Date(now - 1000 * 60 * 60 * 4) },
-      { senderId: oleksiy.id, receiverId: mariya.id, text: 'Ще ні, планую на вихідні. Поїдеш зі мною?', createdAt: new Date(now - 1000 * 60 * 60 * 4), readAt: new Date(now - 1000 * 60 * 60 * 3) },
-      { senderId: mariya.id, receiverId: oleksiy.id, text: 'Так! Візьми дощовик — у горах мінлива погода 🌦️', createdAt: new Date(now - 1000 * 60 * 30) },
-      { senderId: dmytro.id, receiverId: oleksiy.id, text: 'Готовий до Говерли наступного місяця?', createdAt: new Date(now - 1000 * 60 * 60 * 24) },
-    ],
+    data: [],
   });
 
   console.log('Database seeded successfully!');

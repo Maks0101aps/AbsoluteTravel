@@ -63,6 +63,7 @@
       "errorEmailPasswordRequired": "Enter your email and password",
       "errorGeneric": "Something went wrong. Please try again.",
       "orDivider": "or",
+      "googleSignIn": "Continue with Google",
       "verificationNotice": "We've sent a confirmation link to {{email}}. Check your inbox (and spam folder), then log in.",
       "devVerifyButton": "Verify now (dev mode)",
       "devVerifyDone": "Account verified (dev mode). Enter your password and log in."
