@@ -18,8 +18,12 @@ export class MailService {
     }
     this.transporter = nodemailer.createTransport({
       host: process.env.MAILTRAP_HOST || 'sandbox.smtp.mailtrap.io',
-      port: parseInt(process.env.MAILTRAP_PORT ?? '2525', 10),
+      port: parseInt(process.env.MAILTRAP_PORT ?? '587', 10),
+      secure: false,
       auth: { user, pass },
+      tls: {
+        rejectUnauthorized: false,
+      },
     });
   }
 
