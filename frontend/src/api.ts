@@ -790,4 +790,24 @@ export function reportFriendLabel(id: number, userId: number, reason: string) {
   return call<ReportLabelResult>('POST', `/api/friend-labels/${id}/report`, { userId, reason });
 }
 
+// ---- Web Push notifications -------------------------------------------------
+
+/** The server's VAPID public key, needed to create a browser PushSubscription. */
+export function getVapidKey() {
+  return call<{ key: string | null; enabled: boolean }>('GET', '/api/push/vapid-public-key');
+}
+
+export function subscribePush(userId: number, subscription: PushSubscriptionJSON) {
+  return call<{ ok: boolean }>('POST', '/api/push/subscribe', { userId, subscription });
+}
+
+export function unsubscribePush(endpoint: string) {
+  return call<{ ok: boolean }>('POST', '/api/push/unsubscribe', { endpoint });
+}
+
+/** Fire a sample notification back to the caller's own devices (self-test). */
+export function sendTestPush(userId: number) {
+  return call<{ ok: boolean }>('POST', '/api/push/test', { userId });
+}
+
 

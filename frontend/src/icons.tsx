@@ -5,8 +5,7 @@ export type IconName =
   | 'flame' | 'backpack' | 'feather' | 'shield' | 'moon' | 'sun' | 'crown'
   | 'leaf' | 'boot' | 'camera' | 'flag' | 'trophy'
   | 'user' | 'users' | 'shoppingBag' | 'image' | 'target' | 'star' | 'sparkle'
-  | 'lock' | 'coin' | 'pencil' | 'close' | 'check' | 'plus' | 'arrowLeft' | 'arrowRight' | 'messageSquare' | 'mic' | 'smile' | 'hexagon' | 'gift' | 'globe' | 'medal' | 'alertTriangle' | 'chevronUp'
-  | 'qrcode' | 'scan';
+  | 'lock' | 'coin' | 'pencil' | 'close' | 'check' | 'plus' | 'arrowLeft' | 'arrowRight' | 'messageSquare' | 'mic' | 'smile' | 'hexagon' | 'gift' | 'globe' | 'medal' | 'alertTriangle' | 'chevronUp' | 'qrcode' | 'scan' | 'bell' | 'bellOff';
 
 const PATHS: Record<IconName, React.ReactNode> = {
   compass: <><circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z" /></>,
@@ -73,11 +72,13 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <path d="M3 8V5a2 2 0 0 1 2-2h3" />
       <path d="M16 3h3a2 2 0 0 1 2 2v3" />
-      <path d="M21 16v3a2 2 0 0 1-2 2h-3" />
+      <path d="M21 16v3a2 2 0 0 1-2-2h-3" />
       <path d="M8 21H5a2 2 0 0 1-2-2v-3" />
       <path d="M3 12h18" />
     </>
   ),
+  bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></>,
+  bellOff: <><path d="M13.73 21a2 2 0 0 1-3.46 0" /><path d="M18.63 13A17.9 17.9 0 0 1 18 8" /><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14" /><path d="M18 8a6 6 0 0 0-9.33-5" /><path d="M2 2l20 20" /></>,
 };
 
 interface IconProps {

@@ -24,5 +24,37 @@
       "notAnImage": "This is not an image",
       "imageProcessFailed": "Failed to process image"
     }
+  },
+  "pwa": {
+    "offline": {
+      "banner": "No connection — working offline"
+    },
+    "install": {
+      "title": "Install Absolute Travel",
+      "body": "Add the app to your home screen — it works even with no signal in the mountains and forests.",
+      "action": "Install",
+      "dismiss": "Not now"
+    },
+    "update": {
+      "title": "Update available",
+      "body": "We've improved the app. Refresh to get the new version.",
+      "action": "Update"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Get notified about new messages, friend requests and reminders to go explore.",
+    "onTitle": "Notifications are on",
+    "offTitle": "Turn on notifications",
+    "enable": "Enable",
+    "disable": "Disable",
+    "working": "Please wait…",
+    "blocked": "Notifications are blocked in your browser settings. Allow them for this site.",
+    "unsupported": "Your browser doesn't support notifications.",
+    "testButton": "Send a test notification",
+    "error": {
+      "failed": "Couldn't enable notifications. Try again.",
+      "server-disabled": "Notifications are temporarily unavailable on the server."
+    }
   }
 }

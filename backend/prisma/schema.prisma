@@ -61,6 +61,7 @@ model User {
   receivedMessages       Message[] @relation("MessageReceiver")
   friendLabels           FriendLabel[]
   labelReactions         LabelReaction[]
+  pushSubscriptions      PushSubscription[]
 }
 
 // A friendship edge. One row per pair: sender is who initiated the request.
@@ -96,6 +97,23 @@ model Message {
 
   @@index([senderId, receiverId, id])
   @@index([receiverId, readAt])
+}
+
+// A browser's Web Push endpoint for one user on one device. A user can have
+// several (phone, laptop, …). `endpoint` is globally unique so re-subscribing
+// the same browser updates in place instead of piling up duplicates.
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  endpoint  String   @unique
+  p256dh    String // client public key (from subscription.keys.p256dh)
+  auth      String // client auth secret (from subscription.keys.auth)
+  userAgent String? // best-effort device label, purely informational
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model CoinTransaction {

@@ -24,5 +24,37 @@
       "notAnImage": "To nie jest obraz",
       "imageProcessFailed": "Nie udało się przetworzyć obrazu"
     }
+  },
+  "pwa": {
+    "offline": {
+      "banner": "Brak połączenia — działamy offline"
+    },
+    "install": {
+      "title": "Zainstaluj Absolute Travel",
+      "body": "Dodaj aplikację do ekranu głównego — działa nawet bez zasięgu w górach i lasach.",
+      "action": "Zainstaluj",
+      "dismiss": "Nie teraz"
+    },
+    "update": {
+      "title": "Dostępna aktualizacja",
+      "body": "Ulepszyliśmy aplikację. Odśwież, aby pobrać nową wersję.",
+      "action": "Aktualizuj"
+    }
+  },
+  "notifications": {
+    "title": "Powiadomienia",
+    "description": "Otrzymuj powiadomienia o nowych wiadomościach, zaproszeniach do znajomych i przypomnieniach o spacerze.",
+    "onTitle": "Powiadomienia są włączone",
+    "offTitle": "Włącz powiadomienia",
+    "enable": "Włącz",
+    "disable": "Wyłącz",
+    "working": "Poczekaj…",
+    "blocked": "Powiadomienia są zablokowane w ustawieniach przeglądarki. Zezwól na nie dla tej strony.",
+    "unsupported": "Twoja przeglądarka nie obsługuje powiadomień.",
+    "testButton": "Wyślij powiadomienie testowe",
+    "error": {
+      "failed": "Nie udało się włączyć powiadomień. Spróbuj ponownie.",
+      "server-disabled": "Powiadomienia są tymczasowo niedostępne na serwerze."
+    }
   }
 }

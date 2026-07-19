@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../prisma.service';
 import { FriendsService } from '../friends/friends.service';
 import { PresenceService } from '../realtime/presence.service';
+import { PushService } from '../push/push.service';
 
 const MAX_TEXT_LENGTH = 2000;
 const DEFAULT_PAGE = 50;
@@ -17,6 +18,7 @@ export class ChatService {
     private readonly prisma: PrismaService,
     private readonly friends: FriendsService,
     private readonly presence: PresenceService,
+    private readonly push: PushService,
   ) {}
 
   private parseId(raw: unknown, what: string): number {
@@ -66,7 +68,12 @@ export class ChatService {
   }
 
   /** Message history with a friend, newest page by default, keyset pagination. */
-  async history(rawUserId: unknown, rawFriendId: unknown, rawLimit?: unknown, rawBefore?: unknown) {
+  async history(
+    rawUserId: unknown,
+    rawFriendId: unknown,
+    rawLimit?: unknown,
+    rawBefore?: unknown,
+  ) {
     const userId = this.parseId(rawUserId, 'userId');
     const friendId = this.parseId(rawFriendId, 'friendId');
     await this.requireFriendship(userId, friendId);
@@ -75,9 +82,10 @@ export class ChatService {
     if (!Number.isInteger(limit) || limit <= 0) limit = DEFAULT_PAGE;
     limit = Math.min(limit, 100);
 
-    const before = rawBefore !== undefined && rawBefore !== null && rawBefore !== ''
-      ? this.parseId(rawBefore, 'before')
-      : null;
+    const before =
+      rawBefore !== undefined && rawBefore !== null && rawBefore !== ''
+        ? this.parseId(rawBefore, 'before')
+        : null;
 
     const messages = await this.prisma.message.findMany({
       where: {
@@ -100,7 +108,8 @@ export class ChatService {
     const userId = this.parseId(rawUserId, 'userId');
     const friendId = this.parseId(rawFriendId, 'friendId');
     const text = String(rawText ?? '').trim();
-    if (!text) throw new BadRequestException('Повідомлення не може бути порожнім');
+    if (!text)
+      throw new BadRequestException('Повідомлення не може бути порожнім');
     const isVoice = text.startsWith('[voice:');
     const limit = isVoice ? 500000 : MAX_TEXT_LENGTH;
     if (text.length > limit) {
@@ -113,8 +122,14 @@ export class ChatService {
     // A stale client session (userId from before a DB reseed) would otherwise
     // fail requireFriendship silently as "not friends" or crash Message.create
     // on the foreign key — surface it as an auth error instead.
-    const sender = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
-    if (!sender) throw new UnauthorizedException('Сесія недійсна — увійдіть у систему ще раз');
+    const sender = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true },
+    });
+    if (!sender)
+      throw new UnauthorizedException(
+        'Сесія недійсна — увійдіть у систему ще раз',
+      );
     await this.requireFriendship(userId, friendId);
 
     const message = await this.prisma.message.create({
@@ -132,6 +147,17 @@ export class ChatService {
     };
     this.presence.emitToUser(friendId, 'chat:message', wire);
     this.presence.emitToUser(userId, 'chat:sent', wire);
+
+    // Push the recipient only if they aren't connected right now (an open socket
+    // means the chat UI already showed it). Fire-and-forget: a push failure must
+    // never fail message delivery.
+    const preview = isVoice ? '🎤 Голосове повідомлення' : text.slice(0, 140);
+    void this.push.notifyIfAway(friendId, {
+      title: sender.name,
+      body: preview,
+      url: '/',
+      tag: `chat:${userId}`,
+    });
 
     return message;
   }

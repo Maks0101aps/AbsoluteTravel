@@ -29,6 +29,7 @@ import ProfileWall from './ProfileWall';
 import UserProfilePage from './UserProfilePage';
 import WalkIntro from './WalkIntro';
 import LanguageSwitcher from './LanguageSwitcher';
+import NotificationsSettings from './NotificationsSettings';
 import AchievementsPage from './AchievementsPage';
 
 const CREAM = '#F4F1E8';
@@ -855,6 +856,8 @@ function ProfileTab({
       <p style={{ fontSize: '15px', lineHeight: 1.7, color: 'rgba(244,241,232,0.65)', maxWidth: '520px', margin: '0 0 32px' }}>
         {t('core.profile.readyBody')}
       </p>
+
+      <NotificationsSettings userId={user.id} accent={accent} />
 
       <LanguageSwitcher accent={accent} />
 

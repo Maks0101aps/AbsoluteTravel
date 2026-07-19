@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# vite-plugin-pwa dev service worker output
+dev-dist
+
 # dotenv environment variable files
 .env
 .env.local
