@@ -10,6 +10,7 @@ import Navigator from './Navigator';
 import type { RouteResult } from './data/routing';
 import LeafletMap, { type LiveMarker } from './LeafletMap';
 import { useLiveGps, type FriendDot } from './useLiveGps';
+import { useHeading } from './useHeading';
 import { useExploration } from './exploration/useExploration';
 import { UserAvatar } from './UserCard';
 import { Icon, type IconName } from './icons';
@@ -149,6 +150,17 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
     setNavWaypoints([]);
     setNavRoute(null);
     setNavPicking(null);
+    // Zoom straight in on the destination instead of just stretching
+    // whatever the small preview map happened to be showing across the new
+    // full-screen navigator window (that jump-without-a-plan is what read as
+    // "buggy" scaling) — a real navigator opens already zoomed in. Delayed a
+    // beat: switching to the full-screen layout resizes the map container,
+    // and LeafletMap's ResizeObserver calls invalidateSize() in response —
+    // firing flyTo in the same tick let that resize interrupt/cancel the
+    // animation, so the zoom silently never happened.
+    window.setTimeout(() => {
+      setFlyTarget({ lat: place.lat, lng: place.lng, zoom: 16 });
+    }, 150);
   };
 
   const closeNavigator = () => {
@@ -159,6 +171,18 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
     setNavPicking(null);
   };
 
+  // The navigator takes the map full-screen (see the map-wrapper styles
+  // below) — lock page scroll behind it, like every other full-screen
+  // overlay in the app, so the underlying page can't scroll under it.
+  useEffect(() => {
+    if (!navTarget) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [navTarget]);
+
   // Local friend labels states
   const [friendLabels, setFriendLabels] = useState<FriendLabel[]>([]);
   const [activeLabelId, setActiveLabelId] = useState<number | null>(null);
@@ -168,6 +192,9 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
 
   // Live GPS: own pulsing dot + friends' dots (server broadcasts every 10s).
   const { selfPosition, friendDots, sharing, geoError, setSharing } = useLiveGps(userId);
+  // Compass heading for the self marker's "which way am I facing" arrow —
+  // only requested while the navigator is open, matching what it's for.
+  const { heading, needsPermission: headingNeedsPermission, requestPermission: requestHeadingPermission } = useHeading(navTarget != null);
 
   // While following a friend, re-center the map on them each time their dot
   // moves. `flyTarget` is the same "fly here" channel the welcome-screen
@@ -206,7 +233,8 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
         color: profile?.color ?? accent ?? '#4D9DE0',
         label: t('explore.live.youHere', { name: profile?.displayName ?? submitterName ?? t('explore.live.youFallback') }),
         avatar: profile?.customAvatar || profile?.avatarId || undefined,
-        pulse: true
+        pulse: true,
+        heading: navTarget != null ? heading : null,
       });
     }
     friendDots.forEach((d, i) => {
@@ -232,7 +260,7 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
       });
     });
     return markers;
-  }, [selfPosition, sharing, userId, friendDots, profile, accent, submitterName, followFriendId]);
+  }, [selfPosition, sharing, userId, friendDots, profile, accent, submitterName, followFriendId, navTarget, heading]);
 
   const top3Nearby = useMemo(() => {
     if (!selfPosition || places.length === 0) return [];
@@ -371,18 +399,38 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
         <div style={{ minWidth: 0 }}>
         <div
           ref={mapBoxRef}
-          style={{
-            position: 'relative',
-            // Contain Leaflet's internal z-indexes (panes/controls go up to ~1000)
-            // so they can't paint over overlays like the "add place" modal.
-            isolation: 'isolate',
-            minWidth: 0,
-            background: '#081E15',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: '18px',
-            padding: '12px',
-            overflow: 'hidden',
-          }}
+          style={
+            navTarget
+              ? {
+                  // Navigator mode: the map takes over the whole screen as
+                  // its own dedicated window instead of a small panel docked
+                  // in the corner of the regular page — everything else
+                  // (nav header, detail panel, page scroll) is covered/locked
+                  // behind it. The only way out is the Navigator panel's ✕,
+                  // which clears navTarget and drops these styles.
+                  position: 'fixed',
+                  inset: 0,
+                  zIndex: 500,
+                  isolation: 'isolate',
+                  background: '#081E15',
+                  border: 'none',
+                  borderRadius: 0,
+                  padding: 0,
+                  overflow: 'hidden',
+                }
+              : {
+                  position: 'relative',
+                  // Contain Leaflet's internal z-indexes (panes/controls go up to ~1000)
+                  // so they can't paint over overlays like the "add place" modal.
+                  isolation: 'isolate',
+                  minWidth: 0,
+                  background: '#081E15',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '18px',
+                  padding: '12px',
+                  overflow: 'hidden',
+                }
+          }
         >
           <LeafletMap
             places={visiblePlaces}
@@ -393,13 +441,14 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
               setActiveLabelId(null);
             }}
             onHover={(id) => setHoverId(id)}
+            hideGridToggle={navTarget != null}
             liveMarkers={userId != null ? liveMarkers : undefined}
             focusPosition={userId != null ? selfPosition : undefined}
             flyTo={flyTarget}
             exploredCells={userId != null ? visitedCells : undefined}
             revealedCell={lastRevealed}
             fog={userId != null}
-            height="clamp(320px, 60vh, 560px)"
+            height={navTarget ? '100vh' : 'clamp(320px, 60vh, 560px)'}
             friendLabels={friendLabels}
             activeLabelId={activeLabelId}
             hoverLabelId={hoverLabelId}
@@ -433,7 +482,12 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
           {/* territory progress + floating "+XP" popups (logged-in users only) */}
           {userId != null && (
             <>
-              <ExplorationHud totalCells={totalCells} totalRegions={totalRegions} accent={accent} />
+              <ExplorationHud
+                totalCells={totalCells}
+                totalRegions={totalRegions}
+                accent={accent}
+                onBack={navTarget ? closeNavigator : undefined}
+              />
               <div
                 style={{
                   position: 'absolute',
@@ -1043,7 +1097,8 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
           onStopPicking={() => setNavPicking(null)}
           onRemoveWaypoint={(i) => setNavWaypoints((w) => w.filter((_, idx) => idx !== i))}
           onRouteBuilt={setNavRoute}
-          onClose={closeNavigator}
+          headingNeedsPermission={headingNeedsPermission}
+          onRequestHeadingPermission={requestHeadingPermission}
         />
       )}
     </div>
@@ -1052,8 +1107,75 @@ function ExploreMap({ accent = '#3FA66B', submitterName, userId, profile, opened
 
 // Compact overlay in the map's top-left corner: how much territory the user has
 // uncovered. The numbers flash briefly whenever they change.
-function ExplorationHud({ totalCells, totalRegions, accent }: { totalCells: number; totalRegions: number; accent: string }) {
+function ExplorationHud({
+  totalCells,
+  totalRegions,
+  accent,
+  onBack,
+}: {
+  totalCells: number;
+  totalRegions: number;
+  accent: string;
+  // Set only while the navigator's full-screen map is open — turns this HUD
+  // into that screen's exit control (replacing the ✕ that used to live in
+  // the bottom sheet) and surfaces the "don't leave the app" warning right
+  // next to the counters it's warning you about, instead of buried in a
+  // sheet that can be collapsed out of view.
+  onBack?: () => void;
+}) {
   const { t: hudT } = useTranslation();
+
+  // Navigator mode: just a single strip — back arrow on the left, the
+  // "don't leave the app" warning next to it. No cell/region counters here
+  // at all; they're what the plain exploration HUD (below) shows outside
+  // the navigator.
+  if (onBack) {
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: '22px',
+          left: '22px',
+          right: '22px',
+          zIndex: 900,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          background: 'rgba(224,165,78,0.14)',
+          border: '1px solid rgba(224,165,78,0.4)',
+          borderRadius: '14px',
+          padding: '8px 14px 8px 8px',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          boxShadow: '0 8px 24px -10px rgba(0,0,0,0.6)',
+        }}
+      >
+        <button
+          onClick={onBack}
+          aria-label={hudT('explore.navigator.close')}
+          style={{
+            flex: '0 0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '34px',
+            height: '34px',
+            borderRadius: '10px',
+            background: 'rgba(8,26,18,0.6)',
+            border: '1px solid rgba(255,255,255,0.10)',
+            color: CREAM,
+            cursor: 'pointer',
+          }}
+        >
+          <Icon name="arrowLeft" size={17} strokeWidth={2.1} />
+        </button>
+        <span style={{ fontSize: '11.5px', lineHeight: 1.4, fontWeight: 600, color: '#F4D9A8' }}>
+          {hudT('explore.navigator.backgroundNotice')}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -1068,13 +1190,13 @@ function ExplorationHud({ totalCells, totalRegions, accent }: { totalCells: numb
         pointerEvents: 'none',
       }}
     >
-      <HudStat icon="hexagon" label={hudT('explore.hud.cells')} value={totalCells} accent={accent} />
-      <HudStat icon="compass" label={hudT('explore.hud.regions')} value={totalRegions} accent={accent} />
+      <HudStat icon="hexagon" value={totalCells} accent={accent} />
+      <HudStat icon="compass" value={totalRegions} accent={accent} />
     </div>
   );
 }
 
-function HudStat({ icon, label, value, accent }: { icon: IconName; label: string; value: number; accent: string }) {
+function HudStat({ icon, value, accent }: { icon: IconName; value: number; accent: string }) {
   const [bump, setBump] = useState(false);
   const prev = useRef(value);
   useEffect(() => {
@@ -1101,13 +1223,8 @@ function HudStat({ icon, label, value, accent }: { icon: IconName; label: string
       }}
     >
       <Icon name={icon} size={16} stroke={accent} strokeWidth={1.9} />
-      <div style={{ lineHeight: 1.15 }}>
-        <div key={value} className={bump ? 'at-stat-bump' : undefined} style={{ fontSize: '17px', fontWeight: 800, color: CREAM, transformOrigin: 'left center' }}>
-          {value}
-        </div>
-        <div style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(244,241,232,0.5)', textTransform: 'uppercase' }}>
-          {label}
-        </div>
+      <div key={value} className={bump ? 'at-stat-bump' : undefined} style={{ fontSize: '17px', fontWeight: 800, color: CREAM, transformOrigin: 'left center' }}>
+        {value}
       </div>
     </div>
   );

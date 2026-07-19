@@ -112,7 +112,12 @@
       "building": "Building route…",
       "footNotice": "Vehicles not allowed beyond this point — {{meters}} m on foot (~{{duration}}), shown dashed",
       "startRequired": "Pick a start point on the map first",
-      "buildFailed": "Could not build a route"
+      "buildFailed": "Could not build a route",
+      "wakeLockOn": "Your screen will stay on while the navigator is open",
+      "wakeLockOff": "Couldn't keep the screen on — keep your phone active manually",
+      "backgroundNotice": "Territory-cell filling stops if you leave or minimize the app — keep this screen open while you walk",
+      "enableCompass": "Enable compass",
+      "expand": "Expand navigator"
     },
     "walkIntro": {
       "badge": "Welcome to Absolute Travel",
