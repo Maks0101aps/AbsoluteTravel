@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   getAchievements,
   claimAchievement,
@@ -17,11 +18,11 @@ const TIER_COLOR: Record<AchievementTier, string> = {
   gold: '#F0C64B',
 };
 
-const TIER_LABEL: Record<AchievementTier, string> = {
-  bronze: 'Бронза',
-  silver: 'Срібло',
-  gold: 'Золото',
-};
+// Achievement titles/descriptions come from the backend catalog (Ukrainian
+// only — see achievements.catalog.ts) but the catalog is a fixed, known set
+// of keys, so — same trick as ProfileWall's wall-post captions — we translate
+// client-side by `a.key` via i18n/locales/*/achievements.json and only fall
+// back to the raw server string for a key that isn't translated yet.
 
 interface AchievementsPageProps {
   userId: number;
@@ -31,6 +32,7 @@ interface AchievementsPageProps {
 }
 
 function AchievementsPage({ userId, accent, onReward }: AchievementsPageProps) {
+  const { t } = useTranslation();
   const [data, setData] = useState<AchievementsList | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +45,7 @@ function AchievementsPage({ userId, accent, onReward }: AchievementsPageProps) {
         setData(d);
         setError(null);
       })
-      .catch((e) => setError(e?.message ?? 'Не вдалося завантажити досягнення'))
+      .catch((e) => setError(e?.message ?? t('achievements.errors.load')))
       .finally(() => setLoading(false));
   };
 
@@ -65,7 +67,7 @@ function AchievementsPage({ userId, accent, onReward }: AchievementsPageProps) {
       }
       load();
     } catch (e: any) {
-      setError(e?.message ?? 'Не вдалося отримати нагороду');
+      setError(e?.message ?? t('achievements.errors.claim'));
     } finally {
       setClaiming(null);
     }
@@ -87,19 +89,18 @@ function AchievementsPage({ userId, accent, onReward }: AchievementsPageProps) {
       {/* header */}
       <div style={{ marginBottom: '26px' }}>
         <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.2em', color: accent, marginBottom: '10px' }}>
-          ДОСЯГНЕННЯ
+          {t('achievements.header.eyebrow')}
         </div>
         <h1 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: 'clamp(26px, 3.4vw, 36px)', margin: '0 0 8px' }}>
-          Твої нагороди
+          {t('achievements.header.title')}
         </h1>
         <p style={{ fontSize: '14.5px', color: 'rgba(244,241,232,0.6)', margin: 0, maxWidth: '560px', lineHeight: 1.55 }}>
-          Виконуй завдання, щоб отримувати XP та монети. Тижневі досягнення оновлюються щопонеділка —
-          не пропусти свіжу порцію нагород.
+          {t('achievements.header.subtitle')}
           {data && data.claimableCount > 0 && (
             <>
               {' '}
               <span style={{ color: accent, fontWeight: 700 }}>
-                Готово до отримання: {data.claimableCount}.
+                {t('achievements.header.claimableCount', { count: data.claimableCount })}
               </span>
             </>
           )}
@@ -107,7 +108,7 @@ function AchievementsPage({ userId, accent, onReward }: AchievementsPageProps) {
       </div>
 
       {loading && (
-        <div style={{ padding: '40px 0', textAlign: 'center', color: 'rgba(244,241,232,0.5)' }}>Завантаження…</div>
+        <div style={{ padding: '40px 0', textAlign: 'center', color: 'rgba(244,241,232,0.5)' }}>{t('achievements.loading')}</div>
       )}
       {error && !loading && (
         <div style={{ padding: '14px 16px', borderRadius: '12px', background: 'rgba(228,99,95,0.12)', border: '1px solid rgba(228,99,95,0.4)', color: '#E4635F', fontSize: '13.5px', marginBottom: '20px' }}>
@@ -118,10 +119,10 @@ function AchievementsPage({ userId, accent, onReward }: AchievementsPageProps) {
       {data && (
         <>
           {/* weekly */}
-          <SectionTitle icon="flame" accent={accent} title="Тижневі" subtitle={`Оновлюються щотижня · ${data.weekKey}`} />
+          <SectionTitle icon="flame" accent={accent} title={t('achievements.sections.weekly.title')} subtitle={t('achievements.sections.weekly.subtitle', { week: data.weekKey })} />
           <div style={grid}>
             {data.weekly.map((a, i) => (
-              <AchievementCard key={a.key} a={a} accent={accent} index={i} claiming={claiming === a.key} onClaim={() => claim(a)} />
+              <AchievementCard key={a.key} a={a} accent={accent} index={i} claiming={claiming === a.key} onClaim={() => claim(a)} t={t} />
             ))}
           </div>
 
@@ -133,7 +134,7 @@ function AchievementsPage({ userId, accent, onReward }: AchievementsPageProps) {
             return (
               <>
                 <div style={{ marginTop: '34px' }}>
-                  <SectionTitle icon="medal" accent={accent} title="Постійні" subtitle={`${claimedTotal} / ${data.regular.length} отримано · відкривай крок за кроком`} />
+                  <SectionTitle icon="medal" accent={accent} title={t('achievements.sections.regular.title')} subtitle={t('achievements.sections.regular.subtitle', { claimed: claimedTotal, total: data.regular.length })} />
                 </div>
                 <div style={grid}>
                   {chains.map((chain, i) => {
@@ -148,6 +149,7 @@ function AchievementsPage({ userId, accent, onReward }: AchievementsPageProps) {
                         claiming={claiming === active.key}
                         onClaim={() => claim(active)}
                         chain={chain.length > 1 ? { step, total: chain.length, allDone: chain.every((c) => c.claimed) } : undefined}
+                        t={t}
                       />
                     );
                   })}
@@ -179,7 +181,7 @@ function AchievementsPage({ userId, accent, onReward }: AchievementsPageProps) {
             animation: 'atAchToast 2.6s ease both',
           }}
         >
-          <span style={{ color: accent }}>Нагороду отримано!</span>
+          <span style={{ color: accent }}>{t('achievements.toast.title')}</span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#7FC4A0' }}>
             +{toast.xp} XP
           </span>
@@ -250,6 +252,7 @@ function AchievementCard({
   claiming,
   onClaim,
   chain,
+  t,
 }: {
   a: Achievement;
   accent: string;
@@ -258,10 +261,13 @@ function AchievementCard({
   onClaim: () => void;
   // When this card represents one step of a multi-tier chain.
   chain?: { step: number; total: number; allDone: boolean };
+  t: (key: string, opts?: any) => string;
 }) {
   const tier = TIER_COLOR[a.tier];
   const pct = Math.min(100, Math.round((a.progress / a.threshold) * 100));
   const done = a.completed;
+  const title = t(`achievements.items.${a.key}.title`, { defaultValue: a.title });
+  const description = t(`achievements.items.${a.key}.description`, { defaultValue: a.description });
 
   return (
     <div
@@ -301,12 +307,12 @@ function AchievementCard({
         </div>
         <div style={{ flex: '1 1 auto', minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '15px', fontWeight: 700 }}>{a.title}</span>
+            <span style={{ fontSize: '15px', fontWeight: 700 }}>{title}</span>
             <span style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: tier, background: `${tier}1f`, border: `1px solid ${tier}55`, borderRadius: '999px', padding: '1px 7px' }}>
-              {TIER_LABEL[a.tier]}
+              {t(`achievements.tier.${a.tier}`)}
             </span>
           </div>
-          <p style={{ margin: '4px 0 0', fontSize: '12.5px', lineHeight: 1.4, color: 'rgba(244,241,232,0.6)' }}>{a.description}</p>
+          <p style={{ margin: '4px 0 0', fontSize: '12.5px', lineHeight: 1.4, color: 'rgba(244,241,232,0.6)' }}>{description}</p>
           {chain && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginTop: '8px' }}>
               <div style={{ display: 'flex', gap: '4px' }}>
@@ -328,7 +334,7 @@ function AchievementCard({
                 })}
               </div>
               <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'rgba(244,241,232,0.5)' }}>
-                {chain.allDone ? 'Завершено' : `Крок ${chain.step}/${chain.total}`}
+                {chain.allDone ? t('achievements.chain.done') : t('achievements.chain.step', { step: chain.step, total: chain.total })}
               </span>
             </div>
           )}
@@ -338,7 +344,7 @@ function AchievementCard({
       {/* progress */}
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 600, color: 'rgba(244,241,232,0.55)', marginBottom: '5px' }}>
-          <span>{done ? 'Виконано' : 'Прогрес'}</span>
+          <span>{done ? t('achievements.progress.done') : t('achievements.progress.label')}</span>
           <span>{a.value} / {a.threshold}</span>
         </div>
         <div style={{ height: '7px', borderRadius: '999px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
@@ -357,7 +363,7 @@ function AchievementCard({
 
         {a.claimed ? (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 700, color: 'rgba(244,241,232,0.55)' }}>
-            <Icon name="check" size={15} strokeWidth={2.4} stroke="rgba(244,241,232,0.55)" /> Отримано
+            <Icon name="check" size={15} strokeWidth={2.4} stroke="rgba(244,241,232,0.55)" /> {t('achievements.actions.claimed')}
           </span>
         ) : a.claimable ? (
           <button
@@ -378,7 +384,7 @@ function AchievementCard({
             }}
           >
             <span style={{ position: 'absolute', top: 0, left: 0, width: '40px', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)', animation: 'atAchShine 2.6s ease-in-out infinite' }} />
-            <span style={{ position: 'relative' }}>{claiming ? '…' : 'Отримати'}</span>
+            <span style={{ position: 'relative' }}>{claiming ? t('achievements.actions.claiming') : t('achievements.actions.claim')}</span>
           </button>
         ) : (
           <span style={{ fontSize: '11.5px', fontWeight: 600, color: 'rgba(244,241,232,0.4)' }}>{pct}%</span>

@@ -9,6 +9,7 @@ import ukForms from './locales/uk/forms.json';
 import ukShop from './locales/uk/shop.json';
 import ukPlaces from './locales/uk/places.json';
 import ukRegions from './locales/uk/regions.json';
+import ukAchievements from './locales/uk/achievements.json';
 
 import enCommon from './locales/en/common.json';
 import enCore from './locales/en/core.json';
@@ -18,6 +19,7 @@ import enForms from './locales/en/forms.json';
 import enShop from './locales/en/shop.json';
 import enPlaces from './locales/en/places.json';
 import enRegions from './locales/en/regions.json';
+import enAchievements from './locales/en/achievements.json';
 
 import plCommon from './locales/pl/common.json';
 import plCore from './locales/pl/core.json';
@@ -27,6 +29,7 @@ import plForms from './locales/pl/forms.json';
 import plShop from './locales/pl/shop.json';
 import plPlaces from './locales/pl/places.json';
 import plRegions from './locales/pl/regions.json';
+import plAchievements from './locales/pl/achievements.json';
 
 export const LANG_KEY = 'absolute_travel_lang';
 export type Lang = 'uk' | 'en' | 'pl';
@@ -50,9 +53,9 @@ function detectLang(): Lang {
 
 i18n.use(initReactI18next).init({
   resources: {
-    uk: { translation: { ...ukCommon, ...ukCore, ...ukExplore, ...ukSocial, ...ukForms, ...ukShop, ...ukPlaces, ...ukRegions } },
-    en: { translation: { ...enCommon, ...enCore, ...enExplore, ...enSocial, ...enForms, ...enShop, ...enPlaces, ...enRegions } },
-    pl: { translation: { ...plCommon, ...plCore, ...plExplore, ...plSocial, ...plForms, ...plShop, ...plPlaces, ...plRegions } },
+    uk: { translation: { ...ukCommon, ...ukCore, ...ukExplore, ...ukSocial, ...ukForms, ...ukShop, ...ukPlaces, ...ukRegions, ...ukAchievements } },
+    en: { translation: { ...enCommon, ...enCore, ...enExplore, ...enSocial, ...enForms, ...enShop, ...enPlaces, ...enRegions, ...enAchievements } },
+    pl: { translation: { ...plCommon, ...plCore, ...plExplore, ...plSocial, ...plForms, ...plShop, ...plPlaces, ...plRegions, ...plAchievements } },
   },
   lng: detectLang(),
   fallbackLng: 'uk',

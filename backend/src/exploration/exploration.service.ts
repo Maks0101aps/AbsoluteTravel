@@ -15,7 +15,9 @@ export const EXPLORE_RESOLUTION = 9;
 const REGION_RESOLUTION = 3;
 
 // XP economy for automatic territory exploration (see the product spec).
-const NEW_CELL_XP = 10;
+// Cell XP was cut from 10 to 3: walking around unlocking hexes was out-earning
+// deliberate activities (verified visits, achievements) just by wandering.
+const NEW_CELL_XP = 3;
 const NEW_REGION_XP = 100;
 
 /** Prisma's "unique constraint failed" — here, the VisitedCell(userId, cellId) pair. */

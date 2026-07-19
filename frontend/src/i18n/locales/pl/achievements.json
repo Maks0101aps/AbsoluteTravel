@@ -1,0 +1,92 @@
+{
+  "achievements": {
+    "header": {
+      "eyebrow": "OSIĄGNIĘCIA",
+      "title": "Twoje nagrody",
+      "subtitle": "Wykonuj zadania, aby zdobywać XP i monety. Cotygodniowe osiągnięcia odnawiają się w każdy poniedziałek — nie przegap świeżej porcji nagród.",
+      "claimableCount": "Gotowe do odebrania: {{count}}."
+    },
+    "loading": "Ładowanie…",
+    "errors": {
+      "load": "Nie udało się załadować osiągnięć",
+      "claim": "Nie udało się odebrać nagrody"
+    },
+    "sections": {
+      "weekly": {
+        "title": "Cotygodniowe",
+        "subtitle": "Odnawiają się co tydzień · {{week}}"
+      },
+      "regular": {
+        "title": "Osiągnięcia",
+        "subtitle": "{{claimed}} / {{total}} odebrano · odblokowuj krok po kroku"
+      }
+    },
+    "tier": {
+      "bronze": "Brąz",
+      "silver": "Srebro",
+      "gold": "Złoto"
+    },
+    "chain": {
+      "step": "Poziom {{step}}/{{total}}",
+      "done": "Ukończono"
+    },
+    "progress": {
+      "label": "Postęp",
+      "done": "Wykonano"
+    },
+    "actions": {
+      "claim": "Odbierz",
+      "claiming": "…",
+      "claimed": "Odebrano"
+    },
+    "toast": {
+      "title": "Nagroda odebrana!"
+    },
+    "items": {
+      "first_steps": { "title": "Pierwsze kroki", "description": "Odznacz swoją pierwszą wizytę w miejscu" },
+      "weekender": { "title": "Podróżnik weekendowy", "description": "Odwiedź 3 różne miejsca" },
+      "explorer_5": { "title": "Odkrywca", "description": "Odwiedź 5 miejsc" },
+      "explorer_10": { "title": "Doświadczony turysta", "description": "Odwiedź 10 miejsc" },
+      "explorer_20": { "title": "Bywały podróżnik", "description": "Odwiedź 20 miejsc" },
+      "explorer_40": { "title": "Legenda dróg", "description": "Odwiedź 40 miejsc" },
+
+      "pathfinder": { "title": "Tropiciel", "description": "Odblokuj 5 komórek terytorium" },
+      "cartographer": { "title": "Kartograf", "description": "Odblokuj 25 komórek terytorium" },
+      "surveyor": { "title": "Geodeta", "description": "Odblokuj 100 komórek terytorium" },
+      "conqueror": { "title": "Zdobywca przestrzeni", "description": "Odblokuj 300 komórek terytorium" },
+
+      "region_1": { "title": "Miejscowy", "description": "Odwiedź miejsce w swoim regionie" },
+      "region_3": { "title": "Podróżnik po regionach", "description": "Odwiedź miejsca w 3 obwodach" },
+      "region_6": { "title": "Sześć obwodów", "description": "Odwiedź miejsca w 6 obwodach" },
+      "region_9": { "title": "Dziewięć obwodów", "description": "Odwiedź miejsca w 9 obwodach" },
+      "region_11": { "title": "Pół kraju", "description": "Odwiedź miejsca w 11 z 22 obwodów — dokładnie połowa kraju" },
+      "region_16": { "title": "Szesnaście obwodów", "description": "Odwiedź miejsca w 16 obwodach" },
+      "region_19": { "title": "Prawie cały kraj", "description": "Odwiedź miejsca w 19 obwodach" },
+      "region_22": { "title": "Cała Ukraina", "description": "Odwiedź miejsca we wszystkich 22 obwodach dostępnych w grze" },
+
+      "sampler": { "title": "Odrobina wszystkiego", "description": "Odwiedź miejsca 3 różnych kategorii" },
+      "collector": { "title": "Kolekcjoner wrażeń", "description": "Odwiedź miejsca wszystkich 5 kategorii" },
+
+      "friend_1": { "title": "Nie sam", "description": "Dodaj pierwszego znajomego" },
+      "friend_5": { "title": "Towarzystwo", "description": "Dodaj 5 znajomych" },
+      "friend_10": { "title": "Dusza towarzystwa", "description": "Dodaj 10 znajomych" },
+
+      "level_5": { "title": "Koniec z nowicjuszem", "description": "Osiągnij 5 poziom" },
+      "level_10": { "title": "Pewny krok", "description": "Osiągnij 10 poziom" },
+      "level_25": { "title": "Weteran", "description": "Osiągnij 25 poziom" },
+
+      "daredevil": { "title": "Śmiałek", "description": "Odwiedź trudne miejsce (trudność 3+)" },
+      "hardcore": { "title": "Zahartowany", "description": "Odwiedź 5 trudnych miejsc" },
+      "to_the_limit": { "title": "Na granicy", "description": "Odwiedź ekstremalne miejsce (trudność 4)" },
+
+      "saver": { "title": "Skarbonka", "description": "Zarób 1000 monet przez cały czas" },
+
+      "w_warmup": { "title": "Rozgrzewka tygodnia", "description": "Odwiedź 1 miejsce w tym tygodniu" },
+      "w_wanderer": { "title": "Tygodniowy wędrowiec", "description": "Odwiedź 3 miejsca w tym tygodniu" },
+      "w_cartographer": { "title": "Kartograf tygodnia", "description": "Odblokuj 15 komórek w tym tygodniu" },
+      "w_crossregion": { "title": "Tydzień międzyregionalny", "description": "Odwiedź miejsca w 2 obwodach w tym tygodniu" },
+      "w_earner": { "title": "Zarobek tygodnia", "description": "Zarób 150 monet w tym tygodniu" },
+      "w_social": { "title": "Towarzyski tydzień", "description": "Dodaj znajomego w tym tygodniu" }
+    }
+  }
+}
