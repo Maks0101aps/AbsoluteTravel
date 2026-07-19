@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "baseUrl": ".",
+    "typeRoots": ["../frontend/node_modules/@types"],
+    "rootDirs": [
+      "fe-tests",
+      "../frontend/src",
+      "../frontend/src/data",
+      "../frontend/src/exploration"
+    ],
+    "paths": {
+      "vitest": ["../frontend/node_modules/vitest"],
+      "@testing-library/react": ["../frontend/node_modules/@testing-library/react"],
+      "@testing-library/jest-dom": ["../frontend/node_modules/@testing-library/jest-dom"],
+      "@testing-library/user-event": ["../frontend/node_modules/@testing-library/user-event"],
+      "react": ["../frontend/node_modules/react"],
+      "react-dom": ["../frontend/node_modules/react-dom"],
+      "react-i18next": ["../frontend/node_modules/react-i18next"],
+      "i18next": ["../frontend/node_modules/i18next"]
+    }
+  },
+  "include": ["fe-tests/**/*"]
+}

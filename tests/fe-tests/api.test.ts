@@ -46,7 +46,6 @@ describe('api.ts', () => {
     const invocations: Array<() => unknown> = [
       () => api.loginUser({ email: 'a@b.com', password: 'x' }),
       () => api.loginWithGoogle('cred'),
-      () => api.devVerifyUser('a@b.com'),
       () => api.getWallet(1),
       () => api.earnCoins(1, 'profile_complete'),
       () => api.purchaseItem(1, 'gold'),

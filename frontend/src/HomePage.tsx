@@ -533,6 +533,73 @@ function HomePage({ user, onLogout, onEditProfile, onUserUpdate, showWalkIntro, 
         }}
       >
         {tab === 'profile' && <ProfileTab user={user} onEditProfile={onEditProfile} accent={accent} onRequestLogout={() => setConfirmLogout(true)} />}
+        {tab === 'map' && !p && (
+          <div
+            style={{
+              background: 'rgba(240, 198, 75, 0.08)',
+              border: '1px solid rgba(240, 198, 75, 0.35)',
+              borderRadius: '16px',
+              padding: '20px 24px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '16px',
+              boxShadow: '0 8px 30px rgba(0, 0, 0, 0.3)',
+              animation: 'fadeUp 0.3s ease both',
+            }}
+          >
+            <div
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: 'rgba(240, 198, 75, 0.16)',
+                border: '1px solid rgba(240, 198, 75, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                color: '#F0C64B',
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ fontFamily: "'Lora', serif", fontWeight: 500, fontSize: '17px', margin: '0 0 6px', color: '#F0C64B' }}>
+                Профіль не налаштовано
+              </h4>
+              <p style={{ fontSize: '13.5px', lineHeight: 1.5, color: 'rgba(244, 241, 232, 0.75)', margin: '0 0 14px' }}>
+                Ви пропустили початкове налаштування профілю. Налаштуйте його зараз, щоб відкрити наступні функції:
+              </p>
+              <ul style={{ margin: '0 0 16px', paddingLeft: '20px', fontSize: '13px', lineHeight: 1.5, color: 'rgba(244, 241, 232, 0.65)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <li>🏪 <strong>Крамниця косметики:</strong> Доступ до магазину та купівля унікальних аватарів, рамок та кольорових ефектів за зароблені монети.</li>
+                <li>🎁 <strong>Відкриття кейсів:</strong> Можливість відкривати подарункові та безкоштовні стартові кейси з унікальним лутом.</li>
+                <li>🎨 <strong>Персоналізація карти подорожей:</strong> Зміна теми вашої карти та відображення власного аватара/імені для інших мандрівників.</li>
+                <li>📝 <strong>Стіна профілю:</strong> Можливість писати пости, ділитися фотографіями з іншими користувачами та читати їхні коментарі.</li>
+              </ul>
+              <button
+                onClick={onEditProfile}
+                style={{
+                  background: '#F0C64B',
+                  color: '#071F16',
+                  fontFamily: "'Manrope', sans-serif",
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '9px 18px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.15)')}
+                onMouseLeave={(e) => (e.currentTarget.style.filter = 'none')}
+              >
+                Налаштувати профіль зараз
+              </button>
+            </div>
+          </div>
+        )}
+
         {tab === 'map' && (
           <ExploreMap
             accent={accent}

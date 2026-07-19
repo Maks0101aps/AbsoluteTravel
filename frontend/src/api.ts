@@ -146,14 +146,7 @@ export async function loginWithGoogle(credential: string) {
   return data;
 }
 
-/**
- * Dev-only shortcut: marks an account verified without clicking the emailed
- * link. Needed because the Mailtrap sandbox SMTP used in local dev never
- * delivers to a real inbox — the backend refuses this once NODE_ENV=production.
- */
-export function devVerifyUser(email: string) {
-  return call<{ ok: boolean }>('POST', '/api/auth/dev-verify', { email });
-}
+
 
 // --- Economy ---------------------------------------------------------------
 
