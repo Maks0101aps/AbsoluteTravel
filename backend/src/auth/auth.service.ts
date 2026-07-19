@@ -1,7 +1,12 @@
-import { Injectable, BadRequestException, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, ConflictException, ForbiddenException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { PrismaService } from '../prisma.service';
+import { MailService } from '../mail/mail.service';
+
+// How long a fresh verification link stays valid.
+const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 export interface RegisterDto {
   username?: string;
@@ -27,10 +32,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export class AuthService {
   private googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mail: MailService,
+  ) {}
 
   private sanitize(user: any) {
-    const { password, googleId, unlockedItems, profile, ...rest } = user;
+    const { password, googleId, unlockedItems, profile, verificationToken, verificationTokenExpires, ...rest } = user;
     let items: string[] = [];
     try {
       const parsed = JSON.parse(unlockedItems ?? '[]');
@@ -86,6 +94,7 @@ export class AuthService {
     }
 
     const hashed = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
     const user = await this.prisma.user.create({
       data: {
         username,
@@ -94,10 +103,17 @@ export class AuthService {
         city,
         region,
         name: username,
+        isVerified: false,
+        verificationToken,
+        verificationTokenExpires: new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS),
       },
     });
 
-    return { user: this.sanitize(user) };
+    const backendUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT ?? '3000'}`;
+    const verifyUrl = `${backendUrl}/api/auth/verify-email?token=${verificationToken}`;
+    await this.mail.sendVerificationEmail(user.email, user.name, verifyUrl);
+
+    return { user: this.sanitize(user), requiresVerification: true };
   }
 
   async login(dto: LoginDto) {
@@ -118,7 +134,58 @@ export class AuthService {
       throw new UnauthorizedException('Невірна пошта або пароль');
     }
 
+    if (!user.isVerified) {
+      throw new UnauthorizedException('Підтвердіть свою електронну пошту перед входом. Перевірте вашу поштову скриньку.');
+    }
+
     return { user: this.sanitize(user) };
+  }
+
+  async verifyEmail(rawToken: string) {
+    const token = (rawToken ?? '').trim();
+    if (!token) {
+      throw new BadRequestException('Відсутній токен підтвердження');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { verificationToken: token } });
+    if (!user || !user.verificationTokenExpires || user.verificationTokenExpires < new Date()) {
+      throw new BadRequestException('Посилання для підтвердження недійсне або застаріле');
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { isVerified: true, verificationToken: null, verificationTokenExpires: null },
+    });
+
+    return { ok: true };
+  }
+
+  // Mailtrap's sandbox SMTP (used in local dev) never delivers to a real
+  // inbox — it only captures mail into Mailtrap's own testing UI. Until this
+  // project is pointed at a real "Email Sending" SMTP relay, this endpoint
+  // lets local development skip clicking the (undeliverable) link so the
+  // rest of the app can still be exercised end-to-end. Disabled whenever
+  // NODE_ENV is explicitly 'production'.
+  async devVerify(rawEmail: string) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new ForbiddenException('Недоступно в продакшені');
+    }
+    const email = (rawEmail ?? '').trim().toLowerCase();
+    if (!email) {
+      throw new BadRequestException('Введіть електронну пошту');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new BadRequestException('Користувача не знайдено');
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { isVerified: true, verificationToken: null, verificationTokenExpires: null },
+    });
+
+    return { ok: true };
   }
 
   async loginWithGoogle(dto: GoogleAuthDto) {
@@ -152,8 +219,10 @@ export class AuthService {
       const existingByEmail = await this.prisma.user.findUnique({ where: { email } });
       if (existingByEmail) {
         user = await this.prisma.user.update({
+          // Google already vouches for this email, and the account may have
+          // been sitting unverified from an abandoned local registration.
           where: { id: existingByEmail.id },
-          data: { googleId },
+          data: { googleId, isVerified: true },
         });
       } else {
         const username = await this.generateUsernameFromEmail(email);
@@ -165,6 +234,7 @@ export class AuthService {
             googleId,
             name: displayName,
             avatar: payload?.picture ?? undefined,
+            isVerified: true,
           },
         });
         isNew = true;

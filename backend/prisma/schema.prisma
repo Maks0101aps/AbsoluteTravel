@@ -18,6 +18,14 @@ model User {
   password           String?
   // Stable Google account id ("sub" claim), set once a user signs in with Google.
   googleId           String?           @unique
+  // Local (email/password) accounts must confirm their email before they can
+  // log in. Google accounts are considered verified immediately since Google
+  // already vouches for the email.
+  isVerified               Boolean   @default(false)
+  // Random one-time token emailed to the user as an activation link; cleared
+  // once consumed. Unique so a lookup by token is also a validity check.
+  verificationToken        String?   @unique
+  verificationTokenExpires DateTime?
   city               String?
   region             String?
   name               String

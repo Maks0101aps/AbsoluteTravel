@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UKRAINE_REGIONS } from './data/ukraine';
-import { loginUser, registerUser, loginWithGoogle, adminLogin, type AuthUser, type AdminSession } from './api';
+import { loginUser, registerUser, loginWithGoogle, adminLogin, devVerifyUser, type AuthUser, type AdminSession } from './api';
 import GoogleSignInButton from './GoogleSignInButton';
 
 const GREEN = '#3FA66B';
@@ -46,6 +46,12 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
   const [mode, setMode] = useState<'register' | 'login'>('register');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Set right after a successful registration; prompts the user to confirm
+  // their email before the (now login-mode) form will let them in.
+  const [verificationNotice, setVerificationNotice] = useState('');
+  // Email awaiting confirmation — drives the dev "verify now" shortcut below.
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState('');
+  const [devVerifying, setDevVerifying] = useState(false);
 
   // shared
   const [email, setEmail] = useState('');
@@ -70,6 +76,26 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
   const switchMode = (next: 'register' | 'login') => {
     setMode(next);
     setError('');
+    setVerificationNotice('');
+    setPendingVerificationEmail('');
+  };
+
+  // Dev-only shortcut: the Mailtrap sandbox SMTP used locally never delivers
+  // to a real inbox, so this skips clicking the (undeliverable) link. The
+  // backend refuses this once NODE_ENV=production, and the button itself only
+  // renders in a Vite dev build (import.meta.env.DEV).
+  const handleDevVerify = async () => {
+    setError('');
+    setDevVerifying(true);
+    try {
+      await devVerifyUser(pendingVerificationEmail);
+      setPendingVerificationEmail('');
+      setVerificationNotice(t('core.auth.devVerifyDone'));
+    } catch (err: any) {
+      setError(err?.message || t('core.auth.errorGeneric'));
+    } finally {
+      setDevVerifying(false);
+    }
   };
 
   const handleGoogleCredential = async (credential: string) => {
@@ -88,6 +114,7 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setVerificationNotice('');
 
     if (mode === 'register') {
       if (username.trim().length < 3) return setError(t('core.auth.errorUsernameLength'));
@@ -102,8 +129,12 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
     setLoading(true);
     try {
       if (mode === 'register') {
-        const user = await registerUser({ username: username.trim(), email: email.trim(), password, region, city });
-        onAuth(user, true);
+        const { email: registeredEmail } = await registerUser({ username: username.trim(), email: email.trim(), password, region, city });
+        setMode('login');
+        setPassword('');
+        setEmail(registeredEmail);
+        setPendingVerificationEmail(registeredEmail);
+        setVerificationNotice(t('core.auth.verificationNotice', { email: registeredEmail }));
         return;
       }
 
@@ -293,6 +324,32 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
                 </select>
               </div>
             </>
+          )}
+
+          {verificationNotice && (
+            <div style={{ background: 'rgba(63,166,107,0.12)', border: '1px solid rgba(63,166,107,0.35)', color: '#9BD8B4', fontSize: '13px', padding: '11px 14px', borderRadius: '10px', marginBottom: '18px' }}>
+              <div>{verificationNotice}</div>
+              {import.meta.env.DEV && pendingVerificationEmail && (
+                <button
+                  type="button"
+                  onClick={handleDevVerify}
+                  disabled={devVerifying}
+                  style={{
+                    marginTop: '10px',
+                    background: 'rgba(63,166,107,0.18)',
+                    border: '1px solid rgba(63,166,107,0.4)',
+                    color: '#9BD8B4',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    cursor: devVerifying ? 'wait' : 'pointer',
+                  }}
+                >
+                  {devVerifying ? t('core.auth.submitLoading') : t('core.auth.devVerifyButton')}
+                </button>
+              )}
+            </div>
           )}
 
           {error && (

@@ -119,14 +119,21 @@ async function auth(path: string, body: unknown): Promise<AuthUser> {
   return data.user;
 }
 
-export function registerUser(payload: {
+/**
+ * Local (email/password) registration. Unlike `loginUser`/`loginWithGoogle`
+ * this does NOT return a usable session — the new account is unverified
+ * until the user clicks the activation link mailed to them, so the caller
+ * only gets the account's email back for the "check your inbox" notice.
+ */
+export async function registerUser(payload: {
   username: string;
   email: string;
   password: string;
   region: string;
   city: string;
-}) {
-  return auth('/api/auth/register', payload);
+}): Promise<{ email: string }> {
+  const data = await call<{ user: AuthUser; requiresVerification: boolean }>('POST', '/api/auth/register', payload);
+  return { email: data.user.email };
 }
 
 export function loginUser(payload: { email: string; password: string }) {
@@ -137,6 +144,15 @@ export function loginUser(payload: { email: string; password: string }) {
 export async function loginWithGoogle(credential: string) {
   const data = await call<{ user: AuthUser; isNew: boolean }>('POST', '/api/auth/google', { credential });
   return data;
+}
+
+/**
+ * Dev-only shortcut: marks an account verified without clicking the emailed
+ * link. Needed because the Mailtrap sandbox SMTP used in local dev never
+ * delivers to a real inbox — the backend refuses this once NODE_ENV=production.
+ */
+export function devVerifyUser(email: string) {
+  return call<{ ok: boolean }>('POST', '/api/auth/dev-verify', { email });
 }
 
 // --- Economy ---------------------------------------------------------------

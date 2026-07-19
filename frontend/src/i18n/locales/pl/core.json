@@ -62,7 +62,10 @@
       "errorSelectCity": "Wybierz miasto",
       "errorEmailPasswordRequired": "Podaj e-mail i hasło",
       "errorGeneric": "Coś poszło nie tak. Spróbuj ponownie.",
-      "orDivider": "lub"
+      "orDivider": "lub",
+      "verificationNotice": "Wysłaliśmy link potwierdzający na adres {{email}}. Sprawdź skrzynkę (i folder spam), a następnie się zaloguj.",
+      "devVerifyButton": "Potwierdź teraz (tryb dev)",
+      "devVerifyDone": "Konto potwierdzone (tryb dev). Wpisz hasło i zaloguj się."
     },
     "profileSetup": {
       "titleEdit": "Twój profil",

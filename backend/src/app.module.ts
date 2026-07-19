@@ -10,6 +10,7 @@ import { ChatModule } from './chat/chat.module';
 import { LocationsModule } from './locations/locations.module';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
+import { MailService } from './mail/mail.service';
 import { EconomyController } from './economy/economy.controller';
 import { EconomyService } from './economy/economy.service';
 import { AiController } from './ai/ai.controller';
@@ -56,6 +57,7 @@ import { AchievementsService } from './achievements/achievements.service';
   providers: [
     AppService,
     AuthService,
+    MailService,
     EconomyService,
     AiService,
     PlacesService,
