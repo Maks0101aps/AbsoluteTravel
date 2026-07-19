@@ -133,6 +133,15 @@
         "season": "Suggest the best time for a trip.",
         "safety": "Give advice for a safe trip."
       }
+    },
+    "friendMap": {
+      "errorLoading": "Failed to load the map",
+      "ariaLabel": "{{name}}'s map",
+      "back": "Back",
+      "title": "Travel map · {{name}}",
+      "loading": "Loading map…",
+      "cellsExplored": "cells explored",
+      "regions": "regions"
     }
   }
 }

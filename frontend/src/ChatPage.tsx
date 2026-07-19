@@ -239,7 +239,7 @@ function VoiceMessagePlayer({ text, mine }: { text: string; mine: boolean }) {
 }
 
 function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hideSidebar = false, onOpenProfile }: ChatPageProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const QUICK_TOPICS = useMemo(() => buildQuickTopics(t), [t]);
   const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [unread, setUnread] = useState<Record<string, number>>({});
@@ -649,6 +649,7 @@ function ChatPage({ userId, user, accent = '#3FA66B', initialFriendId = null, hi
         lng: gpsPosition?.lng ?? undefined,
         city: user?.city ?? undefined,
         region: user?.region ?? undefined,
+        locale: i18n.language,
       });
       setAdvisorMessages((cur) => [...cur, { role: 'model', text: reply }]);
     } catch (e: any) {

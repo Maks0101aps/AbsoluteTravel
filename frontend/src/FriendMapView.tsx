@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getVisitedCells, getExplorationStats, type ExplorationStats } from './api';
 import { PLACES } from './data/places';
 import LeafletMap from './LeafletMap';
@@ -19,6 +20,7 @@ interface FriendMapViewProps {
 // unlocked-hexes rendering as the live map, just fed by that friend's cells
 // instead of the viewer's own, with no GPS tracking or pick/verify actions.
 function FriendMapView({ userId, viewerId, displayName, accent, onClose }: FriendMapViewProps) {
+  const { t } = useTranslation();
   const [cells, setCells] = useState<string[] | null>(null);
   const [stats, setStats] = useState<ExplorationStats | null>(null);
   const [error, setError] = useState('');
@@ -35,12 +37,12 @@ function FriendMapView({ userId, viewerId, displayName, accent, onClose }: Frien
         setStats(s);
       })
       .catch((e) => {
-        if (!cancelled) setError(e?.message || 'Не вдалося завантажити карту');
+        if (!cancelled) setError(e?.message || t('social.friendMap.errorLoading'));
       });
     return () => {
       cancelled = true;
     };
-  }, [userId, viewerId]);
+  }, [userId, viewerId, t]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -54,7 +56,7 @@ function FriendMapView({ userId, viewerId, displayName, accent, onClose }: Frien
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Карта ${displayName}`}
+      aria-label={t('social.friendMap.ariaLabel', { name: displayName })}
       style={{
         position: 'fixed',
         inset: 0,
@@ -85,11 +87,11 @@ function FriendMapView({ userId, viewerId, displayName, accent, onClose }: Frien
             }}
           >
             <Icon name="arrowLeft" size={15} strokeWidth={2} />
-            Назад
+            {t('social.friendMap.back')}
           </button>
 
           <div style={{ fontSize: '13px', fontWeight: 700, color: 'rgba(244,241,232,0.7)' }}>
-            Карта мандрів · {displayName}
+            {t('social.friendMap.title', { name: displayName })}
           </div>
         </div>
 
@@ -101,7 +103,7 @@ function FriendMapView({ userId, viewerId, displayName, accent, onClose }: Frien
 
         {!error && cells === null && (
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(244,241,232,0.5)', fontSize: '14px' }}>
-            Завантаження карти…
+            {t('social.friendMap.loading')}
           </div>
         )}
 
@@ -109,8 +111,8 @@ function FriendMapView({ userId, viewerId, displayName, accent, onClose }: Frien
           <>
             {stats && (
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '14px' }}>
-                <StatChip icon="map" label="клітинок відкрито" value={stats.totalCells} accent={accent} />
-                <StatChip icon="flag" label="регіонів" value={stats.totalRegions} accent={accent} />
+                <StatChip icon="map" label={t('social.friendMap.cellsExplored')} value={stats.totalCells} accent={accent} />
+                <StatChip icon="flag" label={t('social.friendMap.regions')} value={stats.totalRegions} accent={accent} />
               </div>
             )}
             <div
