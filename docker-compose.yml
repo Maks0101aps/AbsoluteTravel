@@ -1,0 +1,43 @@
+services:
+  backend:
+    build: ./backend
+    container_name: absolute-travel-backend
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    # All app secrets/keys come from the root .env (copy .env.example first).
+    # The file is optional — the app runs with sensible defaults without it.
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # SQLite database lives on the named volume below; keep these fixed so
+      # values from .env (meant for local non-Docker runs) don't override them.
+      DATABASE_URL: "file:/app/data/app.db"
+      PORT: 3000
+    volumes:
+      - backend-data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/places"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Baked into the bundle at build time — rebuild after changing them:
+        #   docker compose up --build frontend
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+    container_name: absolute-travel-frontend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  backend-data:

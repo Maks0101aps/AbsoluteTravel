@@ -9,6 +9,7 @@
 <img src="https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white" alt="Prisma">
 <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
 <img src="https://img.shields.io/badge/Socket.IO-realtime-010101?logo=socketdotio&logoColor=white" alt="Socket.IO">
+<img src="https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white" alt="Docker">
 <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
 
 </div>
@@ -62,6 +63,8 @@ graph TD
 
 ## 🚀 Швидкий старт
 
+### Локальний запуск (без Docker)
+
 ```bash
 # 1. Встановити всі залежності (root + backend + frontend) і підготувати БД
 npm run install:all
@@ -69,6 +72,27 @@ npm run install:all
 # 2. Запустити фронтенд і бекенд одночасно
 npm run dev
 ```
+
+### 🐳 Запуск через Docker
+
+Якщо ви хочете запустити проєкт у контейнерах:
+
+```bash
+# 1. Зібрати образи та запустити контейнери у фоновому режимі
+docker compose up --build -d
+
+# 2. Перевірити статус контейнерів та їх здоров'я (healthcheck)
+docker compose ps
+
+# 3. Переглянути логи
+docker compose logs -f
+
+# 4. Зупинити й видалити контейнери
+docker compose down
+```
+
+> ℹ️ **Порти за замовчуванням:** Фронтенд буде доступний на [http://localhost:8080](http://localhost:8080), а бекенд — на [http://localhost:3000](http://localhost:3000). Налаштувати порти хоста або передати змінні можна через кореневий файл `.env` (за допомогою змінних `FRONTEND_PORT` та `BACKEND_PORT`).
+
 
 <details>
 <summary><b>⚙️ Налаштування `.env`</b></summary>
