@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { Html5Qrcode } from 'html5-qrcode';
 import {
   findUserByFriendCode,
@@ -364,7 +364,7 @@ function AddFriendModal({ userId, accent, onClose, onRequestSent, onError }: Add
                       marginBottom: '12px',
                     }}
                   >
-                    <QRCodeSVG value={friendCodeDeepLink(myCode)} size={168} bgColor="#F4F1E8" fgColor="#0B2B20" level="M" />
+                    <QRCodeCanvas value={friendCodeDeepLink(myCode)} size={168} bgColor="#F4F1E8" fgColor="#0B2B20" level="M" includeMargin={true} style={{ display: 'block', margin: '0 auto' }} />
                   </div>
                   <div
                     style={{

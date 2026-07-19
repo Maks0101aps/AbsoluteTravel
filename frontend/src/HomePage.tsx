@@ -848,30 +848,32 @@ function ProfileHero({
     <div style={{ position: 'relative', zIndex: 1 }}>
       <div style={{ maxWidth: '820px', margin: '0 auto', padding: '40px 24px 34px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
         <XpBar xp={user.xp} accent={accent} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '22px', flexWrap: 'wrap' }}>
-          <ProfileAvatar avatarId={p.avatarId} customAvatar={p.customAvatar} frameId={p.frameId} color={accent} size={104} />
-          <div style={{ flex: '1 1 240px', minWidth: '220px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
-              <span style={{ display: 'inline-block', fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.12em', color: BG, background: accent, padding: '4px 10px', borderRadius: '999px' }}>
-                {t('core.profileSetup.levelBadge', { level: user.level }).toUpperCase()}
-              </span>
-              {BADGES.filter((b) => p.badges?.includes(b.id)).map((b) => (
-                <span key={b.id} title={b.label} style={{ display: 'inline-flex', color: 'rgba(244,241,232,0.85)' }}>
-                  <Icon name={b.icon} size={17} strokeWidth={1.8} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '22px', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '22px', flexWrap: 'wrap', flex: '1 1 320px' }}>
+            <ProfileAvatar avatarId={p.avatarId} customAvatar={p.customAvatar} frameId={p.frameId} color={accent} size={104} />
+            <div style={{ flex: '1 1 200px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
+                <span style={{ display: 'inline-block', fontSize: '10.5px', fontWeight: 700, letterSpacing: '0.12em', color: BG, background: accent, padding: '4px 10px', borderRadius: '999px' }}>
+                  {t('core.profileSetup.levelBadge', { level: user.level }).toUpperCase()}
                 </span>
-              ))}
+                {BADGES.filter((b) => p.badges?.includes(b.id)).map((b) => (
+                  <span key={b.id} title={b.label} style={{ display: 'inline-flex', color: 'rgba(244,241,232,0.85)' }}>
+                    <Icon name={b.icon} size={17} strokeWidth={1.8} />
+                  </span>
+                ))}
+              </div>
+              <div style={{ fontFamily: "'Lora', serif", fontSize: '26px', fontWeight: 500, marginBottom: '4px' }}>{p.displayName}</div>
+              <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.7)', marginBottom: '8px' }}>
+                @{user.username}{user.city ? ` · ${user.city}` : ''}
+              </div>
+              {p.bio && <div style={{ fontSize: '13.5px', color: 'rgba(244,241,232,0.78)', lineHeight: 1.5, maxWidth: '440px' }}>{p.bio}</div>}
             </div>
-            <div style={{ fontFamily: "'Lora', serif", fontSize: '26px', fontWeight: 500, marginBottom: '4px' }}>{p.displayName}</div>
-            <div style={{ fontSize: '13px', color: 'rgba(244,241,232,0.7)', marginBottom: '8px' }}>
-              @{user.username}{user.city ? ` · ${user.city}` : ''}
-            </div>
-            {p.bio && <div style={{ fontSize: '13.5px', color: 'rgba(244,241,232,0.78)', lineHeight: 1.5, maxWidth: '440px' }}>{p.bio}</div>}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignSelf: 'flex-start' }}>
-            <button onClick={onEditProfile} style={{ background: 'rgba(255,255,255,0.12)', color: CREAM, border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(6px)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignSelf: 'center', marginLeft: 'auto' }}>
+            <button onClick={onEditProfile} style={{ background: 'rgba(255,255,255,0.12)', color: CREAM, border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(6px)', textAlign: 'center' }}>
               {t('core.profile.editProfile')}
             </button>
-            <button onClick={onRequestLogout} style={{ background: 'rgba(228,99,95,0.14)', color: '#E4635F', border: '1px solid rgba(228,99,95,0.4)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={onRequestLogout} style={{ background: 'rgba(228,99,95,0.14)', color: '#E4635F', border: '1px solid rgba(228,99,95,0.4)', borderRadius: '10px', padding: '10px 18px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', textAlign: 'center' }}>
               {t('core.profile.logoutButton')}
             </button>
           </div>
