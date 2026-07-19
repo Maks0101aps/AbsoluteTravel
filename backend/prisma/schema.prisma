@@ -14,6 +14,11 @@ model User {
   id                 Int               @id @default(autoincrement())
   username           String            @unique
   email              String            @unique
+  // Short shareable code (e.g. "A7X9Q2") used for fast exact-match friend
+  // lookup — an alternative to typing a username. Generated once at account
+  // creation; nullable only so existing rows can be backfilled after schema
+  // sync (see prisma/backfill-friend-codes.ts), in practice every user has one.
+  friendCode         String?           @unique
   // Null for accounts created via Google Sign-In (no local password set).
   password           String?
   // Stable Google account id ("sub" claim), set once a user signs in with Google.

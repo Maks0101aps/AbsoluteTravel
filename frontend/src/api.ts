@@ -572,8 +572,8 @@ export function getFriendRequests(userId: number) {
   return call<FriendRequest[]>('GET', `/api/friends/requests?userId=${userId}`);
 }
 
-export function sendFriendRequest(userId: number, target: { targetUserId?: number; username?: string }) {
-  return call<{ id: number; status: string }>('POST', '/api/friends/request', { userId, ...target });
+export function sendFriendRequest(userId: number, target: { targetUserId?: number; username?: string; friendCode?: string }) {
+  return call<{ id: number; status: string; receiver?: FriendUser }>('POST', '/api/friends/request', { userId, ...target });
 }
 
 export function acceptFriendRequest(requestId: number, userId: number) {
@@ -587,6 +587,16 @@ export function removeFriend(friendshipId: number, userId: number) {
 
 export function searchUsers(userId: number, query: string) {
   return call<UserSearchResult[]>('GET', `/api/friends/search?userId=${userId}&q=${encodeURIComponent(query)}`);
+}
+
+/** Exact-match lookup by friend code. Rejects (404) when no one has that code. */
+export function findUserByFriendCode(userId: number, code: string) {
+  return call<UserSearchResult>('GET', `/api/friends/by-code?userId=${userId}&code=${encodeURIComponent(code)}`);
+}
+
+/** The caller's own friend code, for display and QR generation. */
+export function getMyFriendCode(userId: number) {
+  return call<{ friendCode: string | null }>('GET', `/api/friends/my-code?userId=${userId}`);
 }
 
 // --- XP leaderboard ----------------------------------------------------------

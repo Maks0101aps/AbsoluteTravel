@@ -13,6 +13,12 @@ export interface SendFriendRequestDto {
   userId?: number;
   targetUserId?: number;
   username?: string;
+  friendCode?: string;
+}
+
+// Friend codes are generated uppercase; normalize any user/QR input to match.
+function normalizeFriendCode(raw: string): string {
+  return raw.trim().toUpperCase();
 }
 
 // Public shape of a user inside friends/search responses.
@@ -122,6 +128,13 @@ export class FriendsService {
         select: { id: true },
       });
       if (!target) throw new NotFoundException('Користувача з таким іменем не знайдено');
+      targetId = target.id;
+    } else if (dto.friendCode) {
+      const target = await this.prisma.user.findUnique({
+        where: { friendCode: normalizeFriendCode(dto.friendCode) },
+        select: { id: true },
+      });
+      if (!target) throw new NotFoundException('Користувача з таким кодом не знайдено');
       targetId = target.id;
     } else {
       throw new BadRequestException('Вкажіть користувача, якому надіслати запит');
@@ -309,5 +322,47 @@ export class FriendsService {
       }
       return { ...this.withPresence(u), relation, friendshipId: edge?.id ?? null };
     });
+  }
+
+  /**
+   * Exact-match lookup by friend code (username-search's fast counterpart).
+   * Throws 404 on no match rather than returning null — an empty Nest JSON
+   * body is ambiguous with an empty object over HTTP, so "not found" needs
+   * its own status rather than a null-shaped 200.
+   */
+  async findByCode(rawUserId: unknown, rawCode: string) {
+    const userId = this.requireUserId(rawUserId);
+    const code = normalizeFriendCode(rawCode ?? '');
+    if (!code) throw new BadRequestException('Вкажіть код друга');
+
+    const u = await this.prisma.user.findUnique({
+      where: { friendCode: code },
+      select: FRIEND_USER_SELECT,
+    });
+    if (!u || u.id === userId) throw new NotFoundException('Користувача з таким кодом не знайдено');
+
+    const edge = await this.prisma.friend.findFirst({
+      where: {
+        OR: [
+          { senderId: userId, receiverId: u.id },
+          { receiverId: userId, senderId: u.id },
+        ],
+      },
+    });
+    let relation: 'none' | 'friends' | 'outgoing' | 'incoming' | 'declined' = 'none';
+    if (edge) {
+      if (edge.status === 'ACCEPTED') relation = 'friends';
+      else if (edge.status === 'PENDING') relation = edge.senderId === userId ? 'outgoing' : 'incoming';
+      else relation = 'declined';
+    }
+    return { ...this.withPresence(u), relation, friendshipId: edge?.id ?? null };
+  }
+
+  /** The caller's own friend code, for display/QR generation. */
+  async myCode(rawUserId: unknown) {
+    const userId = this.requireUserId(rawUserId);
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { friendCode: true } });
+    if (!user) throw new NotFoundException('Користувача не знайдено');
+    return { friendCode: user.friendCode };
   }
 }
