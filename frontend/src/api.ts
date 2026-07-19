@@ -58,23 +58,30 @@ export interface ProfileCustomization {
 }
 
 let cachedPort: number | null = null;
+let cachedBaseUrl: string | null = null;
 
 // Base URL of the backend for non-fetch transports (socket.io). Scans the
 // same candidate ports as call() and locks onto the first that answers.
 export async function resolveApiBase(): Promise<string> {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/$/, '');
+  }
+  if (cachedBaseUrl) return cachedBaseUrl;
   if (cachedPort) return `http://localhost:${cachedPort}`;
   for (const port of [3000, 3001, 3002, 3003, 3004, 3005]) {
     try {
       const res = await fetch(`http://localhost:${port}/api/places`, { method: 'GET' });
       if (res.ok) {
         cachedPort = port;
-        return `http://localhost:${port}`;
+        cachedBaseUrl = `http://localhost:${port}`;
+        return cachedBaseUrl;
       }
     } catch {
       // connection failed, try next port
     }
   }
-  return 'http://localhost:3000';
+  cachedBaseUrl = 'http://localhost:3000';
+  return cachedBaseUrl;
 }
 
 // Core request that scans the candidate backend ports and returns the raw JSON body.
@@ -84,6 +91,22 @@ async function call<T>(
   body?: unknown,
   extraHeaders?: Record<string, string>,
 ): Promise<T> {
+  if (import.meta.env.VITE_API_URL) {
+    const baseUrl = import.meta.env.VITE_API_URL.replace(/\/$/, '');
+    const headers: Record<string, string> = { ...(extraHeaders ?? {}) };
+    if (body) headers['Content-Type'] = 'application/json';
+    const res = await fetch(`${baseUrl}${path}`, {
+      method,
+      headers: Object.keys(headers).length ? headers : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || i18n.t('common.errors.requestFailed'));
+    }
+    return data as T;
+  }
+
   const ports = cachedPort ? [cachedPort] : [3000, 3001, 3002, 3003, 3004, 3005];
   let lastError = i18n.t('common.errors.connectionFailed');
 
