@@ -9,6 +9,7 @@
 <img src="https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white" alt="Prisma">
 <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
 <img src="https://img.shields.io/badge/Socket.IO-realtime-010101?logo=socketdotio&logoColor=white" alt="Socket.IO">
+<img src="https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white" alt="Docker">
 <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
 
 🌐 [English](README.en.md) | 🌐 [Polski](README.pl.md)
@@ -75,17 +76,25 @@ npm run dev
 ```
 
 ### 🐳 Запуск через Docker
-Файли конфігурації Docker розміщені у спеціальній гілці `docker-test`.
 
-1. Склонуйте репозиторій та перейдіть на гілку `docker-test`:
-   ```bash
-   git checkout docker-test
-   ```
-2. Запустіть контейнери:
-   ```bash
-   docker compose up --build -d
-   ```
-   *Детальніше про порти та налаштування дивіться в описі Docker у гілці [docker-test](https://github.com/Maks0101aps/AbsoluteTravel/tree/docker-test).*
+Якщо ви хочете запустити проєкт у контейнерах:
+
+```bash
+# 1. Зібрати образи та запустити контейнери у фоновому режимі
+docker compose up --build -d
+
+# 2. Перевірити статус контейнерів та їхнє здоров'я (healthcheck)
+docker compose ps
+
+# 3. Переглянути логи
+docker compose logs -f
+
+# 4. Зупинити й видалити контейнери
+docker compose down
+```
+
+> ℹ️ **Порти за замовчуванням:** Фронтенд буде доступний на [http://localhost:8080](http://localhost:8080), а бекенд — на [http://localhost:3000](http://localhost:3000). Налаштувати порти хоста або передати змінні можна через кореневий файл `.env` (за допомогою змінних `FRONTEND_PORT` та `BACKEND_PORT`).
+
 
 
 <details>

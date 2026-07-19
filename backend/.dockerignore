@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+prisma/*.db
+prisma/*.db-journal
+.env
+.env.*
+*.log
+npm-debug.log*
+Dockerfile
+.dockerignore
+README.md

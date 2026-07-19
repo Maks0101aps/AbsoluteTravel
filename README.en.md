@@ -74,17 +74,25 @@ npm run dev
 ```
 
 ### 🐳 Run with Docker
-Docker configuration files are located in a special `docker-test` branch.
 
-1. Clone the repository and switch to the `docker-test` branch:
-   ```bash
-   git checkout docker-test
-   ```
-2. Start the containers:
-   ```bash
-   docker compose up --build -d
-   ```
-   *For more details on ports and settings, check the Docker description in the [docker-test](https://github.com/Maks0101aps/AbsoluteTravel/tree/docker-test) branch.*
+If you want to run the project in containers:
+
+```bash
+# 1. Build the images and run the containers in the background
+docker compose up --build -d
+
+# 2. Check the container status and healthcheck
+docker compose ps
+
+# 3. View logs
+docker compose logs -f
+
+# 4. Stop and remove containers
+docker compose down
+```
+
+> ℹ️ **Default ports:** The frontend will be available at [http://localhost:8080](http://localhost:8080), and the backend at [http://localhost:3000](http://localhost:3000). You can configure host ports or pass environment variables via the root `.env` file (using `FRONTEND_PORT` and `BACKEND_PORT` variables).
+
 
 <details>
 <summary><b>⚙️ Configuring `.env`</b></summary>

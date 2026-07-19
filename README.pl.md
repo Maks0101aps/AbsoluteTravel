@@ -75,17 +75,25 @@ npm run dev
 ```
 
 ### 🐳 Uruchamianie przez Docker
-Pliki konfiguracyjne Docker znajdują się w dedykowanej gałęzi `docker-test`.
 
-1. Sklonuj repozytorium i przełącz się na gałąź `docker-test`:
-   ```bash
-   git checkout docker-test
-   ```
-2. Uruchom kontenery:
-   ```bash
-   docker compose up --build -d
-   ```
-   *Więcej szczegółów na temat portów i konfiguracji znajdziesz w opisie Docker w gałęzi [docker-test](https://github.com/Maks0101aps/AbsoluteTravel/tree/docker-test).*
+Jeśli chcesz uruchomić projekt w kontenerach:
+
+```bash
+# 1. Zbuduj obrazy i uruchom kontenery w tle
+docker compose up --build -d
+
+# 2. Sprawdź status kontenerów i healthcheck
+docker compose ps
+
+# 3. Zobacz logi
+docker compose logs -f
+
+# 4. Zatrzymaj i usuń kontenery
+docker compose down
+```
+
+> ℹ️ **Domyślne porty:** Frontend będzie dostępny pod adresem [http://localhost:8080](http://localhost:8080), a backend pod adresem [http://localhost:3000](http://localhost:3000). Możesz skonfigurować porty hosta lub przekazać zmienne środowiskowe za pomocą głównego pliku `.env` (używając zmiennych `FRONTEND_PORT` i `BACKEND_PORT`).
+
 
 <details>
 <summary><b>⚙️ Konfiguracja `.env`</b></summary>
