@@ -12,6 +12,8 @@
 <img src="https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white" alt="Docker">
 <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
 
+🌐 [English](README.en.md) | 🌐 [Polski](README.pl.md)
+
 </div>
 
 ---
@@ -63,7 +65,7 @@ graph TD
 
 ## 🚀 Швидкий старт
 
-### Локальний запуск (без Docker)
+### 💻 Локальний запуск (без Docker)
 
 ```bash
 # 1. Встановити всі залежності (root + backend + frontend) і підготувати БД
@@ -81,7 +83,7 @@ npm run dev
 # 1. Зібрати образи та запустити контейнери у фоновому режимі
 docker compose up --build -d
 
-# 2. Перевірити статус контейнерів та їх здоров'я (healthcheck)
+# 2. Перевірити статус контейнерів та їхнє здоров'я (healthcheck)
 docker compose ps
 
 # 3. Переглянути логи
@@ -92,6 +94,7 @@ docker compose down
 ```
 
 > ℹ️ **Порти за замовчуванням:** Фронтенд буде доступний на [http://localhost:8080](http://localhost:8080), а бекенд — на [http://localhost:3000](http://localhost:3000). Налаштувати порти хоста або передати змінні можна через кореневий файл `.env` (за допомогою змінних `FRONTEND_PORT` та `BACKEND_PORT`).
+
 
 
 <details>
