@@ -61,7 +61,8 @@
       "errorSelectRegion": "Wybierz region",
       "errorSelectCity": "Wybierz miasto",
       "errorEmailPasswordRequired": "Podaj e-mail i hasło",
-      "errorGeneric": "Coś poszło nie tak. Spróbuj ponownie."
+      "errorGeneric": "Coś poszło nie tak. Spróbuj ponownie.",
+      "orDivider": "lub"
     },
     "profileSetup": {
       "titleEdit": "Twój profil",

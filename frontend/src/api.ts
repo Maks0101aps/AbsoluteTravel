@@ -133,6 +133,12 @@ export function loginUser(payload: { email: string; password: string }) {
   return auth('/api/auth/login', payload);
 }
 
+/** Exchanges a Google Identity Services ID token for a user session. */
+export async function loginWithGoogle(credential: string) {
+  const data = await call<{ user: AuthUser; isNew: boolean }>('POST', '/api/auth/google', { credential });
+  return data;
+}
+
 // --- Economy ---------------------------------------------------------------
 
 export function getWallet(userId: number) {

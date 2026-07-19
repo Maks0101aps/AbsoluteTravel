@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, UnauthorizedException, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import { OAuth2Client } from 'google-auth-library';
 import { PrismaService } from '../prisma.service';
 
 export interface RegisterDto {
@@ -15,14 +16,21 @@ export interface LoginDto {
   password?: string;
 }
 
+export interface GoogleAuthDto {
+  // ID token ("credential") returned by Google Identity Services on the client.
+  credential?: string;
+}
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 @Injectable()
 export class AuthService {
+  private googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
   constructor(private prisma: PrismaService) {}
 
   private sanitize(user: any) {
-    const { password, unlockedItems, profile, ...rest } = user;
+    const { password, googleId, unlockedItems, profile, ...rest } = user;
     let items: string[] = [];
     try {
       const parsed = JSON.parse(unlockedItems ?? '[]');
@@ -101,7 +109,7 @@ export class AuthService {
     }
 
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) {
+    if (!user || !user.password) {
       throw new UnauthorizedException('Невірна пошта або пароль');
     }
 
@@ -111,5 +119,72 @@ export class AuthService {
     }
 
     return { user: this.sanitize(user) };
+  }
+
+  async loginWithGoogle(dto: GoogleAuthDto) {
+    const credential = dto.credential ?? '';
+    if (!credential) {
+      throw new BadRequestException('Відсутній токен Google');
+    }
+
+    let payload;
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      payload = ticket.getPayload();
+    } catch {
+      throw new UnauthorizedException('Не вдалося перевірити токен Google');
+    }
+
+    const email = (payload?.email ?? '').trim().toLowerCase();
+    const googleId = payload?.sub;
+    if (!googleId || !email) {
+      throw new UnauthorizedException('Google не надав необхідні дані профілю');
+    }
+
+    let user = await this.prisma.user.findUnique({ where: { googleId } });
+    let isNew = false;
+    if (!user) {
+      // A local account may already exist with this email — link it instead
+      // of creating a duplicate.
+      const existingByEmail = await this.prisma.user.findUnique({ where: { email } });
+      if (existingByEmail) {
+        user = await this.prisma.user.update({
+          where: { id: existingByEmail.id },
+          data: { googleId },
+        });
+      } else {
+        const username = await this.generateUsernameFromEmail(email);
+        const displayName = (payload?.name ?? username).trim();
+        user = await this.prisma.user.create({
+          data: {
+            username,
+            email,
+            googleId,
+            name: displayName,
+            avatar: payload?.picture ?? undefined,
+          },
+        });
+        isNew = true;
+      }
+    }
+
+    return { user: this.sanitize(user), isNew };
+  }
+
+  // Derives a unique username from the local part of the Google account's
+  // email (e.g. "jane.doe@gmail.com" -> "jane.doe", disambiguated with a
+  // numeric suffix on collision).
+  private async generateUsernameFromEmail(email: string): Promise<string> {
+    const base = (email.split('@')[0] || 'user').replace(/[^a-zA-Z0-9_.]/g, '').slice(0, 20) || 'user';
+    let candidate = base;
+    let suffix = 0;
+    while (await this.prisma.user.findUnique({ where: { username: candidate } })) {
+      suffix += 1;
+      candidate = `${base}${suffix}`;
+    }
+    return candidate;
   }
 }

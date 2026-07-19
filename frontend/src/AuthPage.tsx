@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UKRAINE_REGIONS } from './data/ukraine';
-import { loginUser, registerUser, adminLogin, type AuthUser, type AdminSession } from './api';
+import { loginUser, registerUser, loginWithGoogle, adminLogin, type AuthUser, type AdminSession } from './api';
+import GoogleSignInButton from './GoogleSignInButton';
 
 const GREEN = '#3FA66B';
 const LIGHT = '#9BD8B4';
@@ -69,6 +70,19 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
   const switchMode = (next: 'register' | 'login') => {
     setMode(next);
     setError('');
+  };
+
+  const handleGoogleCredential = async (credential: string) => {
+    setError('');
+    setLoading(true);
+    try {
+      const { user, isNew } = await loginWithGoogle(credential);
+      onAuth(user, isNew);
+    } catch (err: any) {
+      setError(err?.message || t('core.auth.errorGeneric'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -309,6 +323,14 @@ function AuthPage({ onAuth, onAdminAuth, onBack }: AuthPageProps) {
             {loading ? t('core.auth.submitLoading') : mode === 'register' ? t('core.auth.submitRegister') : t('core.auth.submitLogin')}
           </button>
         </form>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '22px 0' }}>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.12)' }} />
+          <span style={{ fontSize: '12px', color: 'rgba(244,241,232,0.45)' }}>{t('core.auth.orDivider')}</span>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.12)' }} />
+        </div>
+
+        <GoogleSignInButton onCredential={handleGoogleCredential} disabled={loading} />
 
         <p style={{ textAlign: 'center', fontSize: '13px', color: 'rgba(244,241,232,0.55)', marginTop: '22px', marginBottom: 0 }}>
           {mode === 'register' ? t('core.auth.hasAccount') : t('core.auth.noAccount')}

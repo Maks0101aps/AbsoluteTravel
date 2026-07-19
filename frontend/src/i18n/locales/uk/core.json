@@ -61,7 +61,8 @@
       "errorSelectRegion": "Оберіть область",
       "errorSelectCity": "Оберіть місто",
       "errorEmailPasswordRequired": "Введіть пошту та пароль",
-      "errorGeneric": "Сталася помилка. Спробуйте ще раз."
+      "errorGeneric": "Сталася помилка. Спробуйте ще раз.",
+      "orDivider": "або"
     },
     "profileSetup": {
       "titleEdit": "Твій профіль",

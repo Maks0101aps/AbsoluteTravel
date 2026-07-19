@@ -14,7 +14,10 @@ model User {
   id                 Int               @id @default(autoincrement())
   username           String            @unique
   email              String            @unique
-  password           String
+  // Null for accounts created via Google Sign-In (no local password set).
+  password           String?
+  // Stable Google account id ("sub" claim), set once a user signs in with Google.
+  googleId           String?           @unique
   city               String?
   region             String?
   name               String
