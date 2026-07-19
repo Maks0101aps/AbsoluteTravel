@@ -3,6 +3,7 @@ import * as bcrypt from 'bcryptjs';
 import { gridDisk, latLngToCell } from 'h3-js';
 import { EXPLORE_RESOLUTION } from '../src/exploration/exploration.service';
 import { GENERATED_PLACES } from './generatedPlaces';
+import { generateUniqueFriendCode } from '../src/friends/friend-code.util';
 
 const prisma = new PrismaClient();
 
@@ -87,6 +88,7 @@ async function main() {
       city: 'Львів',
       region: 'Львівська область',
       name: 'Олексій',
+      friendCode: await generateUniqueFriendCode(prisma),
       avatar: '/assets/avatar_oleksiy.avif',
       level: 14,
       xp: 2450,
@@ -104,6 +106,7 @@ async function main() {
       city: 'Ужгород',
       region: 'Закарпатська область',
       name: 'Марія',
+      friendCode: await generateUniqueFriendCode(prisma),
       avatar: '/assets/avatar_mariya.avif',
       level: 10,
       xp: 1200,
@@ -121,6 +124,7 @@ async function main() {
       city: 'Івано-Франківськ',
       region: 'Івано-Франківська область',
       name: 'Дмитро',
+      friendCode: await generateUniqueFriendCode(prisma),
       avatar: '/assets/avatar_dmytro.avif',
       level: 12,
       xp: 1850,
@@ -138,6 +142,7 @@ async function main() {
       city: 'Кам’янець-Подільський',
       region: 'Хмельницька область',
       name: 'Ірина',
+      friendCode: await generateUniqueFriendCode(prisma),
       avatar: '/assets/avatar_iryna.avif',
       level: 8,
       xp: 950,

@@ -572,8 +572,8 @@ export function getFriendRequests(userId: number) {
   return call<FriendRequest[]>('GET', `/api/friends/requests?userId=${userId}`);
 }
 
-export function sendFriendRequest(userId: number, target: { targetUserId?: number; username?: string }) {
-  return call<{ id: number; status: string }>('POST', '/api/friends/request', { userId, ...target });
+export function sendFriendRequest(userId: number, target: { targetUserId?: number; username?: string; friendCode?: string }) {
+  return call<{ id: number; status: string; receiver?: FriendUser }>('POST', '/api/friends/request', { userId, ...target });
 }
 
 export function acceptFriendRequest(requestId: number, userId: number) {
@@ -587,6 +587,16 @@ export function removeFriend(friendshipId: number, userId: number) {
 
 export function searchUsers(userId: number, query: string) {
   return call<UserSearchResult[]>('GET', `/api/friends/search?userId=${userId}&q=${encodeURIComponent(query)}`);
+}
+
+/** Exact-match lookup by friend code. Rejects (404) when no one has that code. */
+export function findUserByFriendCode(userId: number, code: string) {
+  return call<UserSearchResult>('GET', `/api/friends/by-code?userId=${userId}&code=${encodeURIComponent(code)}`);
+}
+
+/** The caller's own friend code, for display and QR generation. */
+export function getMyFriendCode(userId: number) {
+  return call<{ friendCode: string | null }>('GET', `/api/friends/my-code?userId=${userId}`);
 }
 
 // --- XP leaderboard ----------------------------------------------------------
@@ -778,6 +788,21 @@ export function reactToFriendLabel(id: number, userId: number, type: 'LIKE' | 'D
 
 export function reportFriendLabel(id: number, userId: number, reason: string) {
   return call<ReportLabelResult>('POST', `/api/friend-labels/${id}/report`, { userId, reason });
+}
+
+// ---- Web Push notifications -------------------------------------------------
+
+/** The server's VAPID public key, needed to create a browser PushSubscription. */
+export function getVapidKey() {
+  return call<{ key: string | null; enabled: boolean }>('GET', '/api/push/vapid-public-key');
+}
+
+export function subscribePush(userId: number, subscription: PushSubscriptionJSON) {
+  return call<{ ok: boolean }>('POST', '/api/push/subscribe', { userId, subscription });
+}
+
+export function unsubscribePush(endpoint: string) {
+  return call<{ ok: boolean }>('POST', '/api/push/unsubscribe', { endpoint });
 }
 
 

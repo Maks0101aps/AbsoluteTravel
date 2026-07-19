@@ -8,11 +8,18 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { PresenceService } from '../realtime/presence.service';
+import { PushService } from '../push/push.service';
 
 export interface SendFriendRequestDto {
   userId?: number;
   targetUserId?: number;
   username?: string;
+  friendCode?: string;
+}
+
+// Friend codes are generated uppercase; normalize any user/QR input to match.
+function normalizeFriendCode(raw: string): string {
+  return raw.trim().toUpperCase();
 }
 
 // Public shape of a user inside friends/search responses.
@@ -33,6 +40,7 @@ export class FriendsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly presence: PresenceService,
+    private readonly push: PushService,
   ) {}
 
   private requireUserId(raw: unknown): number {
@@ -47,9 +55,17 @@ export class FriendsService {
   // publicProfile exposes, so a friend's actual equipped avatar+frame can be
   // drawn on the map/mini-profile instead of just their default `avatar`
   // image — this is what the map's friend markers need frame data for.
-  private withPresence<T extends { id: number; profile?: string | null }>(user: T) {
+  private withPresence<T extends { id: number; profile?: string | null }>(
+    user: T,
+  ) {
     const { profile: rawProfile, ...rest } = user;
-    let customization: { avatarId?: string; customAvatar?: string; frameId?: string; color?: string; backgroundId?: string } | null = null;
+    let customization: {
+      avatarId?: string;
+      customAvatar?: string;
+      frameId?: string;
+      color?: string;
+      backgroundId?: string;
+    } | null = null;
     if (rawProfile) {
       try {
         customization = JSON.parse(rawProfile);
@@ -94,7 +110,9 @@ export class FriendsService {
       },
       select: { senderId: true, receiverId: true },
     });
-    return edges.map((e) => (e.senderId === userId ? e.receiverId : e.senderId));
+    return edges.map((e) =>
+      e.senderId === userId ? e.receiverId : e.senderId,
+    );
   }
 
   /**
@@ -103,9 +121,14 @@ export class FriendsService {
    * reseed) would otherwise hit a raw foreign-key error on insert.
    */
   private async requireExistingUser(userId: number): Promise<void> {
-    const exists = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+    const exists = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
     if (!exists) {
-      throw new UnauthorizedException('Сесія недійсна — увійдіть у систему ще раз');
+      throw new UnauthorizedException(
+        'Сесія недійсна — увійдіть у систему ще раз',
+      );
     }
   }
 
@@ -121,17 +144,30 @@ export class FriendsService {
         where: { username: dto.username.trim() },
         select: { id: true },
       });
-      if (!target) throw new NotFoundException('Користувача з таким іменем не знайдено');
+      if (!target)
+        throw new NotFoundException('Користувача з таким іменем не знайдено');
+      targetId = target.id;
+    } else if (dto.friendCode) {
+      const target = await this.prisma.user.findUnique({
+        where: { friendCode: normalizeFriendCode(dto.friendCode) },
+        select: { id: true },
+      });
+      if (!target) throw new NotFoundException('Користувача з таким кодом не знайдено');
       targetId = target.id;
     } else {
-      throw new BadRequestException('Вкажіть користувача, якому надіслати запит');
+      throw new BadRequestException(
+        'Вкажіть користувача, якому надіслати запит',
+      );
     }
 
     if (targetId === userId) {
       throw new BadRequestException('Не можна надіслати запит самому собі');
     }
 
-    const target = await this.prisma.user.findUnique({ where: { id: targetId }, select: { id: true } });
+    const target = await this.prisma.user.findUnique({
+      where: { id: targetId },
+      select: { id: true },
+    });
     if (!target) throw new NotFoundException('Користувача не знайдено');
 
     const existing = await this.prisma.friend.findFirst({
@@ -157,20 +193,41 @@ export class FriendsService {
       // DECLINED: allow a fresh attempt, re-pointing the edge at the new sender.
       const updated = await this.prisma.friend.update({
         where: { id: existing.id },
-        data: { senderId: userId, receiverId: targetId, status: 'PENDING', createdAt: new Date() },
-        include: { receiver: { select: FRIEND_USER_SELECT }, sender: { select: FRIEND_USER_SELECT } },
+        data: {
+          senderId: userId,
+          receiverId: targetId,
+          status: 'PENDING',
+          createdAt: new Date(),
+        },
+        include: {
+          receiver: { select: FRIEND_USER_SELECT },
+          sender: { select: FRIEND_USER_SELECT },
+        },
       });
       this.presence.emitToUser(targetId, 'friends:request', {
         id: updated.id,
         sender: this.withPresence(updated.sender),
         createdAt: updated.createdAt,
       });
-      return { id: updated.id, status: updated.status, receiver: this.withPresence(updated.receiver) };
+      void this.push.notifyIfAway(targetId, {
+        title: 'Нова заявка в друзі 👋',
+        body: `${updated.sender.name} хоче додати вас у друзі`,
+        url: '/',
+        tag: `friend-request:${userId}`,
+      });
+      return {
+        id: updated.id,
+        status: updated.status,
+        receiver: this.withPresence(updated.receiver),
+      };
     }
 
     const created = await this.prisma.friend.create({
       data: { senderId: userId, receiverId: targetId },
-      include: { receiver: { select: FRIEND_USER_SELECT }, sender: { select: FRIEND_USER_SELECT } },
+      include: {
+        receiver: { select: FRIEND_USER_SELECT },
+        sender: { select: FRIEND_USER_SELECT },
+      },
     });
 
     // Real-time nudge for the receiver's requests inbox.
@@ -179,22 +236,39 @@ export class FriendsService {
       sender: this.withPresence(created.sender),
       createdAt: created.createdAt,
     });
+    void this.push.notifyIfAway(targetId, {
+      title: 'Нова заявка в друзі 👋',
+      body: `${created.sender.name} хоче додати вас у друзі`,
+      url: '/',
+      tag: `friend-request:${userId}`,
+    });
 
-    return { id: created.id, status: created.status, receiver: this.withPresence(created.receiver) };
+    return {
+      id: created.id,
+      status: created.status,
+      receiver: this.withPresence(created.receiver),
+    };
   }
 
   async accept(friendId: number, rawUserId: unknown) {
     const userId = this.requireUserId(rawUserId);
     const edge = await this.prisma.friend.findUnique({
       where: { id: friendId },
-      include: { sender: { select: FRIEND_USER_SELECT }, receiver: { select: FRIEND_USER_SELECT } },
+      include: {
+        sender: { select: FRIEND_USER_SELECT },
+        receiver: { select: FRIEND_USER_SELECT },
+      },
     });
     if (!edge) throw new NotFoundException('Запит не знайдено');
     if (edge.receiverId !== userId) {
       throw new ForbiddenException('Прийняти запит може лише його отримувач');
     }
     if (edge.status === 'ACCEPTED') {
-      return { id: edge.id, status: edge.status, friend: this.withPresence(edge.sender) };
+      return {
+        id: edge.id,
+        status: edge.status,
+        friend: this.withPresence(edge.sender),
+      };
     }
     if (edge.status !== 'PENDING') {
       throw new BadRequestException('Цей запит уже не активний');
@@ -210,14 +284,26 @@ export class FriendsService {
       id: edge.id,
       friend: this.withPresence(edge.receiver),
     });
+    void this.push.notifyIfAway(edge.senderId, {
+      title: 'Заявку прийнято 🎉',
+      body: `${edge.receiver.name} тепер ваш друг`,
+      url: '/',
+      tag: `friend-accepted:${edge.receiverId}`,
+    });
 
-    return { id: updated.id, status: updated.status, friend: this.withPresence(edge.sender) };
+    return {
+      id: updated.id,
+      status: updated.status,
+      friend: this.withPresence(edge.sender),
+    };
   }
 
   /** Remove a friend, cancel an outgoing request, or decline an incoming one. */
   async remove(friendId: number, rawUserId: unknown) {
     const userId = this.requireUserId(rawUserId);
-    const edge = await this.prisma.friend.findUnique({ where: { id: friendId } });
+    const edge = await this.prisma.friend.findUnique({
+      where: { id: friendId },
+    });
     if (!edge) throw new NotFoundException('Запис не знайдено');
     if (edge.senderId !== userId && edge.receiverId !== userId) {
       throw new ForbiddenException('Це не ваш запис у списку друзів');
@@ -225,13 +311,19 @@ export class FriendsService {
 
     if (edge.status === 'PENDING' && edge.receiverId === userId) {
       // Declining keeps the row so the UI can distinguish "declined" later.
-      await this.prisma.friend.update({ where: { id: edge.id }, data: { status: 'DECLINED' } });
+      await this.prisma.friend.update({
+        where: { id: edge.id },
+        data: { status: 'DECLINED' },
+      });
     } else {
       await this.prisma.friend.delete({ where: { id: edge.id } });
     }
 
     const otherId = edge.senderId === userId ? edge.receiverId : edge.senderId;
-    this.presence.emitToUser(otherId, 'friends:removed', { id: edge.id, by: userId });
+    this.presence.emitToUser(otherId, 'friends:removed', {
+      id: edge.id,
+      by: userId,
+    });
 
     return { ok: true, id: edge.id };
   }
@@ -253,7 +345,11 @@ export class FriendsService {
 
     return edges.map((e) => {
       const other = e.senderId === userId ? e.receiver : e.sender;
-      return { friendshipId: e.id, since: e.createdAt, ...this.withPresence(other) };
+      return {
+        friendshipId: e.id,
+        since: e.createdAt,
+        ...this.withPresence(other),
+      };
     });
   }
 
@@ -265,7 +361,11 @@ export class FriendsService {
       include: { sender: { select: FRIEND_USER_SELECT } },
       orderBy: { createdAt: 'desc' },
     });
-    return edges.map((e) => ({ id: e.id, createdAt: e.createdAt, sender: this.withPresence(e.sender) }));
+    return edges.map((e) => ({
+      id: e.id,
+      createdAt: e.createdAt,
+      sender: this.withPresence(e.sender),
+    }));
   }
 
   /** Search users by username/name and annotate the relationship state. */
@@ -301,13 +401,61 @@ export class FriendsService {
           (e.senderId === userId && e.receiverId === u.id) ||
           (e.receiverId === userId && e.senderId === u.id),
       );
-      let relation: 'none' | 'friends' | 'outgoing' | 'incoming' | 'declined' = 'none';
+      let relation: 'none' | 'friends' | 'outgoing' | 'incoming' | 'declined' =
+        'none';
       if (edge) {
         if (edge.status === 'ACCEPTED') relation = 'friends';
-        else if (edge.status === 'PENDING') relation = edge.senderId === userId ? 'outgoing' : 'incoming';
+        else if (edge.status === 'PENDING')
+          relation = edge.senderId === userId ? 'outgoing' : 'incoming';
         else relation = 'declined';
       }
-      return { ...this.withPresence(u), relation, friendshipId: edge?.id ?? null };
+      return {
+        ...this.withPresence(u),
+        relation,
+        friendshipId: edge?.id ?? null,
+      };
     });
+  }
+
+  /**
+   * Exact-match lookup by friend code (username-search's fast counterpart).
+   * Throws 404 on no match rather than returning null — an empty Nest JSON
+   * body is ambiguous with an empty object over HTTP, so "not found" needs
+   * its own status rather than a null-shaped 200.
+   */
+  async findByCode(rawUserId: unknown, rawCode: string) {
+    const userId = this.requireUserId(rawUserId);
+    const code = normalizeFriendCode(rawCode ?? '');
+    if (!code) throw new BadRequestException('Вкажіть код друга');
+
+    const u = await this.prisma.user.findUnique({
+      where: { friendCode: code },
+      select: FRIEND_USER_SELECT,
+    });
+    if (!u || u.id === userId) throw new NotFoundException('Користувача з таким кодом не знайдено');
+
+    const edge = await this.prisma.friend.findFirst({
+      where: {
+        OR: [
+          { senderId: userId, receiverId: u.id },
+          { receiverId: userId, senderId: u.id },
+        ],
+      },
+    });
+    let relation: 'none' | 'friends' | 'outgoing' | 'incoming' | 'declined' = 'none';
+    if (edge) {
+      if (edge.status === 'ACCEPTED') relation = 'friends';
+      else if (edge.status === 'PENDING') relation = edge.senderId === userId ? 'outgoing' : 'incoming';
+      else relation = 'declined';
+    }
+    return { ...this.withPresence(u), relation, friendshipId: edge?.id ?? null };
+  }
+
+  /** The caller's own friend code, for display/QR generation. */
+  async myCode(rawUserId: unknown) {
+    const userId = this.requireUserId(rawUserId);
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { friendCode: true } });
+    if (!user) throw new NotFoundException('Користувача не знайдено');
+    return { friendCode: user.friendCode };
   }
 }

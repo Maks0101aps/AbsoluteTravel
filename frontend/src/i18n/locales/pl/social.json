@@ -29,6 +29,17 @@
       "acceptRequest": "Akceptuj zaproszenie",
       "add": "Dodaj"
     },
+    "addFriend": {
+      "openButton": "Dodaj znajomego",
+      "heading": "Dodaj znajomego",
+      "close": "Zamknij",
+      "searchPlaceholder": "Nazwa użytkownika lub kod znajomego…",
+      "scanQr": "Skanuj kod QR",
+      "cancelScan": "Anuluj skanowanie",
+      "cameraError": "Nie udało się uzyskać dostępu do kamery. Sprawdź uprawnienia i spróbuj ponownie.",
+      "yourCode": "Twój kod znajomego — udostępnij go lub pozwól znajomemu zeskanować kod QR",
+      "alreadyFriends": "Już znajomi"
+    },
     "profile": {
       "dialogLabel": "Profil podróżnika",
       "requestNotFound": "Nie znaleziono zaproszenia",

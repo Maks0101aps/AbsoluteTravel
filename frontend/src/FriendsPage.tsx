@@ -14,6 +14,7 @@ import {
 import { getSocket } from './socket';
 import UserCard from './UserCard';
 import { Icon } from './icons';
+import AddFriendModal from './AddFriendModal';
 
 const CREAM = '#F4F1E8';
 const PANEL = '#0B2B20';
@@ -76,6 +77,7 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [addFriendOpen, setAddFriendOpen] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const reload = useCallback(() => {
@@ -298,7 +300,30 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
           </div>
 
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 12px' }}>{t('social.friends.findTravelers')}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', margin: '0 0 12px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: 700, margin: 0 }}>{t('social.friends.findTravelers')}</h3>
+              <button
+                onClick={() => setAddFriendOpen(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: `${accent}22`,
+                  border: `1px solid ${accent}55`,
+                  color: accent,
+                  borderRadius: '9px',
+                  padding: '7px 12px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontFamily: "'Manrope', sans-serif",
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <Icon name="qrcode" size={14} strokeWidth={1.9} />
+                {t('social.addFriend.openButton')}
+              </button>
+            </div>
             <div style={{ position: 'relative', marginBottom: '10px' }}>
               <span style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(244,241,232,0.4)', display: 'inline-flex' }}>
                 <Icon name="target" size={15} strokeWidth={1.9} />
@@ -355,6 +380,19 @@ function FriendsPage({ userId, accent = '#3FA66B', onMessage, onOpenProfile, onR
           </div>
         </div>
       </div>
+
+      {addFriendOpen && (
+        <AddFriendModal
+          userId={userId}
+          accent={accent}
+          onClose={() => setAddFriendOpen(false)}
+          onRequestSent={(name) => {
+            flash(t('social.friends.requestSent', { name }));
+            reload();
+          }}
+          onError={(msg) => setError(msg)}
+        />
+      )}
     </div>
   );
 }

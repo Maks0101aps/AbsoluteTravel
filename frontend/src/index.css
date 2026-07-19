@@ -8,6 +8,16 @@ html, body {
   margin: 0;
   padding: 0;
   background: #071F16;
+  /* Stop mobile browsers from auto-inflating font sizes on orientation change,
+     which otherwise breaks the carefully-tuned mobile layout. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  /* App-like feel: no rubber-band scroll-chaining to the browser chrome, and a
+     subtle brand-tinted tap highlight instead of the default grey flash. */
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: rgba(63, 166, 107, 0.18);
 }
 * {
   box-sizing: border-box;
@@ -109,7 +119,7 @@ a:hover {
 
   /* ---- home page ---- */
   .at-home-nav { padding: 12px 18px !important; }
-  :root { --at-header: 60px; }
+  :root { --at-header: calc(62px + env(safe-area-inset-top, 0px)); }
   .at-home-main { padding: 40px 18px 64px !important; }
 
   /* ---- explore map: stack map + detail panel on narrow screens ---- */
@@ -824,10 +834,19 @@ img, svg, video, canvas { max-width: 100%; }
    height (padding + logo/button content) so this spacer can reserve the same
    space in normal flow right below it. Kept in sync with .at-home-nav's
    padding at each breakpoint below. */
-:root { --at-header: 68px; }
+:root { --at-header: calc(68px + env(safe-area-inset-top, 0px)); }
 .at-home-nav-spacer { height: var(--at-header); flex: 0 0 auto; }
 
-@media (max-width: 860px) {
+/* Installed PWAs with a translucent status bar (see apple-mobile-web-app-status-
+   bar-style) draw page content under the notch. Push the fixed nav clear of it;
+   env() resolves to 0 in a normal browser tab, so desktop is unaffected. */
+.at-home-nav { padding-top: calc(14px + env(safe-area-inset-top, 0px)) !important; }
+
+/* Applies to narrow screens (portrait phones/tablets) AND to phones held
+   sideways — a landscape phone can be wider than 860px (e.g. Pro Max at 932px)
+   yet only ~400px tall, where the desktop nav makes no sense. max-height:500px
+   cleanly separates landscape phones from landscape tablets (~768px+ tall). */
+@media (max-width: 860px), (orientation: landscape) and (max-height: 500px) {
   :root { --at-tabbar: calc(58px + env(safe-area-inset-bottom)); }
 
   .at-home-nav-tabs { display: none !important; }
@@ -896,6 +915,39 @@ img, svg, video, canvas { max-width: 100%; }
 
 @media (max-width: 380px) {
   .at-tabbar-btn { font-size: 8.5px; }
+}
+
+/* ---- landscape orientation ----------------------------------------------
+   Two things change when a phone is turned sideways: the notch/home-indicator
+   move to the left/right edges (portrait only ever needed top/bottom insets),
+   and the viewport becomes very short. Handle both. */
+
+/* max-height:500px scopes this to phones held sideways (landscape tablets are
+   ~768px+ tall) — so it never touches desktop monitors, which are also
+   "landscape". Two problems to solve: side notches, and a very short viewport. */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Side safe-areas: pad the fixed chrome away from a notch that has moved to
+     the edge. env() is 0 on devices without one, so this stays inert there. */
+  .at-home-nav {
+    padding-left: max(18px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(18px, env(safe-area-inset-right, 0px)) !important;
+  }
+  .at-tabbar {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  .at-home-main {
+    padding-left: max(18px, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(18px, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  /* Reclaim vertical space so content isn't crushed between the top nav and the
+     bottom tab bar; slim the bar and any docked sheet. */
+  .at-tabbar-btn { padding: 5px 2px; font-size: 9px; }
+  .at-home-main:not(.at-chat-main-tab) { padding-top: 16px !important; }
+  .at-hero { padding-top: 22px !important; padding-bottom: 30px !important; }
+  /* form sheets: never taller than the screen, always scroll to reach submit */
+  .at-sheet-panel { max-height: 92dvh !important; overflow-y: auto !important; }
 }
 
 /* ---- modals become sheets on phones -------------------------------------
@@ -1101,4 +1153,129 @@ img, svg, video, canvas { max-width: 100%; }
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ===================================================================
+   PWA banners — offline pill, install card, update toast.
+   Rendered globally by <PwaBanners/>. Respect device safe-areas so
+   they clear notches / home indicators on installed mobile PWAs.
+   =================================================================== */
+.at-pwa-offline {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(120, 53, 15, 0.96);
+  color: #ffe8c9;
+  border: 1px solid rgba(240, 198, 75, 0.35);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.4);
+  font: 600 13px/1.2 'Manrope', system-ui, sans-serif;
+  backdrop-filter: blur(8px);
+  animation: fadeUp 0.35s ease both;
+  max-width: calc(100vw - 24px);
+}
+
+.at-pwa-card {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  z-index: 9999;
+  width: min(420px, calc(100vw - 24px));
+  background: rgba(9, 38, 27, 0.97);
+  border: 1px solid rgba(63, 166, 107, 0.35);
+  border-radius: 18px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+  color: #F4F1E8;
+  backdrop-filter: blur(10px);
+  animation: fadeUp 0.4s ease both;
+}
+
+.at-pwa-install {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: 'icon text' 'actions actions';
+  gap: 12px 14px;
+  padding: 16px;
+}
+.at-pwa-install-icon {
+  grid-area: icon;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(63, 166, 107, 0.3), rgba(123, 218, 162, 0.15));
+  color: #7bdaa2;
+}
+.at-pwa-install-text {
+  grid-area: text;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.at-pwa-install-text strong {
+  font: 700 15px/1.25 'Manrope', system-ui, sans-serif;
+}
+.at-pwa-install-text span {
+  font: 400 13px/1.4 'Manrope', system-ui, sans-serif;
+  color: rgba(244, 241, 232, 0.72);
+}
+.at-pwa-actions {
+  grid-area: actions;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.at-pwa-update {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.at-pwa-update .at-pwa-install-text {
+  flex: 1;
+}
+
+.at-pwa-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font: 700 13px/1 'Manrope', system-ui, sans-serif;
+  cursor: pointer;
+  min-height: 40px;
+  transition: transform 0.12s ease, background 0.2s ease, opacity 0.2s ease;
+}
+.at-pwa-btn:active { transform: scale(0.96); }
+.at-pwa-btn-primary {
+  background: linear-gradient(135deg, #3fa66b, #7bdaa2);
+  color: #05130d;
+}
+.at-pwa-btn-primary:hover { background: linear-gradient(135deg, #46b877, #8ee5b1); }
+.at-pwa-btn-ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(244, 241, 232, 0.85);
+}
+.at-pwa-btn-ghost:hover { background: rgba(255, 255, 255, 0.12); }
+
+/* On phones the bottom tab bar occupies the same corner, so float the PWA
+   cards just above it (--at-tabbar already folds in the safe-area inset). */
+@media (max-width: 860px) {
+  .at-pwa-card { bottom: calc(var(--at-tabbar) + 12px); }
+}
+
+@media (max-width: 380px) {
+  .at-pwa-install { grid-template-columns: 1fr; grid-template-areas: 'text' 'actions'; }
+  .at-pwa-install-icon { display: none; }
+  .at-pwa-actions { justify-content: stretch; }
+  .at-pwa-actions .at-pwa-btn { flex: 1; }
 }

@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 // PrismaService now comes from the global PrismaModule.
 import { PrismaModule } from './prisma.module';
+import { PushModule } from './push/push.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { FriendsModule } from './friends/friends.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
@@ -30,10 +32,11 @@ import { FriendLabelsService } from './friend-labels/friend-labels.service';
 import { AchievementsController } from './achievements/achievements.controller';
 import { AchievementsService } from './achievements/achievements.service';
 
-
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     PrismaModule,
+    PushModule,
     RealtimeModule,
     FriendsModule,
     LeaderboardModule,

@@ -4,6 +4,7 @@ import * as crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { PrismaService } from '../prisma.service';
 import { MailService } from '../mail/mail.service';
+import { generateUniqueFriendCode } from '../friends/friend-code.util';
 
 // How long a fresh verification link stays valid.
 const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
@@ -95,6 +96,7 @@ export class AuthService {
 
     const hashed = await bcrypt.hash(password, 10);
     const verificationToken = crypto.randomBytes(32).toString('hex');
+    const friendCode = await generateUniqueFriendCode(this.prisma);
     const user = await this.prisma.user.create({
       data: {
         username,
@@ -106,6 +108,7 @@ export class AuthService {
         isVerified: false,
         verificationToken,
         verificationTokenExpires: new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS),
+        friendCode,
       },
     });
 
@@ -227,6 +230,7 @@ export class AuthService {
       } else {
         const username = await this.generateUsernameFromEmail(email);
         const displayName = (payload?.name ?? username).trim();
+        const friendCode = await generateUniqueFriendCode(this.prisma);
         user = await this.prisma.user.create({
           data: {
             username,
@@ -235,6 +239,7 @@ export class AuthService {
             name: displayName,
             avatar: payload?.picture ?? undefined,
             isVerified: true,
+            friendCode,
           },
         });
         isNew = true;

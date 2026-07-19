@@ -394,8 +394,21 @@ function App({ onStart }: { onStart?: () => void } = {}) {
                 </div>
                 <div style={{ fontFamily: "'Lora', serif", fontSize: '21px', fontWeight: 500 }}>{t('core.landing.feature1Title')}</div>
               </div>
-              <div style={{ width: '92px', height: '88px', flex: '0 0 auto', borderRadius: '10px', background: 'linear-gradient(180deg, #123326, #0B2B20)', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <div style={{ position: 'absolute', left: '-10%', right: '-10%', bottom: 0, height: '60%', background: '#1A4030', clipPath: 'polygon(0 100%, 30% 20%, 55% 70%, 78% 10%, 100% 100%)' }}></div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px', flex: '0 0 auto' }}>
+                <div style={{ width: '100px', height: '68px', position: 'relative' }}>
+                  <img src="/assets/places/synevyr_1.avif" style={{ width: '52px', height: '52px', borderRadius: '8px', objectFit: 'cover', position: 'absolute', right: 0, top: 0, zIndex: 1, border: '1.5px solid rgba(255,255,255,0.15)', opacity: 0.65, transform: 'rotate(8deg)' }} />
+                  <img src="/assets/places/kamianets_1.avif" style={{ width: '52px', height: '52px', borderRadius: '8px', objectFit: 'cover', position: 'absolute', right: '16px', top: '4px', zIndex: 2, border: '1.5px solid rgba(255,255,255,0.15)', opacity: 0.85, transform: 'rotate(-4deg)' }} />
+                  <img src="/assets/carpathians_thumb.avif" style={{ width: '52px', height: '52px', borderRadius: '8px', objectFit: 'cover', position: 'absolute', right: '32px', top: '8px', zIndex: 3, border: '1.5px solid rgba(255,255,255,0.25)', boxShadow: '0 4px 10px rgba(0,0,0,0.4)' }} />
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#0B2B20', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', left: '12px', bottom: '-4px', zIndex: 4, border: '1.5px solid #F4F1E8', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#3FA66B' }}>
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                    </svg>
+                  </div>
+                </div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(63,166,107,0.16)', color: '#3FA66B', fontSize: '9.5px', fontWeight: 700, padding: '4px 8px', borderRadius: '6px', whiteSpace: 'nowrap', border: '1px solid rgba(63,166,107,0.25)' }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                  {t('core.landing.feature1Badge')}
+                </div>
               </div>
             </div>
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '16px', fontSize: '13.5px', lineHeight: 1.65, color: 'rgba(244,241,232,0.62)' }}>

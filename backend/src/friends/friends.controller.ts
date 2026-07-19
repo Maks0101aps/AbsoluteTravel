@@ -28,6 +28,16 @@ export class FriendsController {
     return this.friendsService.search(userId, q);
   }
 
+  @Get('by-code')
+  byCode(@Query('userId') userId: string, @Query('code') code: string) {
+    return this.friendsService.findByCode(userId, code);
+  }
+
+  @Get('my-code')
+  myCode(@Query('userId') userId: string) {
+    return this.friendsService.myCode(userId);
+  }
+
   @Get()
   list(@Query('userId') userId: string) {
     return this.friendsService.list(userId);

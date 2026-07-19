@@ -5,7 +5,8 @@ export type IconName =
   | 'flame' | 'backpack' | 'feather' | 'shield' | 'moon' | 'sun' | 'crown'
   | 'leaf' | 'boot' | 'camera' | 'flag' | 'trophy'
   | 'user' | 'users' | 'shoppingBag' | 'image' | 'target' | 'star' | 'sparkle'
-  | 'lock' | 'coin' | 'pencil' | 'close' | 'check' | 'plus' | 'arrowLeft' | 'arrowRight' | 'messageSquare' | 'mic' | 'smile' | 'hexagon' | 'gift' | 'globe' | 'medal' | 'alertTriangle' | 'chevronUp' | 'externalLink';
+  | 'lock' | 'coin' | 'pencil' | 'close' | 'check' | 'plus' | 'arrowLeft' | 'arrowRight' | 'messageSquare' | 'mic' | 'smile' | 'hexagon' | 'gift' | 'globe' | 'medal' | 'alertTriangle' | 'chevronUp' | 'externalLink' | 'qrcode' | 'scan' | 'bell' | 'bellOff';
+
 
 const PATHS: Record<IconName, React.ReactNode> = {
   compass: <><circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2.2 5.3-5.3 2.2 2.2-5.3z" /></>,
@@ -61,6 +62,25 @@ const PATHS: Record<IconName, React.ReactNode> = {
   gift: <><rect x="3" y="8" width="18" height="4" rx="1" /><path d="M5 12v9h14v-9" /><path d="M12 8v13" /><path d="M12 8S10.5 3.5 8 4.5 8.5 8 12 8zM12 8s1.5-4.5 4-3.5S15.5 8 12 8z" /></>,
   globe: <><circle cx="12" cy="12" r="9" /><ellipse cx="12" cy="12" rx="4" ry="9" /><path d="M3 12h18" /></>,
   medal: <><path d="M8.5 2l3.5 6 3.5-6" /><path d="M7 2l3 5.5M17 2l-3 5.5" /><circle cx="12" cy="15" r="6" /><path d="M12 12.5l1 2 2.2.2-1.7 1.5.5 2.1L12 17.2l-2 1.2.5-2.1L8.8 14.7l2.2-.2z" /></>,
+  qrcode: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z" fill="currentColor" stroke="none" />
+    </>
+  ),
+  scan: (
+    <>
+      <path d="M3 8V5a2 2 0 0 1 2-2h3" />
+      <path d="M16 3h3a2 2 0 0 1 2 2v3" />
+      <path d="M21 16v3a2 2 0 0 1-2-2h-3" />
+      <path d="M8 21H5a2 2 0 0 1-2-2v-3" />
+      <path d="M3 12h18" />
+    </>
+  ),
+  bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></>,
+  bellOff: <><path d="M13.73 21a2 2 0 0 1-3.46 0" /><path d="M18.63 13A17.9 17.9 0 0 1 18 8" /><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14" /><path d="M18 8a6 6 0 0 0-9.33-5" /><path d="M2 2l20 20" /></>,
 };
 
 interface IconProps {

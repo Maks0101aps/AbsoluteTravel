@@ -14,6 +14,11 @@ model User {
   id                 Int               @id @default(autoincrement())
   username           String            @unique
   email              String            @unique
+  // Short shareable code (e.g. "A7X9Q2") used for fast exact-match friend
+  // lookup — an alternative to typing a username. Generated once at account
+  // creation; nullable only so existing rows can be backfilled after schema
+  // sync (see prisma/backfill-friend-codes.ts), in practice every user has one.
+  friendCode         String?           @unique
   // Null for accounts created via Google Sign-In (no local password set).
   password           String?
   // Stable Google account id ("sub" claim), set once a user signs in with Google.
@@ -56,6 +61,7 @@ model User {
   receivedMessages       Message[] @relation("MessageReceiver")
   friendLabels           FriendLabel[]
   labelReactions         LabelReaction[]
+  pushSubscriptions      PushSubscription[]
 }
 
 // A friendship edge. One row per pair: sender is who initiated the request.
@@ -91,6 +97,23 @@ model Message {
 
   @@index([senderId, receiverId, id])
   @@index([receiverId, readAt])
+}
+
+// A browser's Web Push endpoint for one user on one device. A user can have
+// several (phone, laptop, …). `endpoint` is globally unique so re-subscribing
+// the same browser updates in place instead of piling up duplicates.
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  endpoint  String   @unique
+  p256dh    String // client public key (from subscription.keys.p256dh)
+  auth      String // client auth secret (from subscription.keys.auth)
+  userAgent String? // best-effort device label, purely informational
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model CoinTransaction {

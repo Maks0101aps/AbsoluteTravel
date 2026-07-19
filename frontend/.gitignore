@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# vite-plugin-pwa dev service worker output
+dev-dist
+
+# vitest coverage reports
+coverage
+
 # dotenv environment variable files
 .env
 .env.local

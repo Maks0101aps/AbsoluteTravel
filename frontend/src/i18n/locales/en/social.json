@@ -29,6 +29,17 @@
       "acceptRequest": "Accept request",
       "add": "Add"
     },
+    "addFriend": {
+      "openButton": "Add friend",
+      "heading": "Add a friend",
+      "close": "Close",
+      "searchPlaceholder": "Username or friend code…",
+      "scanQr": "Scan QR code",
+      "cancelScan": "Cancel scan",
+      "cameraError": "Couldn't access the camera. Check permissions and try again.",
+      "yourCode": "Your friend code — share it or let a friend scan the QR",
+      "alreadyFriends": "Already friends"
+    },
     "profile": {
       "dialogLabel": "Traveler profile",
       "requestNotFound": "Request not found",
