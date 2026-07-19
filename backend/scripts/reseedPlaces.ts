@@ -22,16 +22,19 @@ async function main() {
   }
 
   await prisma.place.createMany({
-    data: toInsert.map((p) => ({
-      ...p,
-      photos: JSON.stringify((p as any).photos || []),
-      status: 'approved',
-      source: 'admin',
-      submittedBy: 'Absolute Travel',
-      aiDecision: 'approve',
-      aiReason: 'Куроване місце від команди Absolute Travel.',
-      reviewedAt: new Date(),
-    })),
+    data: toInsert.map((p) => {
+      const { id, ...rest } = p;
+      return {
+        ...rest,
+        photos: JSON.stringify((p as any).photos || []),
+        status: 'approved',
+        source: 'admin',
+        submittedBy: 'Absolute Travel',
+        aiDecision: 'approve',
+        aiReason: 'Куроване місце від команди Absolute Travel.',
+        reviewedAt: new Date(),
+      };
+    }),
   });
 
   console.log(`Inserted ${toInsert.length} curated places (skipped ${SEED_PLACES.length - toInsert.length} already present).`);
