@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Absolute Travel monorepo orchestrator",
   "scripts": {
-    "install:all": "node -e \"const fs = require('fs'); if (!fs.existsSync('.env') && fs.existsSync('.env.example')) fs.copyFileSync('.env.example', '.env');\" && npm install && npm install --prefix backend && npm install --prefix frontend && node -e \"const fs = require('fs'); if (fs.existsSync('.env')) fs.copyFileSync('.env', 'backend/.env');\" && (cd backend && npx prisma generate && npx prisma db push --force-reset && npx prisma db seed)",
+    "install:all": "node -e \"const fs = require('fs'); if (!fs.existsSync('.env') && fs.existsSync('.env.example')) fs.copyFileSync('.env.example', '.env'); if (!fs.existsSync('frontend/.env') && fs.existsSync('frontend/.env.example')) fs.copyFileSync('frontend/.env.example', 'frontend/.env');\" && npm install && npm install --prefix backend && npm install --prefix frontend && node -e \"const fs = require('fs'); if (fs.existsSync('.env')) fs.copyFileSync('.env', 'backend/.env');\" && (cd backend && npx prisma generate && npx prisma db push --force-reset && npx prisma db seed)",
     "dev": "node -e \"const fs = require('fs'); if (fs.existsSync('.env')) fs.copyFileSync('.env', 'backend/.env');\" && concurrently \"npm run dev --prefix frontend\" \"npm run start:dev --prefix backend\"",
     "test:front": "npm run test:cov --prefix frontend",
     "test:back": "npm run test:cov --prefix backend",
